@@ -1,0 +1,8 @@
+{
+  "name": "be-nover-app",
+  "version": "1.0.0",
+  "main": "index.js",
+  "repository": "https://github.com/Final-Colledge-Project/be-nover-app.git",
+  "author": "khiemld <khiemit240@gmail.com>",
+  "license": "MIT"
+}
