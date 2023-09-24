@@ -4,5 +4,31 @@
   "main": "index.js",
   "repository": "https://github.com/Final-Colledge-Project/be-nover-app.git",
   "author": "khiemld <khiemit240@gmail.com>",
-  "license": "MIT"
+  "license": "MIT",
+  "scripts": {
+    "server": "nodemon src/server.ts"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1",
+    "envalid": "^8.0.0",
+    "express": "^4.18.2",
+    "helmet": "^7.0.0",
+    "hpp": "^0.2.3",
+    "mongoose": "^7.5.2",
+    "morgan": "^1.10.0",
+    "winston": "^3.10.0"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.14",
+    "@types/express": "^4.17.17",
+    "@types/hpp": "^0.2.3",
+    "@types/mongoose": "^5.11.97",
+    "@types/morgan": "^1.9.5",
+    "cross-env": "^7.0.3",
+    "nodemon": "^3.0.1",
+    "ts-node": "^10.9.1",
+    "tsconfig-paths": "^4.2.0",
+    "typescript": "^5.2.2"
+  }
 }
