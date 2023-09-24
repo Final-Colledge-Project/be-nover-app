@@ -18,9 +18,9 @@ export default class App{
     this.app = express()
     this.port = process.env.PORT || 5000
     this.production = process.env.NODE_ENV == 'production' ? true : false
-    this.initialRoutes(routes)
     this.connectToDB()
     this.initializeMiddleware()
+    this.initialRoutes(routes)
   }
 
   private initialRoutes(routes: Route[]){
@@ -28,7 +28,6 @@ export default class App{
       this.app.use('/', route.router)
     })
   }
-
 
   private initializeMiddleware(){
     if(this.production){
@@ -48,6 +47,8 @@ export default class App{
       }))
     }
     this.app.use(errorMiddleWare)
+    this.app.use(express.json())
+    this.app.use(express.urlencoded({extended: true}))
   }
 
   private connectToDB(){
