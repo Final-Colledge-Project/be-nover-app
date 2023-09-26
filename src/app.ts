@@ -21,6 +21,7 @@ export default class App{
     this.connectToDB()
     this.initializeMiddleware()
     this.initialRoutes(routes)
+    this.initializeErrorHandling()
   }
 
   private initialRoutes(routes: Route[]){
@@ -46,9 +47,14 @@ export default class App{
         credentials: true
       }))
     }
-    this.app.use(errorMiddleWare)
+    
     this.app.use(express.json())
     this.app.use(express.urlencoded({extended: true}))
+  }
+
+
+  private initializeErrorHandling(){
+    this.app.use(errorMiddleWare)
   }
 
   private connectToDB(){
