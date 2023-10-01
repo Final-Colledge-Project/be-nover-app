@@ -6,7 +6,6 @@ import jwt from "jsonwebtoken";
 import { IUser, UserSchema } from "@modules/users";
 import AuthDto from "./auth.dto";
 
-
 class AuthService {
   public userSchema = UserSchema;
 
@@ -24,12 +23,12 @@ class AuthService {
       );
     }
 
-    const isMatchPassword = await bcrypt.compare(model.password!, user.password);
-    if(!isMatchPassword) {
-      throw new HttpException(
-        400,
-        'Credential is not valid'
-      )
+    const isMatchPassword = await bcrypt.compare(
+      model.password!,
+      user.password
+    );
+    if (!isMatchPassword) {
+      throw new HttpException(400, "Credential is not valid");
     }
 
     return this.createToken(user);

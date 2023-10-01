@@ -3,7 +3,6 @@ import { Router } from "express";
 import AuthController from "./auth.controller";
 
 
-
 export default class AuthRoute implements Route{
   public path = '/api/v1/login'
   public router = Router()
