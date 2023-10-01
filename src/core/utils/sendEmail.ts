@@ -1,4 +1,5 @@
 import nodemailer from 'nodemailer'
+import Logger from './logger'
 
 let transporter = nodemailer.createTransport({
   host: 'smtp-mail.outlook.com',
@@ -14,8 +15,7 @@ transporter.verify((error, success) => {
     console.log(error)
   }
   else {
-    console.log('Ready to send email')
-    console.log(success)
+    Logger.info('Ready to send email')
   }
 })
 
