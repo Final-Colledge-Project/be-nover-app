@@ -9,9 +9,8 @@ class OTPService {
   public otpSchema = OTPSchema;
 
   public async sendOTP(model: SendOtpDto): Promise<IOtp> {
-    const { email, subject, message, duration = 1 } = model;
-
     try {
+      const { email, subject, message, duration = 1 } = model;
       if (!(email && subject && message)) {
         throw new HttpException(
           400,
@@ -54,8 +53,8 @@ class OTPService {
   }
 
   public async verifyOTP(model: VerifyOtpDto): Promise<boolean> {
-    let { email, otp } = model
     try{
+    let { email, otp } = model
      if (!(email && otp)){
        throw new HttpException(400, "Provide values for email and otp")
      }
