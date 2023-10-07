@@ -1,20 +1,44 @@
-export default class RegisterDto {
-  public firstName: string;
-  public lastName: string;
-  public email: string;
-  public password: string;
-  public phone: number;
-  public birthDate: Date;
-  public address: string;
+import {  IsEmail, IsNotEmpty, Length, MaxLength, MinLength } from "class-validator";
 
-  constructor(model: RegisterDto){
-    this.firstName = model.firstName
-    this.lastName = model.lastName
-    this.email = model.email
-    this.password = model.password
-    this.phone = model.phone
-    this.birthDate = model.birthDate
-    this.address = model.address
+export default class RegisterDto {
+  constructor(firstName: string, lastName: string, email: string, password: string, phone: string, birthDate: Date, address: string){
+    this.firstName = firstName
+    this.lastName = lastName
+    this.email = email
+    this.password = password
+    this.phone = phone
+    this.birthDate = birthDate
+    this.address = address
   }
   
+  @IsNotEmpty()
+  @MinLength(2, {
+    message: 'First name must be at least 2 characters long',
+  })
+  @MaxLength(20, {
+    message: 'First name must be at most 20 characters long',
+  })
+  public firstName: string;
+  @IsNotEmpty()
+  @MinLength(2, {
+    message: 'Last name must be at least 2 characters long',
+  })
+  @MaxLength(20, {
+    message: 'Last name must be at most 20 characters long',
+  })
+  public lastName: string;
+  @IsNotEmpty()
+  @IsEmail()
+  public email: string;
+  @IsNotEmpty()
+  public password: string;
+  @IsNotEmpty()
+  @Length(10, 10, {
+    message: 'Phone must be at least 10 characters long',
+  })
+  public phone: string;
+  @IsNotEmpty()
+  public birthDate: Date;
+  @IsNotEmpty()
+  public address: string;
 }

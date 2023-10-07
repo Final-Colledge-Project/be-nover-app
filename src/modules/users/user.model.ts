@@ -31,11 +31,11 @@ const UserSchema = new mongoose.Schema({
     minlength: [8, 'Password must be at least 8 characters long'],
   },
   phone: {
-    type: Number,
+    type: String,
     required: [true, 'Phone is required'],
     unique: true,
     trim: true,
-    max: [9999999999, 'Phone number must be at most 10 digits long'],
+    length: [10, 'Phone must be at least 10 characters long'],
   },
   birthDate: {
     type: Date,

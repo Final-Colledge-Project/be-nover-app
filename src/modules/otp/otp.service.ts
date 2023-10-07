@@ -4,9 +4,11 @@ import { compareHash, generateOTP, hashData, sendEmail } from "@core/utils";
 import SendOtpDto from "./dtos/sendOtp.dto";
 import IOtp from "./otp.interface";
 import VerifyOtpDto from "./dtos/verifyOtp.dto";
+import { UserSchema } from "@modules/users";
 
 class OTPService {
   public otpSchema = OTPSchema;
+  public userSchema = UserSchema;
 
   public async sendOTP(model: SendOtpDto): Promise<IOtp> {
     try {
@@ -17,10 +19,9 @@ class OTPService {
           "Provide values for email, subject and message"
         );
       }
-
       //clear and old record
       await OTPSchema.deleteOne({ email });
-
+      
       //generate new otp
       const generatedOTP = await generateOTP();
 

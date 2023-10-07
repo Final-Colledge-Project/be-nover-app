@@ -4,10 +4,10 @@ export default interface IUser {
   lastName: string;
   email: string;
   password: string;
-  phone: number;
+  phone: string;
   birthDate: Date;
   address: string;
   avatar: string;
   createdAt: Date;
-  active: boolean
+  active: boolean;
 }

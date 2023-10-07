@@ -1,6 +1,8 @@
 import { Route } from "@core/interfaces";
 import { Router } from "express";
 import UserController from "./user.controller";
+import { validationMiddleware } from "@core/middleware";
+import RegisterDto from "./dtos/register.dto";
 
 
 export default class UsersRoute implements Route{
@@ -14,8 +16,8 @@ export default class UsersRoute implements Route{
   }
 
   private initializeRoute(){
-    this.router.post(this.path, this.userController.registerUser)
+    this.router.post(this.path, 
+      validationMiddleware(RegisterDto, true), 
+      this.userController.registerUser)
   }
-
-
 }

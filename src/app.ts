@@ -20,7 +20,7 @@ export default class App {
     this.connectToDB();
     this.initializeMiddleware();
     this.initialRoutes(routes);
-    this.initializeErrorHandling();
+    this.initializeErrorMiddleware();
   }
 
   private initialRoutes(routes: Route[]) {
@@ -52,9 +52,10 @@ export default class App {
 
     this.app.use(express.json());
     this.app.use(express.urlencoded({ extended: true }));
+    
   }
 
-  private initializeErrorHandling() {
+  private initializeErrorMiddleware() {
     this.app.use(errorMiddleWare);
   }
 
