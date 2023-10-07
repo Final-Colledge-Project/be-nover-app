@@ -11,7 +11,6 @@ class OTPService {
   public userSchema = UserSchema;
 
   public async sendOTP(model: SendOtpDto): Promise<IOtp> {
-    try {
       const { email, subject, message, duration = 1 } = model;
       if (!(email && subject && message)) {
         throw new HttpException(
@@ -48,13 +47,10 @@ class OTPService {
 
       const createdOtp = await newOtp.save();
       return createdOtp;
-    } catch (error) {
-      throw error;
-    }
   }
 
   public async verifyOTP(model: VerifyOtpDto): Promise<boolean> {
-    try{
+
     let { email, otp } = model
      if (!(email && otp)){
        throw new HttpException(400, "Provide values for email and otp")
@@ -81,10 +77,6 @@ class OTPService {
      const hashedOTP = matchedOtpRecord.otp
      const validOTP = await compareHash(otp, hashedOTP)
      return validOTP
-    }
-    catch(error){
-      throw error
-    }
   }
 
   public async deleteOTP(email: string) : Promise<void> {
@@ -94,6 +86,39 @@ class OTPService {
     catch(err){
       throw err
     }
+  }
+
+  public async sendRegisterOtp(model: SendOtpDto) : Promise<IOtp> {
+    const {email} = model
+    console.log("Email", email)
+    const existingUser = await UserSchema.findOne({email: email})
+    console.log("User", existingUser)
+
+    if (existingUser) {
+      throw new HttpException(401, "Email already exists")
+    }
+
+    const otpDetails = {
+      email,
+      subject: "Email Verification",
+      message: "Your OTP for email verification is",
+      duration: 1
+    }
+
+    const createdOtp = await this.sendOTP(otpDetails)
+    return createdOtp
+  }
+
+  public async verifyEmailOtp(model: VerifyOtpDto) : Promise<void> {
+    const {email, otp} = model
+
+    const validOTP = await this.verifyOTP({email, otp})
+
+    if (!validOTP) {
+      throw new HttpException(400, "Invalid code passed. Check your inbox")
+    }
+
+    await this.deleteOTP(email)
   }
 }
 

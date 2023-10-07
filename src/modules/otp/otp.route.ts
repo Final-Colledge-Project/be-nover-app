@@ -4,6 +4,7 @@ import OTPController from "./otp.controller";
 import { validationMiddleware } from "@core/middleware";
 import SendOtpDto from "./dtos/sendOtp.dto";
 import VerifyOtpDto from "./dtos/verifyOtp.dto";
+import SendEmailDto from "@modules/email_verification/dtos/sendEmailDto";
 
 export default class OTPRoute implements Route{
   public path = '/api/v1/authentication'
@@ -17,6 +18,8 @@ export default class OTPRoute implements Route{
 
   private initializeRoute(){
     this.router.post(this.path + '/otp', validationMiddleware(SendOtpDto, true), this.otpController.sendOTP)
-    this.router.post(this.path + '/verify-otp', validationMiddleware(VerifyOtpDto, true), this.otpController.verifyOTP)
+    this.router.post(this.path + '/verify-otp', validationMiddleware(VerifyOtpDto, true), this.otpController.verifyEmailOtp)
+    this.router.post(this.path + '/otp-registration', validationMiddleware(SendOtpDto, true), this.otpController.sendRegisterOtp)
+
   }
 }

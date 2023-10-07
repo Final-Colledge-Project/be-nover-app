@@ -32,4 +32,32 @@ export default class OTPController {
       next(err)
     }
   }
+
+  public sendRegisterOtp = async (req: Request, res: Response, next: NextFunction) => {
+    try{
+      const model = req.body
+      await this.otpService.sendRegisterOtp(model)
+      res.status(201).json({
+        status: "success",
+        message: "OTP is sent successfully"
+      })
+    }
+    catch(err){
+      next(err)
+    }
+  }
+
+  public verifyEmailOtp = async (req: Request, res: Response, next: NextFunction) => {
+    try{
+      const model = req.body
+      await this.otpService.verifyEmailOtp(model)
+      res.status(200).json({
+        status: "success",
+        message: "OTP is verified successfully"
+      })
+    }
+    catch(err){
+      next(err)
+    }
+  }
 }
