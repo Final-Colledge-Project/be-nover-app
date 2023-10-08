@@ -17,4 +17,15 @@ export default class AuthController {
       next(err)
     }
   }
+
+
+  public getCurrentLoginUser = async (req: Request, res: Response, next: NextFunction) => {
+    try{
+      const user = await this.authService.getCurrentLoginUser(req.user.id) 
+      res.status(200).json(user)
+    }
+    catch (err) {
+      next(err)
+    }
+  }
 }
