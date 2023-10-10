@@ -7,8 +7,8 @@ export default class VerifyOtpDto {
   @IsNotEmpty()
   public otp: string;
 
-  constructor(model: VerifyOtpDto) {
-    this.email = model.email;
-    this.otp = model.otp;
+  constructor(email: string, otp: string) {
+    this.email = email;
+    this.otp = otp;
   }
 }
