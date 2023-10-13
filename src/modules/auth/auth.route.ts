@@ -15,7 +15,7 @@ export default class AuthRoute implements Route{
   }
 
   private initializeRoute(){
-    this.router.post(this.path, this.authController.registerUser)
+    this.router.post(this.path, this.authController.loginUser)
     this.router.get(this.path, authMiddleware, this.authController.getCurrentLoginUser)
   }
 }

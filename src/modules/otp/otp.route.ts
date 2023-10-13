@@ -20,6 +20,5 @@ export default class OTPRoute implements Route{
     this.router.post(this.path + '/otp', validationMiddleware(SendOtpDto, true), this.otpController.sendOTP)
     this.router.post(this.path + '/verify-otp', validationMiddleware(VerifyOtpDto, true), this.otpController.verifyEmailOtp)
     this.router.post(this.path + '/otp-registration', validationMiddleware(SendOtpDto, true), this.otpController.sendRegisterOtp)
-
   }
 }

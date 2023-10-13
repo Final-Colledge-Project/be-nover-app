@@ -14,14 +14,18 @@ class AuthService {
       throw new HttpException(400, "Model is empty");
     }
 
-    const user = await this.userSchema.findOne({ email: model.email });
+    const user = await this.userSchema.findOne({ email: model.email }).exec();
 
+    console.log('user', user)
+   
     if (!user) {
       throw new HttpException(
         409,
         `User with email ${model.email} is not exits`
       );
     }
+
+    console.log(model.password, user.password)
 
     const isMatchPassword = await bcrypt.compare(
       model.password!,
@@ -35,19 +39,20 @@ class AuthService {
   }
 
   public async getCurrentLoginUser(userId: string) : Promise<IUser> {
-    const currentUser = await this.userSchema.findById(userId)
+    const currentUser = await this.userSchema.findById(userId).exec()
     if (!currentUser) {
       throw new HttpException(400, "User not found")
     }
     return currentUser
   } 
 
+  
+
   private createToken(user: IUser): TokenData {
-    const dataInToken: DataStoredInToken = { id: user._id };
-    const secretKey: string = process.env.JWT_TOKEN_SECRET!;
-    const expiresIn: number = 60;
+    const dataInToken: DataStoredInToken = { id: user._id }
+    const secretKey: string = process.env.JWT_TOKEN_SECRET!
     return {
-      token: jwt.sign(dataInToken, secretKey, { expiresIn }),
+      token: jwt.sign(dataInToken, secretKey, { expiresIn: process.env.JWT_EXPIRES_IN }),
     };
   }
 }

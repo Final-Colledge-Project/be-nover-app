@@ -9,5 +9,7 @@ export default interface IUser {
   address: string;
   avatar: string;
   createdAt: Date;
+  passwordChangedAt: Date;
+  isAdmin: boolean;
   active: boolean;
 }

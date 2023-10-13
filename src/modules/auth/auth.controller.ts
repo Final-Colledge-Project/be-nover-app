@@ -7,7 +7,7 @@ import AuthService from "./auth.service";
 export default class AuthController {
   private authService = new AuthService()
 
-  public registerUser = async (req: Request, res: Response, next: NextFunction) => {
+  public loginUser = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const model : AuthDto = req.body
       const tokenData : TokenData = await this.authService.login(model)
