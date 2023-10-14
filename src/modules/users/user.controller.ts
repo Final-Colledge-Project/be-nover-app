@@ -20,7 +20,7 @@ export default class UserController {
   public getUserById = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const user = await this.userService.getUserById(req.params.id)
-      res.status(200).json(user)
+      res.status(200).json({user})
     }
     catch (err){
       next(err)

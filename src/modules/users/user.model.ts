@@ -54,7 +54,6 @@ const UserSchema = new mongoose.Schema({
   },
   passwordChangedAt: {
     type: Date, 
-    select: false,
     default: Date.now
   },
   isAdmin: {
@@ -67,5 +66,8 @@ const UserSchema = new mongoose.Schema({
     default: true
   }
 })
+
+
+
 
 export default mongoose.model<IUser & mongoose.Document>('User', UserSchema)

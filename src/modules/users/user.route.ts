@@ -26,7 +26,9 @@ export default class UsersRoute implements Route{
       validationMiddleware(RegisterDto, true), 
       this.userController.updateUser)
 
-    this.router.get(this.path + '/:id', this.userController.getUserById)
+    this.router.get(this.path + '/:id', 
+      authMiddleware,
+      this.userController.getUserById)
    
   }
 }

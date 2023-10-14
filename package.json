@@ -6,7 +6,7 @@
   "author": "khiemld <khiemit240@gmail.com>",
   "license": "MIT",
   "scripts": {
-    "server": "nodemon src/server.ts"
+    "start": "nodemon src/server.ts"
   },
   "dependencies": {
     "bcrypt": "^5.1.1",
