@@ -86,6 +86,11 @@ class UserService {
     return user;
   } 
 
+  public async getAllUsers() : Promise<IUser[]> {
+    const users = await this.userSchema.find().exec();
+    return users
+  }
+
   private createToken(user: IUser): TokenData {
     const dataInToken: DataStoredInToken = { id: user._id }
     const secretKey: string = process.env.JWT_TOKEN_SECRET!

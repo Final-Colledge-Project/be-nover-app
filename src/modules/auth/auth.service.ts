@@ -16,7 +16,7 @@ class AuthService {
 
     const user = await this.userSchema.findOne({ email: model.email }).exec();
 
-    console.log('user', user)
+
    
     if (!user) {
       throw new HttpException(
@@ -24,8 +24,6 @@ class AuthService {
         `User with email ${model.email} is not exits`
       );
     }
-
-    console.log(model.password, user.password)
 
     const isMatchPassword = await bcrypt.compare(
       model.password!,

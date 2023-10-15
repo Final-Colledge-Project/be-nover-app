@@ -1,7 +1,7 @@
 import { Route } from "@core/interfaces";
 import { Router } from "express";
 import UserController from "./user.controller";
-import { authMiddleware, validationMiddleware } from "@core/middleware";
+import { authMiddleware, permissionMiddleware, validationMiddleware } from "@core/middleware";
 import RegisterDto from "./dtos/register.dto";
 
 
@@ -20,6 +20,11 @@ export default class UsersRoute implements Route{
     this.router.post(this.path, 
       validationMiddleware(RegisterDto, true), 
       this.userController.registerUser)
+    
+    this.router.get(this.path, 
+      authMiddleware, 
+      permissionMiddleware(['admin']),
+      this.userController.getAllUsers)
 
     this.router.put(this.path + '/:id', 
       authMiddleware,

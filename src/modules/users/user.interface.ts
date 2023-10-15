@@ -10,6 +10,6 @@ export default interface IUser {
   avatar: string;
   createdAt: Date;
   passwordChangedAt: Date;
-  isAdmin: boolean;
+  role: string;
   active: boolean;
 }

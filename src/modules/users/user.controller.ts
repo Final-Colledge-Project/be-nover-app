@@ -17,6 +17,16 @@ export default class UserController {
     }
   }
 
+  public getAllUsers = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const users = await this.userService.getAllUsers()
+      res.status(200).json({users})
+    }
+    catch (err){
+      next(err)
+    }
+  }
+
   public getUserById = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const user = await this.userService.getUserById(req.params.id)

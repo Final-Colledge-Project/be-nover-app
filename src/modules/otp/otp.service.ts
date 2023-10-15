@@ -90,9 +90,8 @@ class OTPService {
 
   public async sendRegisterOtp(model: SendOtpDto) : Promise<IOtp> {
     const {email} = model
-    console.log("Email", email)
     const existingUser = await UserSchema.findOne({email: email})
-    console.log("User", existingUser)
+
 
     if (existingUser) {
       throw new HttpException(401, "Email already exists")
