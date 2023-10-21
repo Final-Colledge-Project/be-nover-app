@@ -34,6 +34,9 @@ export default class UsersRoute implements Route{
     this.router.get(this.path + '/:id', 
       authMiddleware,
       this.userController.getUserById)
-   
+    
+    this.router.delete(this.path, 
+      authMiddleware,
+      this.userController.deleteUser)
   }
 }

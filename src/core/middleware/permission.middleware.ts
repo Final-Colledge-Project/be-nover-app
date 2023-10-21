@@ -4,7 +4,7 @@ import { UserSchema } from "@modules/users";
 
 const permissionMiddleware =  (roles: string[]) => {
   return async (req: any, res: any, next: any) => {
-    const user = await UserSchema.findById(req.user.id);
+    const user = await UserSchema.findById(req.user.id).select('+role').exec();
     if (!user) {
       return next(
         new HttpException(

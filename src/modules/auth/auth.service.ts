@@ -14,10 +14,8 @@ class AuthService {
       throw new HttpException(400, "Model is empty");
     }
 
-    const user = await this.userSchema.findOne({ email: model.email }).exec();
+    const user = await this.userSchema.findOne({ email: model.email }).select('+password').exec();
 
-
-   
     if (!user) {
       throw new HttpException(
         409,
@@ -36,8 +34,9 @@ class AuthService {
     return this.createToken(user);
   }
 
+  
   public async getCurrentLoginUser(userId: string) : Promise<IUser> {
-    const currentUser = await this.userSchema.findById(userId).exec()
+    const currentUser = await this.userSchema.findById(userId).select('-__v').exec()
     if (!currentUser) {
       throw new HttpException(400, "User not found")
     }

@@ -6,6 +6,7 @@ import { HttpException } from "@core/exceptions";
 import bcrypt from "bcrypt";
 import IUser from "./user.interface";
 import jwt from "jsonwebtoken";
+import UpdateUserDto from "./dtos/updateUser.dto";
 
 class UserService {
   public userSchema = UserSchema;
@@ -15,29 +16,45 @@ class UserService {
       throw new HttpException(400, "Model is empty");
     }
 
-    const user = await this.userSchema.findOne({ email: model.email }).exec();
+    const user = await this.userSchema.findOne({ email: model.email }).select('+verify').exec();
+    
 
     if (user) {
-      throw new HttpException(
-        409,
-        `User with email ${model.email} already exists`
-      );
+      if (user.verify === true && user.password !== '') {
+        throw new HttpException(409, `User with email ${model.email} already exists`);
+      }
+      else if (!user.verify){
+        throw new HttpException(
+          409,
+          `User with email ${model.email} is not verified`
+        );
+      }
     }
+
+    if (!user) {
+      throw new HttpException(409, `User with email ${model.email} is not verified`)
+    }
+
 
     const salt = await bcrypt.genSalt(10);
 
     const hashedPassword = await bcrypt.hash(model.password!, salt);
 
-    const createdUser = await this.userSchema.create({
+
+    const createdUser = await this.userSchema.findByIdAndUpdate(user._id , {
       ...model,
       password: hashedPassword,
-    });
+    }, {new: true, runValidators: true});
+
+    if(!createdUser){
+      throw new HttpException(409, 'You are not an user');
+    }
 
     return this.createToken(createdUser);
   }
 
 
-  public async updateUser(userId: string, model: RegisterDto): Promise<IUser> {
+  public async updateUser(userId: string, model: UpdateUserDto): Promise<IUser> {
     if (isEmptyObject(model)) {
       throw new HttpException(400, "Model is empty");
     }
@@ -66,6 +83,7 @@ class UserService {
 
     const updateUserById = await this.userSchema.findByIdAndUpdate(userId, {
       ...model,
+      passwordChangeAt: Date.now() - 1000
     }, 
     {new: true, runValidators: true}
     ).exec();
@@ -79,7 +97,7 @@ class UserService {
   }
 
   public async getUserById(userId: string) : Promise<IUser> {
-    const user = await this.userSchema.findById(userId).exec();
+    const user = await this.userSchema.findById(userId).select('-__v').exec();
     if(!user){
         throw new HttpException(404, `User is not exits`)
     }
@@ -87,8 +105,12 @@ class UserService {
   } 
 
   public async getAllUsers() : Promise<IUser[]> {
-    const users = await this.userSchema.find().exec();
+    const users = await this.userSchema.find().select('-__v').exec();
     return users
+  }
+
+  public async deleteUser(userId: string) : Promise<void> {
+    await this.userSchema.findByIdAndUpdate(userId, {active: false})
   }
 
   private createToken(user: IUser): TokenData {

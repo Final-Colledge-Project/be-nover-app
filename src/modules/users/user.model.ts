@@ -1,6 +1,7 @@
 import  mongoose  from "mongoose"
 import IUser from "./user.interface"
 import validator from 'validator'
+import { Query } from 'mongoose';
 
 const UserSchema = new mongoose.Schema({
   firstName: {
@@ -28,7 +29,8 @@ const UserSchema = new mongoose.Schema({
     type: String,
     required: [true, 'Password is required'],
     trim: true,
-    minlength: [8, 'Password must be at least 8 characters long']
+    minlength: [8, 'Password must be at least 8 characters long'],
+    select: false
   },
   phone: {
     type: String,
@@ -54,20 +56,34 @@ const UserSchema = new mongoose.Schema({
   },
   passwordChangedAt: {
     type: Date, 
-    default: Date.now
+    default: Date.now,
+    select: false
   },
   role: {
     type: String,
     enum: ['admin', 'user'],
-    default: 'user'
+    default: 'user',
+    select: false
+  },
+  verify: {
+    type: Boolean,
+    default: false,
+    select: false
   },
   active: {
     type: Boolean,
-    default: true
+    default: true,
+    select: false
   }
-})
+}, { validateBeforeSave: false })
 
-
+UserSchema.pre(/^find/, async function (next) {
+  if (this instanceof Query) {
+      const user = this;
+      user.find({ active: { $ne: false } });
+  }
+  next();
+});
 
 
 export default mongoose.model<IUser & mongoose.Document>('User', UserSchema)

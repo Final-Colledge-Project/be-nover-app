@@ -13,7 +13,7 @@ class EmailVerificationService {
       const {email} = model
       const existingUser = await UserSchema.findOne({email})
 
-      if (!existingUser) {
+      if (existingUser) {
         throw new HttpException(400, "There are no account for the provided email")
       }
 
@@ -37,6 +37,8 @@ class EmailVerificationService {
         throw new HttpException(400, "Invalid code passed. Check your inbox")
 
       }
+
+      await this.userSchema.create({email: email, verify: true})
       
       await this.otpService.deleteOTP(email)
   }

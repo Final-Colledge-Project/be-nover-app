@@ -11,5 +11,6 @@ export default interface IUser {
   createdAt: Date;
   passwordChangedAt: Date;
   role: string;
+  verify: boolean,
   active: boolean;
 }

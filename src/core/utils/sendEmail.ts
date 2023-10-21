@@ -2,7 +2,8 @@ import nodemailer from 'nodemailer'
 import Logger from './logger'
 
 let transporter = nodemailer.createTransport({
-  host: 'smtp-mail.outlook.com',
+  // host: 'smtp-mail.outlook.com',
+  host: 'sandbox.smtp.mailtrap.io',
   auth: {
     user: process.env.AUTH_USERNAME,
     pass: process.env.AUTH_PASSWORD

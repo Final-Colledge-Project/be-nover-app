@@ -1,11 +1,10 @@
 import {  IsEmail, IsNotEmpty, Length, MaxLength, MinLength } from "class-validator";
 
-export default class RegisterDto {
-  constructor(firstName: string, lastName: string, email: string, password: string, phone: string, birthDate: Date, address: string){
+export default class UpdateUserDto {
+  constructor(firstName: string, lastName: string, email: string, phone: string, birthDate: Date, address: string){
     this.firstName = firstName
     this.lastName = lastName
     this.email = email
-    this.password = password
     this.phone = phone
     this.birthDate = birthDate
     this.address = address
@@ -30,11 +29,6 @@ export default class RegisterDto {
   @IsNotEmpty()
   @IsEmail()
   public email: string;
-  @IsNotEmpty()
-  @MinLength(8, {
-    message: 'Password must be at least 8 characters long',
-  })
-  public password: string;
   @IsNotEmpty()
   @Length(10, 10, {
     message: 'Phone must be at least 10 characters long',

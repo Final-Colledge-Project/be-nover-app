@@ -15,5 +15,6 @@ export default class EmailVerificationRoute implements Route{
 
   private initializeRoute(){
     this.router.post(this.path, this.emailVerificationController.sendEmailOTP)
+    this.router.post(this.path + '/verify', this.emailVerificationController.verifyEmailOTP)
   }
 }
