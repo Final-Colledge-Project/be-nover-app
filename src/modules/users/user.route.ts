@@ -3,6 +3,8 @@ import { Router } from "express";
 import UserController from "./user.controller";
 import { authMiddleware, permissionMiddleware, validationMiddleware } from "@core/middleware";
 import RegisterDto from "./dtos/register.dto";
+import UpdateUserDto from "./dtos/updateUser.dto";
+import ChangePasswordDto from "./dtos/changePasswordDto";
 
 
 export default class UsersRoute implements Route{
@@ -26,10 +28,15 @@ export default class UsersRoute implements Route{
       permissionMiddleware(['admin']),
       this.userController.getAllUsers)
 
-    this.router.put(this.path + '/:id', 
+    this.router.patch(this.path, 
+      validationMiddleware(UpdateUserDto, true), 
       authMiddleware,
-      validationMiddleware(RegisterDto, true), 
       this.userController.updateUser)
+
+    this.router.patch(this.path + '/change-password', 
+      validationMiddleware(ChangePasswordDto, true),
+      authMiddleware,
+      this.userController.changePassword) 
 
     this.router.get(this.path + '/:id', 
       authMiddleware,

@@ -21,7 +21,7 @@ class EmailVerificationService {
         email,
         subject: "Email Verification",
         message: "Your OTP for email verification is",
-        duration: 1
+        duration: 2
       }
 
       const createdOtp = await this.otpService.sendOTP(otpDetails)
@@ -38,7 +38,8 @@ class EmailVerificationService {
 
       }
 
-      await this.userSchema.create({email: email, verify: true})
+      const user = new UserSchema({email, verify: true})
+      await user.save({ validateBeforeSave: false })
       
       await this.otpService.deleteOTP(email)
   }

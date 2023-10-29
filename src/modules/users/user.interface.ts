@@ -12,5 +12,6 @@ export default interface IUser {
   passwordChangedAt: Date;
   role: string;
   verify: boolean,
+  refreshToken: string[];
   active: boolean;
 }

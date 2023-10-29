@@ -31,7 +31,7 @@ class OTPService {
         subject,
         html: `<p>${message}</p>
                <p style="color:#007AFF;font-size:25px;letter-spacing:2px"><b>${generatedOTP}</b></p>
-               <p>This code <b>expires in ${duration} hour(s)</b></p>`,
+               <p>This code <b>expires in ${duration} minute(s)</b></p>`,
       };
 
       await sendEmail(mailOptions);
@@ -42,7 +42,7 @@ class OTPService {
         email,
         otp: hashedOTP,
         createdAt: Date.now(),
-        expireAt: Date.now() + 3600000 * duration,
+        expireAt: Date.now() + 60 * 1000 * duration,
       });
 
       const createdOtp = await newOtp.save();

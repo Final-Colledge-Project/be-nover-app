@@ -9,10 +9,12 @@
     "start": "nodemon src/server.ts"
   },
   "dependencies": {
+    "@types/cookie-parser": "^1.4.5",
     "bcrypt": "^5.1.1",
     "bcryptjs": "^2.4.3",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.0",
+    "cookie-parser": "^1.4.6",
     "cors": "^2.8.5",
     "dotenv": "^16.3.1",
     "envalid": "^8.0.0",

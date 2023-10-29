@@ -70,20 +70,33 @@ const UserSchema = new mongoose.Schema({
     default: false,
     select: false
   },
+  refreshToken: {
+    type: [String],
+    select: false
+  },
   active: {
     type: Boolean,
     default: true,
     select: false
   }
-}, { validateBeforeSave: false })
+})
 
 UserSchema.pre(/^find/, async function (next) {
   if (this instanceof Query) {
       const user = this;
-      user.find({ active: { $ne: false } });
+      user.find({ active: { $ne: false } }).select('-__v');
   }
   next();
 });
+
+
+UserSchema.pre('save', function(next){
+  if(!this.isModified('password') || this.isNew)
+    return next()
+  this.passwordChangedAt = new Date(Date.now() - 1000)
+  next();
+});
+
 
 
 export default mongoose.model<IUser & mongoose.Document>('User', UserSchema)

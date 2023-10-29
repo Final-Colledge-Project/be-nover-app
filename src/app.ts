@@ -7,6 +7,7 @@ import morgan from "morgan";
 import cors from "cors";
 import { Logger } from "@core/utils";
 import { errorMiddleWare } from "@core/middleware";
+import cookieParser from "cookie-parser";
 
 export default class App {
   public app: express.Application;
@@ -40,6 +41,7 @@ export default class App {
           credentials: true,
         })
       );
+      this.app.use(cookieParser());
     } else {
       this.app.use(morgan("dev"));
       this.app.use(
@@ -48,6 +50,7 @@ export default class App {
           credentials: true,
         })
       );
+      this.app.use(cookieParser());
     }
 
     this.app.use(express.json());

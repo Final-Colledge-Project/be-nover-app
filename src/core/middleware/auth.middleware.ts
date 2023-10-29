@@ -1,12 +1,11 @@
 import { HttpException } from "@core/exceptions";
 import { checkUserChangePasswordAfter } from "@core/utils/helpers";
-import { DataStoredInToken } from "@modules/auth";
 import { UserSchema } from "@modules/users";
 import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 
-type Decoded = {
-  id: string;
+export type Decoded = {
+  userId: string;
   iat: number;
   exp: number;
 };
@@ -37,11 +36,11 @@ const authMiddleware = async (
   //2. Verification token
   const decoded: Decoded = (await jwtVerifyPromisified(
     token,
-    process.env.JWT_TOKEN_SECRET!
+    process.env.JWT_TOKEN_SECRET ?? ''
   )) as Decoded;
 
   //3. Check if user still exists
-  const currentUser = await UserSchema.findById(decoded?.id);
+  const currentUser = await UserSchema.findById(decoded?.userId);
 
   if (!currentUser) {
     return next(
@@ -69,12 +68,13 @@ const authMiddleware = async (
   next();
 };
 
-const jwtVerifyPromisified = (token: string, secret: string) => {
+export const jwtVerifyPromisified = (token: string, secret: string) => {
   return new Promise((resolve, reject) => {
     jwt.verify(token, secret, {}, (err, payload) => {
       if (err) {
         reject(err);
       } else {
+        console.log(payload)
         resolve(payload);
       }
     });
