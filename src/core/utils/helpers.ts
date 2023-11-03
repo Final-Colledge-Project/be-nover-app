@@ -1,10 +1,6 @@
-import { DataStoredInToken, TokenData } from "@modules/auth";
-import { RefreshTokenSchema } from "@modules/refresh_token";
+
 import { IUser } from "@modules/users";
 import crypto from "crypto";
-import jwt from "jsonwebtoken";
-import Logger from "./logger";
-import { HttpException } from "@core/exceptions";
 
 export const isEmptyObject = (obj: Object): boolean => {
   return !Object.keys(obj).length;
