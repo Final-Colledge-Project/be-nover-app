@@ -11,18 +11,46 @@ const TeamWorkspaceSchema = new mongoose.Schema({
     maxlength: [20, "Name must be at most 20 characters long"],
     trim: true,
   },
-  workspaceAdmin: {
-    type: mongoose.Schema.ObjectId,
-    ref: 'User'
-  },
-  memberList: [{
-    type: mongoose.Schema.ObjectId,
-    ref: 'User'
+  workspaceAdmins: [{
+    user: {
+      type: mongoose.Schema.ObjectId,
+      ref: 'User'
+    },
+    role: {
+      type: String,
+      enum: ['superAdmin', 'admin'],
+      default: 'admin'
+    }
   }],
+  workspaceMembers: [{
+    user: {
+      type: mongoose.Schema.ObjectId,
+      ref: 'User'
+    },
+    joinDate: {
+      type: Date,
+      default: Date.now
+    },
+    }
+  ],
   createdAt: {
     type: Date,
     default: Date.now,
   },
+  invitedMembers: [{
+    user: {
+        type: mongoose.Schema.ObjectId,
+        ref: 'User'
+    },
+    requestDate: {
+      type: Date,
+      default: Date.now
+    },
+    status: {
+      type: String,
+      enum: ['pending', 'accepted'],
+    }
+  }],
   active: {
     type: Boolean,
     default: true,

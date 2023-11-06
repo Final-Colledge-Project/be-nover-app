@@ -12,7 +12,7 @@ export default class UserController {
 
   public registerUser = catchAsync( async (req: Request, res: Response, next: NextFunction) => {
     const model : RegisterDto = req.body
-    const user =  await this.userService.createUser(model)
+    const user =  await this.userService.createUser(model, req)
     res.status(201).json({data: user, message: "Register user successfully"})
   })
 

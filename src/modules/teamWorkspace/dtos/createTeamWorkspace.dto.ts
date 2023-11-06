@@ -1,9 +1,9 @@
 import { IsNotEmpty, IsString, MaxLength, MinLength } from "class-validator";
 
 export default class CreateTeamWorkspaceDto {
-  constructor(name: string, adminWorkspaceId: string) {
+  constructor(name: string, superAdminWorkspaceId: string) {
     this.name = name;
-    this.adminWorkspaceId = adminWorkspaceId;
+    this.superAdminWorkspaceId = superAdminWorkspaceId;
   }
   @IsNotEmpty()
   @MinLength(2, {
@@ -14,5 +14,5 @@ export default class CreateTeamWorkspaceDto {
   })
   public name: string;
   @IsString()
-  public adminWorkspaceId: string;
+  public superAdminWorkspaceId: string;
 }

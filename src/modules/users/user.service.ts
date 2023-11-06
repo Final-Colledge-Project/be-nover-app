@@ -1,7 +1,7 @@
 import { DataStoredInToken, TokenData } from "@modules/auth";
 import RegisterDto from "./dtos/register.dto";
 import UserSchema from "./user.model";
-import { Logger, isEmptyObject, signToken } from "@core/utils";
+import { Email, Logger, isEmptyObject, signToken } from "@core/utils";
 import { HttpException } from "@core/exceptions";
 import bcrypt from "bcrypt";
 import IUser from "./user.interface";
@@ -14,7 +14,7 @@ import { Request, Response } from "express";
 class UserService {
   public userSchema = UserSchema;
 
-  public async createUser(model: RegisterDto): Promise<IUser> {
+  public async createUser(model: RegisterDto, req: Request): Promise<IUser> {
     if (isEmptyObject(model)) {
       throw new HttpException(400, "Model is empty");
     }
@@ -50,6 +50,10 @@ class UserService {
     if(!createdUser){
       throw new HttpException(409, 'You are not an user');
     }
+
+    const url='http://localhost:5173/'
+    // const url=`${req.protocol}://${req.get('host')}`
+    await new Email(createdUser, url).sendWelcome();
 
     return createdUser;
   }
@@ -140,10 +144,9 @@ class UserService {
 
     if (cookies?.jwt) {
         /* 
-        Scenario added here: 
-            1) User logs in but never uses RT and does not logout 
-            2) RT is stolen
-            3) If 1 & 2, reuse detection is needed to clear all RTs when user logs in
+            - User logs in but never uses RT and does not logout 
+            - RT is stolen
+            - If 1 & 2, reuse detection is needed to clear all RTs when user logs in
         */
         const refreshToken = cookies.jwt;
         const foundToken = await this.userSchema.findOne({ refreshToken }).exec();
