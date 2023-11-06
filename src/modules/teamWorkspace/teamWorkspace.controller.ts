@@ -21,12 +21,19 @@ export default class TeamWorkspaceController {
     const workspaceId = req.params.id;
     const model : JoinGroupDto = req.body;
     await this.teamWorkspaceService.sendInvitationToTeamWorkspace(model, adminId, workspaceId);
-    res.status(201).json({message: "Send invitation successfully" });
+    res.status(200).json({message: "Send invitation successfully" });
   })
   public acceptInvitationToTeamWorkspace = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
     const userId = req.user.id;
     const workspaceId = req.params.id;
     await this.teamWorkspaceService.acceptInvitationToTeamWorkspace(userId, workspaceId);
-    res.status(201).json({message: "Accept invitation successfully" });
+    res.status(200).json({message: "Accept invitation successfully" });
+  })
+  public assignMemberToAdmin = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+    const adminId = req.user.id;
+    const workspaceId = req.params.id;
+    const emailMember : JoinGroupDto = req.body;
+    await this.teamWorkspaceService.assignMemberToAdmin(emailMember, workspaceId, adminId);
+    res.status(200).json({message: "Assign member to admin successfully" });
   })
 }

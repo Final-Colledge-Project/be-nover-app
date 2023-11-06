@@ -5,9 +5,9 @@ import { HttpException } from "@core/exceptions";
 import { ObjectId } from "mongodb"
 import mongoose, { Model } from "mongoose";
 import JoinGroupDto from "./dtos/joinGroup.dto";
-import { isAdmin, isMember } from "./utils/checkPermission";
+import { isAdmin, isMember, isSuperAdmin } from "./utils/checkPermission";
 import { UserSchema } from "@modules/users";
-import ITeamWorkspace, { IInvitedMember, IMember } from "./teamWorkspace.interface";
+import ITeamWorkspace, { IInvitedMember, IMember, IWorkspaceAdmin } from "./teamWorkspace.interface";
 
 class TeamWorkspaceService {
   public teamWorkspaceSchema = TeamWorkspaceSchema;
@@ -56,8 +56,6 @@ class TeamWorkspaceService {
     }
 
     const checkMember = await isMember(workspaceId, invitedUser.id)
-    console.log('=================> member ID', invitedUser.id)
-    console.log("🚀 ~ file: teamWorkspace.service.ts:50 ~ TeamWorkspaceService ~ sendInvitationToTeamWorkspace ~ checkMember:", checkMember)
     if(await isAdmin(workspaceId, adminId) === false){
       throw new HttpException(409, 'You are not the admin');
     } 
@@ -65,9 +63,6 @@ class TeamWorkspaceService {
     if( checkMember === true){
       throw new HttpException(409, 'User is already a member');
     }
-
-    
-
     const url = ''
     await new Email(invitedUser, url, adminUser).sendInvitationMember();
 
@@ -105,7 +100,31 @@ class TeamWorkspaceService {
     } as IMember)
     await teamWorkspace.save();
   }
-
+  public async assignMemberToAdmin(model: JoinGroupDto, workspaceId: string, adminId: string): Promise<void> {
+    if (isEmptyObject(model)) {
+      throw new HttpException(400, "Model is empty");
+    }
+    const teamWorkspace = await this.teamWorkspaceSchema.findById(workspaceId).exec();
+    const member = await UserSchema.findOne({email: model.emailUser}).exec();
+    if(!teamWorkspace){
+      throw new HttpException(409, 'Workspace not found');
+    }
+    if(await isSuperAdmin(workspaceId, adminId) === false){
+      throw new HttpException(409, 'You are not permission to assign member to admin');
+    }
+    if(await isAdmin(workspaceId, member?.id) === true){
+      throw new HttpException(409, 'User is already admin');
+    }
+    if(await isMember(workspaceId, member?.id) === false){
+      throw new HttpException(409, 'User is not member');
+    }
+    
+    teamWorkspace.workspaceAdmins.unshift({
+      user: member?.id,
+      role: 'admin'
+    } as IWorkspaceAdmin)
+    await teamWorkspace.save();
+  }
 
 }
 

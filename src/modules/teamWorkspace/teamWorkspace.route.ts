@@ -33,6 +33,12 @@ export default class TeamWorkspaceRoute implements Route {
       authMiddleware,
       this.teamWorkspaceController.acceptInvitationToTeamWorkspace
     )
+    this.router.post(
+      this.path + '/:id/assign-admin',
+      validationMiddleware(JoinGroupDto, true),
+      authMiddleware,
+      this.teamWorkspaceController.assignMemberToAdmin
+    )
   }
   
 }
