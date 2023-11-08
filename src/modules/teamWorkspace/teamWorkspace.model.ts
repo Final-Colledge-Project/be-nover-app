@@ -1,8 +1,6 @@
 import mongoose from "mongoose";
-import validator from "validator";
 import { Query } from "mongoose";
 import ITeamWorkspace from "./teamWorkspace.interface";
-
 const TeamWorkspaceSchema = new mongoose.Schema({
   name: {
     type: String,

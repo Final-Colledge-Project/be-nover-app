@@ -7,6 +7,7 @@ import { AuthRoute } from "@modules/auth";
 import { OTPRoute } from "@modules/otp";
 import { EmailVerificationRoute } from "@modules/email_verification";
 import { TeamWorkspaceRoute } from "@modules/teamWorkspace";
+import { BoardRoute } from "@modules/boards";
 
 validateEnv();
 
@@ -16,7 +17,8 @@ const routes = [
   new AuthRoute(),
   new OTPRoute(),
   new EmailVerificationRoute(),
-  new TeamWorkspaceRoute()
+  new TeamWorkspaceRoute(),
+  new BoardRoute()
 ];
 
 const app = new App(routes);

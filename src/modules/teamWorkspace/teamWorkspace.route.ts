@@ -4,9 +4,6 @@ import { Route } from "@core/interfaces";
 import { authMiddleware, validationMiddleware } from "@core/middleware";
 import CreateTeamWorkspaceDto from "./dtos/createTeamWorkspace.dto";
 import JoinGroupDto from "./dtos/joinGroup.dto";
-
-
-
 export default class TeamWorkspaceRoute implements Route {
   public path = '/api/v1/team-workspace'
   public router = Router()

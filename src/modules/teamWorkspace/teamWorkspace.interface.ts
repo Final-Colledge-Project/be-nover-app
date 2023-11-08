@@ -7,17 +7,14 @@ export default interface ITeamWorkspace {
   invitedMembers: IInvitedMember[];
   active: boolean;
 }
-
 export interface IWorkspaceAdmin {
   user: string;
   role: string;
 }
-
 export interface IMember {
   user: string;
   joinDate: Date;
 }
-
 export interface IInvitedMember {
   user: string;
   requestDate: Date;
