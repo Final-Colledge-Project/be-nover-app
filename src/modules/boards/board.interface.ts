@@ -3,6 +3,7 @@ export default interface IBoard {
   title: string;
   description: string;
   type: string;
+  teamWorkspaceId: string;
   ownerIds: string[];
   memberIds: string[];
   columnIds: string[];

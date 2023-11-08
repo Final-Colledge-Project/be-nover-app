@@ -4,8 +4,6 @@ export const isAdmin = async (teamWorkspaceId : string, adminId: string) => {
   const teamWorkspace = await TeamWorkspaceSchema.findById(teamWorkspaceId).exec();
 
   const isAdmin = teamWorkspace?.workspaceAdmins.find((admin : IWorkspaceAdmin) =>{
-    console.log("🚀 ~ file: checkPermission.ts:6 ~ isAdmin ~ admin", admin.user)
-    console.log("🚀 ~ file: checkPermission.ts:6 ~ isAdmin ~ adminId", adminId)
     return admin.user.toString() === adminId}
   );
 

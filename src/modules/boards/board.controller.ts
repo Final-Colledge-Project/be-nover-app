@@ -11,5 +11,11 @@ export default class BoardController {
     const board = await this.boardService.createBoard(model, ownerId, teamWorkspaceId);
     res.status(201).json({ data: board, message: "Create board successfully" });
   })
-  
+  public addMemberToBoard = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+    const userId = req.user.id;
+    const boardId = req.params.id;
+    const memberId = req.params.memberId;
+    const board = await this.boardService.addMemberToBoard(userId, boardId, memberId);
+    res.status(200).json({ data: board, message: "Add member to board successfully" });
+  })
 }

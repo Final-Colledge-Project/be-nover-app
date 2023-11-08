@@ -18,5 +18,10 @@ export default class BoardRoute implements Route {
       authMiddleware,
       this.boardController.createBoard
     )
+    this.router.patch(
+      this.path + '/:id/member/:memberId',
+      authMiddleware,
+      this.boardController.addMemberToBoard
+    )
   }
 }
