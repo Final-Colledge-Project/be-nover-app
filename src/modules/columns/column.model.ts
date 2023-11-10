@@ -1,0 +1,36 @@
+import mongoose from "mongoose";
+import { IColumn } from "./column.interface";
+
+const ColumnSchema = new mongoose.Schema({
+  title: {
+    type: String,
+    required: [true, "Title is required"],
+    minlength: [2, "Title must be at least 2 characters long"],
+    maxlength: [20, "Title must be at most 20 characters long"],
+    trim: true,
+  },
+  boardId: {
+    type: mongoose.Schema.ObjectId,
+    ref: 'Board',
+  },
+  cardOrderIds: [
+    {
+      type: mongoose.Schema.ObjectId,
+      ref: 'Card',
+    }
+  ],
+  createdAt: {
+    type: Date,
+    default: Date.now,
+  },
+  updateAt: {
+    type: Date,
+    default: Date.now,
+  },
+  isActive: {
+    type: Boolean,
+    default: true,
+    select: false,
+  }
+});
+export default mongoose.model<IColumn & mongoose.Document>("Column", ColumnSchema);

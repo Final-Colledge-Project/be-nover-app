@@ -1,14 +1,10 @@
-import { Email, isEmptyObject } from "@core/utils";
+import { Email, isEmptyObject, isSuperAdmin, isWorkspaceAdmin, isWorkspaceMember } from "@core/utils";
 import CreateTeamWorkspaceDto from "./dtos/createTeamWorkspace.dto";
 import TeamWorkspaceSchema from "./teamWorkspace.model";
 import { HttpException } from "@core/exceptions";
-import { ObjectId } from "mongodb"
-import mongoose, { Model } from "mongoose";
 import JoinGroupDto from "./dtos/joinGroup.dto";
-import { isAdmin, isMember, isSuperAdmin } from "./utils/checkPermission";
 import { UserSchema } from "@modules/users";
-import ITeamWorkspace, { IInvitedMember, IMember, IWorkspaceAdmin } from "./teamWorkspace.interface";
-
+import  { IInvitedMember, IMember, IWorkspaceAdmin } from "./teamWorkspace.interface";
 class TeamWorkspaceService {
   public teamWorkspaceSchema = TeamWorkspaceSchema;
   public async createTeamWorkspace(model: CreateTeamWorkspaceDto): Promise<Object> {
@@ -55,8 +51,8 @@ class TeamWorkspaceService {
       throw new HttpException(409, 'Workspace not found');
     }
 
-    const checkMember = await isMember(workspaceId, invitedUser.id)
-    if(await isAdmin(workspaceId, adminId) === false){
+    const checkMember = await isWorkspaceMember(workspaceId, invitedUser.id)
+    if(await isWorkspaceAdmin(workspaceId, adminId) === false){
       throw new HttpException(409, 'You are not the admin');
     } 
     
@@ -112,10 +108,10 @@ class TeamWorkspaceService {
     if(await isSuperAdmin(workspaceId, adminId) === false){
       throw new HttpException(409, 'You are not permission to assign member to admin');
     }
-    if(await isAdmin(workspaceId, member?.id) === true){
+    if(await isWorkspaceAdmin(workspaceId, member?.id) === true){
       throw new HttpException(409, 'User is already admin');
     }
-    if(await isMember(workspaceId, member?.id) === false){
+    if(await isWorkspaceMember(workspaceId, member?.id) === false){
       throw new HttpException(409, 'User is not member');
     }
     

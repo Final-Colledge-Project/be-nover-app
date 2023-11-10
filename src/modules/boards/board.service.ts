@@ -7,7 +7,7 @@ import { isAdmin, isMember } from '@modules/teamWorkspace/utils';
 import mongoose from 'mongoose';
 
 export default class BoardService {
-  public boardSchema = BoardSchema;
+  private boardSchema = BoardSchema;
   public async createBoard(model: CreateBoardDto, ownerId: string, teamWorkspaceId: string): Promise<IBoard> {
     if(isEmptyObject(model)){
       throw new HttpException(400, "Model is empty");

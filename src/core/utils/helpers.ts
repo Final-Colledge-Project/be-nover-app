@@ -17,7 +17,6 @@ export const checkUserChangePasswordAfter = (
   return false;
 };
 
-
 export const randomTokenString = () : string => {
   return crypto.randomBytes(40).toString('hex');
 }

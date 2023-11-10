@@ -9,10 +9,8 @@ import jwt from "jsonwebtoken";
 import UpdateUserDto from "./dtos/updateUser.dto";
 import ChangePasswordDto from "./dtos/changePasswordDto";
 import { Request, Response } from "express";
-
-
 class UserService {
-  public userSchema = UserSchema;
+  private userSchema = UserSchema;
 
   public async createUser(model: RegisterDto, req: Request): Promise<IUser> {
     if (isEmptyObject(model)) {
