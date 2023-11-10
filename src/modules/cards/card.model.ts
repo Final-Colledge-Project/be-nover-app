@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 import ICard from "./card.interface";
-import { SCHEMA_TYPE } from "@core/utils";
+import { PRIORITY, SCHEMA_TYPE } from "@core/utils";
 
 const CardSchema = new mongoose.Schema({
   boardId: {
@@ -123,9 +123,10 @@ const CardSchema = new mongoose.Schema({
     type: SCHEMA_TYPE,
     ref: 'Label'
   },
-  priorityId: {
-    type: SCHEMA_TYPE,
-    ref: 'Priority'
+  priority: {
+    type: String,
+    enum: [PRIORITY.lowest, PRIORITY.low, PRIORITY.medium, PRIORITY.high, PRIORITY.highest],
+    default: PRIORITY.medium
   },
   isActive: {
     type: Boolean,

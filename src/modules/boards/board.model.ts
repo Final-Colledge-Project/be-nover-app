@@ -42,12 +42,6 @@ const BoardSchema = new mongoose.Schema({
       ref: 'User'
     }
   ],
-  columnIds: [
-    {
-      type: SCHEMA_TYPE,
-      ref: 'Column'
-    }
-  ],
   createdAt: {
     type: Date,
     default: Date.now,

@@ -7,7 +7,6 @@ export default interface IBoard {
   teamWorkspaceId: string;
   ownerIds: string[];
   memberIds: string[];
-  columnIds: string[];
   createdAt: Date;
   updatedAt: Date;
   isActive: boolean;

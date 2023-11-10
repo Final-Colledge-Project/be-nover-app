@@ -10,6 +10,7 @@ import { TeamWorkspaceRoute } from "@modules/teamWorkspace";
 import { BoardRoute } from "@modules/boards";
 import { ColumnRoute } from "@modules/columns";
 import { CardRoute } from "@modules/cards";
+import { LabelRoute } from "@modules/labels";
 validateEnv();
 const routes = [
   new IndexRoute(),
@@ -20,7 +21,8 @@ const routes = [
   new TeamWorkspaceRoute(),
   new BoardRoute(),
   new ColumnRoute(),
-  new CardRoute()
+  new CardRoute(),
+  new LabelRoute()
 ];
 const app = new App(routes);
 app.listen();

@@ -27,7 +27,8 @@ export class Email {
     // }
   
     return nodemailer.createTransport({
-      host: 'sandbox.smtp.mailtrap.io',
+      // service: 'gmail',
+      host: 'smtp-mail.outlook.com',
       auth: {
         user: process.env.AUTH_USERNAME,
         pass: process.env.AUTH_PASSWORD
@@ -69,8 +70,8 @@ export class Email {
 
 
 let transporter = nodemailer.createTransport({
-  // host: 'smtp-mail.outlook.com',
-  host: 'sandbox.smtp.mailtrap.io',
+  host: 'smtp-mail.outlook.com',
+  // service: 'gmail',
   auth: {
     user: process.env.AUTH_USERNAME,
     pass: process.env.AUTH_PASSWORD

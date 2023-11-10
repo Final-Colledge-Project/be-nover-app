@@ -17,7 +17,7 @@ export default interface ICard {
   updatedAt: Date;
   reporterId: string;
   labelId: string;
-  priorityId: string;
+  priority: string;
   isActive: boolean;
 }
 

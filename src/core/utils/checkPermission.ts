@@ -41,7 +41,6 @@ export const isSuperAdmin = async (teamWorkspaceId : string, superAdminId: strin
 
 export const isBoardAdmin = async (boardId : string, adminId: string) => {
   const existBoard = await BoardSchema.findById(boardId).exec();
-
   const isAdmin = existBoard?.ownerIds.find((admin : string) =>{
     return admin.toString() === adminId}
   );
