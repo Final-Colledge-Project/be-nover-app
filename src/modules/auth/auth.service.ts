@@ -72,8 +72,8 @@ class AuthService {
 
     // Saving refreshToken with current user
     user.refreshToken = [...newRefreshTokenArray, newRefreshToken];
-    const result = await user.save();
-    console.log(result);
+    await user.save();
+    
    
 
     // Creates Secure Cookie with refresh token
@@ -176,8 +176,7 @@ class AuthService {
 
     // Saving refreshToken with current user
     newUser.refreshToken = [...newRefreshTokenArray, newRefreshToken];
-    const result = await newUser.save();
-    console.log(result);
+    await newUser.save();
    
     // Creates Secure Cookie with refresh token
     res.cookie('jwt', newRefreshToken, { httpOnly: true, secure: true, sameSite: 'none', maxAge: 24 * 60 * 60 * 1000 });
@@ -202,8 +201,7 @@ class AuthService {
           const hackedUser = await this.userSchema.findById(decoded?.userId).exec();
           if(!hackedUser) throw new HttpException(403, 'hacked user not found');
           hackedUser.refreshToken = [];
-          const result = await hackedUser.save();
-          console.log(result);
+          await hackedUser.save();
       }
       catch(err) {
         throw new HttpException(403, 'Forbidden');
@@ -228,8 +226,7 @@ class AuthService {
       
       // Saving refreshToken with current user
       foundUser.refreshToken = [...newRefreshTokenArray, newRefreshToken];
-      const result = await foundUser.save();
-      console.log(result);
+      await foundUser.save();
       tokenData = {accessToken, refreshToken: newRefreshToken}
     }
     catch(err){
@@ -256,9 +253,7 @@ class AuthService {
 
     // Delete refreshToken in db
     foundUser.refreshToken = foundUser.refreshToken.filter(rt => rt !== refreshToken);;
-    const result = await foundUser.save();
-    console.log(result);
-
+    await foundUser.save();
     res.clearCookie('jwt', { httpOnly: true, sameSite: 'none', secure: true });
     res.status(201).json({message: 'Logout success'});
   }

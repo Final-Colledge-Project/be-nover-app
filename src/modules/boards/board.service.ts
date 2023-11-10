@@ -1,29 +1,26 @@
-import { isEmptyObject } from '@core/utils';
+import { OBJECT_ID, isEmptyObject, isWorkspaceAdmin, isWorkspaceMember } from '@core/utils';
 import IBoard from './board.interface';
 import BoardSchema from './board.model';
 import CreateBoardDto from './dtos/createBoardDto';
 import { HttpException } from '@core/exceptions';
-import { isAdmin, isMember } from '@modules/teamWorkspace/utils';
-import mongoose from 'mongoose';
-
+import mongoose, { Document, Model } from 'mongoose';
 export default class BoardService {
   private boardSchema = BoardSchema;
-  public async createBoard(model: CreateBoardDto, ownerId: string, teamWorkspaceId: string): Promise<IBoard> {
+  public async createBoard(model: CreateBoardDto, ownerId: string): Promise<IBoard> {
     if(isEmptyObject(model)){
       throw new HttpException(400, "Model is empty");
     }
-    const checkAdmin = await isAdmin(teamWorkspaceId, ownerId);
+    const checkAdmin = await isWorkspaceAdmin(model.teamWorkspaceId, ownerId);
     if(!!checkAdmin === false){
       throw new HttpException(409, 'You has not permission to create board');
     }
-    const existedBoard = await this.boardSchema.findOne({title: model.title, teamWorkspaceId: teamWorkspaceId}).exec();
+    const existedBoard = await this.boardSchema.findOne({title: model.title, teamWorkspaceId: model.teamWorkspaceId}).exec();
     if(existedBoard){
       throw new HttpException(409, 'Board already exists');
     }
     const createdBoard = await this.boardSchema.create({
       ...model,
-      ownerIds: [ownerId],
-      teamWorkspaceId: teamWorkspaceId
+      ownerIds: [ownerId]
     })
     if (!createdBoard){
       throw new HttpException(409, 'Board not created');
@@ -36,12 +33,12 @@ export default class BoardService {
       throw new HttpException(409, 'Board not found');
     }
     const workspaceId = board.teamWorkspaceId;
-    const checkMember = await isMember(workspaceId, memberId);
-    const checkAdmin = await isAdmin(workspaceId, userId);
+    const checkMember = await isWorkspaceMember(workspaceId, memberId);
+    const checkAdmin = await isWorkspaceAdmin(workspaceId, userId);
     if (!!checkAdmin === false){
       throw new HttpException(409, 'You has not permission to add member to board');
     }
-    if(!!checkMember === false && !!checkAdmin === false){
+    if(!!checkMember === false){
       throw new HttpException(409, 'Member not found');
     }
     const existedMember = board.memberIds.find((id) => id.toString() === memberId);
@@ -55,5 +52,15 @@ export default class BoardService {
     board.memberIds.unshift(memberId);
     await board.save();
     return board;
+  }
+  public async pushColumnToBoard(columnId: string): Promise<Document<IBoard>> {
+    const board =  await this.boardSchema.findByIdAndUpdate(
+    {_id: new OBJECT_ID(columnId)}, 
+    {$push: {columnOrderIds: new OBJECT_ID(columnId)}},
+    {returnDocument: 'after'}).exec();  
+    if(!board) {
+      throw new HttpException(409, 'Board not found');
+    }
+    return board
   }
 }

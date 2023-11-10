@@ -1,4 +1,4 @@
-export interface IColumn {
+export default interface IColumn {
   _id: string;
   title: string;
   boardId: string;

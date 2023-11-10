@@ -9,9 +9,8 @@ import { EmailVerificationRoute } from "@modules/email_verification";
 import { TeamWorkspaceRoute } from "@modules/teamWorkspace";
 import { BoardRoute } from "@modules/boards";
 import { ColumnRoute } from "@modules/columns";
-
+import { CardRoute } from "@modules/cards";
 validateEnv();
-
 const routes = [
   new IndexRoute(),
   new UsersRoute(), 
@@ -20,9 +19,8 @@ const routes = [
   new EmailVerificationRoute(),
   new TeamWorkspaceRoute(),
   new BoardRoute(),
-  new ColumnRoute()
+  new ColumnRoute(),
+  new CardRoute()
 ];
-
 const app = new App(routes);
-
 app.listen();

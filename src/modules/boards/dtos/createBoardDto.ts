@@ -2,15 +2,16 @@ import { MODE_ACCESS } from "@core/utils";
 import { IsEnum, IsNotEmpty, IsString, MaxLength, MinLength } from "class-validator";
 
 export default class CreateBoardDto {
-  constructor(title: string, description: string, type: string){
+  constructor(title: string, description: string, type: string, teamWorkspaceId: string){
     this.title = title,
     this.description = description,
-    this.type = type
+    this.type = type,
+    this.teamWorkspaceId = teamWorkspaceId
   }
   @IsNotEmpty()
   @IsString()
-  @MinLength(2, {
-    message: 'Title must be at least 2 characters long',
+  @MinLength(3, {
+    message: 'Title must be at least 3 characters long',
   })
   @MaxLength(30, {
     message: 'Title must be at most 30 characters long',
@@ -28,5 +29,9 @@ export default class CreateBoardDto {
   @IsEnum([MODE_ACCESS.public, MODE_ACCESS.private], {
     message: 'Type must be public or private'
   })
+  @IsString()
   public type: string;
+  @IsNotEmpty()
+  @IsString()
+  public teamWorkspaceId: string;
 }

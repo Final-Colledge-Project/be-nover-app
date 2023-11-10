@@ -13,7 +13,7 @@ export default class BoardRoute implements Route {
   }
   private initializeRoute(){
     this.router.post(
-      this.path + '/workspace/:id',
+      this.path,
       validationMiddleware(CreateBoardDto, true), 
       authMiddleware,
       this.boardController.createBoard

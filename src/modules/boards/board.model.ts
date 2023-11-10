@@ -1,11 +1,12 @@
 import mongoose from "mongoose";
 import IBoard from "./board.interface";
+import { SCHEMA_TYPE } from "@core/utils";
 
 const BoardSchema = new mongoose.Schema({
   title : {
     type: String,
     required: [true, "Title is required"],
-    minlength: [2, "Title must be at least 2 characters long"],
+    minlength: [3, "Title must be at least 3 characters long"],
     maxlength: [30, "Title must be at most 30 characters long"],
     trim: true,
   },
@@ -16,28 +17,34 @@ const BoardSchema = new mongoose.Schema({
     maxlength: [100, "Description must be at most 100 characters long"],
     trim: true,
   },
+  columnOrderIds: [
+    {
+      type: SCHEMA_TYPE,
+      ref: 'Column'
+    }
+  ],
   type: {
     type: String,
     enum: ['public', 'private'],
     default: 'public'
   },
   teamWorkspaceId: {
-    type: mongoose.Schema.ObjectId,
+    type: SCHEMA_TYPE,
     ref: 'TeamWorkspace'
   },
   ownerIds: [{
-    type: mongoose.Schema.ObjectId,
+    type: SCHEMA_TYPE,
     ref: 'User'
   }],
   memberIds: [
     {
-      type: mongoose.Schema.ObjectId,
+      type: SCHEMA_TYPE,
       ref: 'User'
     }
   ],
   columnIds: [
     {
-      type: mongoose.Schema.ObjectId,
+      type: SCHEMA_TYPE,
       ref: 'Column'
     }
   ],

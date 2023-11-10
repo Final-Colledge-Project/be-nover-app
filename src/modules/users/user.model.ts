@@ -2,7 +2,6 @@ import  mongoose  from "mongoose"
 import IUser from "./user.interface"
 import validator from 'validator'
 import { Query } from 'mongoose';
-
 const UserSchema = new mongoose.Schema({
   firstName: {
     type: String,

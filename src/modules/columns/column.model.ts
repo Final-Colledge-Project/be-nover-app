@@ -1,5 +1,7 @@
 import mongoose from "mongoose";
-import { IColumn } from "./column.interface";
+import IColumn from "./column.interface";
+import { SCHEMA_TYPE } from "@core/utils";
+
 
 const ColumnSchema = new mongoose.Schema({
   title: {
@@ -10,12 +12,12 @@ const ColumnSchema = new mongoose.Schema({
     trim: true,
   },
   boardId: {
-    type: mongoose.Schema.ObjectId,
+    type: SCHEMA_TYPE,
     ref: 'Board',
   },
   cardOrderIds: [
     {
-      type: mongoose.Schema.ObjectId,
+      type: SCHEMA_TYPE,
       ref: 'Card',
     }
   ],

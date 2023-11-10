@@ -17,7 +17,8 @@ export const checkUserChangePasswordAfter = (
   return false;
 };
 
-export const randomTokenString = () : string => {
-  return crypto.randomBytes(40).toString('hex');
+export const generateCardId = (workSpaceName: string, lengthCard: number) : string => {
+  const formatName = workSpaceName.substring(0, 3).toUpperCase();
+  return `${formatName}-${lengthCard + 1}`;
 }
 

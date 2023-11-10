@@ -1,7 +1,8 @@
 import { IsNotEmpty, IsString, MaxLength, MinLength } from "class-validator";
 export default class CreateColumnDto {
-  constructor(title: string) {
-    this.title = title
+  constructor(title: string, boardId: string) {
+    this.title = title,
+    this.boardId = boardId
   }
   @IsNotEmpty()
   @IsString()
@@ -12,4 +13,7 @@ export default class CreateColumnDto {
     message: 'Title must be at most 30 characters long',
   })
   public title: string;
+  @IsNotEmpty()
+  @IsString()
+  public boardId: string;
 }

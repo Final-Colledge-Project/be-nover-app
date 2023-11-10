@@ -85,7 +85,6 @@ export const jwtVerifyPromisified = (token: string, secret: string) => {
       if (err) {
         reject(err);
       } else {
-        console.log(payload)
         resolve(payload);
       }
     });

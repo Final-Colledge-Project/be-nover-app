@@ -161,8 +161,7 @@ class UserService {
 
     // Saving refreshToken with current user
     user.refreshToken = [...newRefreshTokenArray, newRefreshToken];
-    const result = await user.save();
-    console.log(result);
+    await user.save();
    
     // Creates Secure Cookie with refresh token
     res.cookie('jwt', newRefreshToken, { httpOnly: true, secure: true, sameSite: 'none', maxAge: 24 * 60 * 60 * 1000 });

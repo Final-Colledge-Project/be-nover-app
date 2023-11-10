@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
 import { Query } from "mongoose";
 import ITeamWorkspace from "./teamWorkspace.interface";
+import { SCHEMA_TYPE } from "@core/utils";
 const TeamWorkspaceSchema = new mongoose.Schema({
   name: {
     type: String,
@@ -11,7 +12,7 @@ const TeamWorkspaceSchema = new mongoose.Schema({
   },
   workspaceAdmins: [{
     user: {
-      type: mongoose.Schema.ObjectId,
+      type: SCHEMA_TYPE,
       ref: 'User'
     },
     role: {
@@ -22,7 +23,7 @@ const TeamWorkspaceSchema = new mongoose.Schema({
   }],
   workspaceMembers: [{
     user: {
-      type: mongoose.Schema.ObjectId,
+      type: SCHEMA_TYPE,
       ref: 'User'
     },
     joinDate: {
@@ -37,7 +38,7 @@ const TeamWorkspaceSchema = new mongoose.Schema({
   },
   invitedMembers: [{
     user: {
-        type: mongoose.Schema.ObjectId,
+        type: SCHEMA_TYPE,
         ref: 'User'
     },
     requestDate: {
