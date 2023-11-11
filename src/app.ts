@@ -8,7 +8,8 @@ import cors from "cors";
 import { Logger } from "@core/utils";
 import { errorMiddleWare } from "@core/middleware";
 import cookieParser from "cookie-parser";
-
+import firebase, { initializeApp } from 'firebase/app';
+import config from './core/config/firebaseConfig';
 export default class App {
   public app: express.Application;
   public port: string | number;
@@ -22,6 +23,11 @@ export default class App {
     this.initializeMiddleware();
     this.initialRoutes(routes);
     this.initializeErrorMiddleware();
+    this.initializeFireBase();
+  }
+
+  private initializeFireBase(){
+    initializeApp(config.firebaseConfig);
   }
 
   private initialRoutes(routes: Route[]) {

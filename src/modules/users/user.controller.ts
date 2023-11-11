@@ -2,7 +2,7 @@ import { NextFunction, Request, Response } from "express";
 import RegisterDto from "./dtos/register.dto";
 import UserService from "./user.service";
 import { TokenData } from "@modules/auth";
-import { catchAsync } from "@core/utils";
+import { catchAsync, getImageUrl } from "@core/utils";
 import UpdateUserDto from "./dtos/updateUser.dto";
 import { HttpException } from "@core/exceptions";
 import ChangePasswordDto from "./dtos/changePasswordDto";
@@ -49,5 +49,11 @@ export default class UserController {
   public changePassword = catchAsync( async (req: Request, res: Response, next: NextFunction) => {
     const model : ChangePasswordDto = req.body
     await this.userService.changePassword(req.user.id, model, req, res)
+  })
+  public uploadAvatar = catchAsync( async (req: Request, res: Response, next: NextFunction) => {
+    const userId = req.user.id;
+    const imageUrl = await getImageUrl(req)
+    const user = await this.userService.uploadAvatar(userId, imageUrl)
+    res.status(200).json({data: user, message: "Upload avatar successfully"})
   })
 }

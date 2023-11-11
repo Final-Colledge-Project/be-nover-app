@@ -8,6 +8,7 @@ import catchAsync from "./catchAsync"
 import { signToken } from "./handleToken"
 export * from "./constant"
 export * from "./checkPermission";
+export * from "./getUrl";
 export {
   Logger, 
   validateEnv, 

@@ -1,4 +1,3 @@
-import { DataStoredInToken, TokenData } from "@modules/auth";
 import RegisterDto from "./dtos/register.dto";
 import UserSchema from "./user.model";
 import { Email, Logger, isEmptyObject, signToken } from "@core/utils";
@@ -169,7 +168,13 @@ class UserService {
     // Send authorization roles and access token to user
     res.status(200).json({data: accessToken, message: "Update password successfully"});
   }
-  
+  public async uploadAvatar(userId: string, avatar: string) : Promise<IUser> {
+      const updatedUser = await this.userSchema.findByIdAndUpdate(userId, {avatar: avatar}, {new: true}).exec();
+      if(!updatedUser){
+          throw new HttpException(404, `User is not exits`)
+      }
+      return updatedUser;
+  }
 }
 
 export default UserService;

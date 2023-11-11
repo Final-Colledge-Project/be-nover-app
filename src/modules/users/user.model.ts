@@ -2,6 +2,7 @@ import  mongoose  from "mongoose"
 import IUser from "./user.interface"
 import validator from 'validator'
 import { Query } from 'mongoose';
+import { AVATAR_DEFAULT } from "@core/utils";
 const UserSchema = new mongoose.Schema({
   firstName: {
     type: String,
@@ -48,7 +49,10 @@ const UserSchema = new mongoose.Schema({
     required: [true, 'Address is required'],
     trim: true
   },
-  avatar: String,
+  avatar: {
+    type: String,
+    default: AVATAR_DEFAULT
+  },
   createdAt: {
     type: Date,
     default: Date.now

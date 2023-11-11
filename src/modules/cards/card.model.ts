@@ -76,9 +76,9 @@ const CardSchema = new mongoose.Schema({
       }
     }
   ],
-  tasks:[
+  checkList:[
     {
-      nameTask: {
+      item: {
         type: String,
         minlength: [2, "Name task must be at least 2 characters long"],
         maxlength: [100, "Name task must be at most 100 characters long"],
@@ -86,6 +86,22 @@ const CardSchema = new mongoose.Schema({
       isDone: {
         type: Boolean,
         default: false,
+      },
+      assignedTo: {
+        type: SCHEMA_TYPE,
+        ref: 'User',
+      },
+      createdAt: {
+        type: Date,
+        default: Date.now,
+      },
+      dueDate: {
+        type: Date,
+        default: null,
+      },
+      updatedAt: {
+        type: Date,
+        default: Date.now,
       }
     }
   ],

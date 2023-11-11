@@ -5,8 +5,7 @@ import { authMiddleware, permissionMiddleware, validationMiddleware } from "@cor
 import RegisterDto from "./dtos/register.dto";
 import UpdateUserDto from "./dtos/updateUser.dto";
 import ChangePasswordDto from "./dtos/changePasswordDto";
-
-
+import { uploadSingleImage } from "@core/middleware/uploadImage.middleware";
 export default class UsersRoute implements Route{
   public path = '/api/v1/users'
   public router = Router()
@@ -45,5 +44,9 @@ export default class UsersRoute implements Route{
     this.router.delete(this.path, 
       authMiddleware,
       this.userController.deleteUser)
+    this.router.patch(this.path + '/upload-avatar',
+      authMiddleware,
+      uploadSingleImage('avatar'),
+      this.userController.uploadAvatar)
   }
 }
