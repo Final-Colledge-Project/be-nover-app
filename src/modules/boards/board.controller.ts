@@ -17,4 +17,10 @@ export default class BoardController {
     const board = await this.boardService.addMemberToBoard(userId, boardId, memberId);
     res.status(200).json({ data: board, message: "Add member to board successfully" });
   })
+  public getAllBoardByWorkspaceId = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+    const workspaceId = req.params.id;
+    const userId = req.user.id;
+    const boards = await this.boardService.getAllBoardByWorkspaceId(workspaceId, req, userId);
+    res.status(200).json({ length: boards.length, data: boards, message: "Get all board successfully" });
+  })
 }

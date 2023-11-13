@@ -4,6 +4,8 @@ import BoardSchema from './board.model';
 import CreateBoardDto from './dtos/createBoardDto';
 import { HttpException } from '@core/exceptions';
 import mongoose, { Document, Model } from 'mongoose';
+import { Request } from 'express';
+import APIFeatures from '@core/utils/apiFeature';
 export default class BoardService {
   private boardSchema = BoardSchema;
   public async createBoard(model: CreateBoardDto, ownerId: string): Promise<IBoard> {
@@ -62,5 +64,18 @@ export default class BoardService {
       throw new HttpException(409, 'Board not found');
     }
     return board
+  }
+  public async getAllBoardByWorkspaceId(workspaceId: string, req: Request, userId: string): Promise<IBoard[]> {
+    const checkWorkspaceMember = await isWorkspaceMember(workspaceId, userId);
+    if(!!checkWorkspaceMember === false){
+      throw new HttpException(409, 'You has not permission to get all board on this workspace');
+    }
+    let nameBoard = ''
+    if (!!req.query.search) {
+      nameBoard = req.query.search.toString();
+    }
+    const feature = new APIFeatures(this.boardSchema.find({teamWorkspaceId: workspaceId,  $text: {$search: nameBoard}}), req.query).filter().sort().limit().paginate();
+    const boards = await feature.query;
+    return boards;
   }
 }

@@ -23,5 +23,10 @@ export default class BoardRoute implements Route {
       authMiddleware,
       this.boardController.addMemberToBoard
     )
+    this.router.get(
+      this.path + '/workspace/:id',
+      authMiddleware,
+      this.boardController.getAllBoardByWorkspaceId
+    )
   }
 }

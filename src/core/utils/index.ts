@@ -9,6 +9,7 @@ import { signToken } from "./handleToken"
 export * from "./constant"
 export * from "./checkPermission";
 export * from "./getUrl";
+export * from './apiFeature';
 export {
   Logger, 
   validateEnv, 

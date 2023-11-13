@@ -1,4 +1,4 @@
-import mongoose from "mongoose";
+import mongoose, { Query } from "mongoose";
 import IBoard from "./board.interface";
 import { SCHEMA_TYPE } from "@core/utils";
 
@@ -61,5 +61,15 @@ const BoardSchema = new mongoose.Schema({
     select: false
   }
 })
+BoardSchema.index({ "title": "text"})
+
+BoardSchema.pre(/^find/, async function (next) {
+  if (this instanceof Query) {
+      const label = this;
+      label.find({ isActive: { $ne: false } }).select('-__v');
+  }
+  next();
+});
+
 
 export default mongoose.model<IBoard & mongoose.Document>('Board', BoardSchema);
