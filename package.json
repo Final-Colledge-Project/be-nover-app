@@ -14,6 +14,11 @@
     "prettier": "prettier --check .",
     "prettier:fix": "prettier --write ."
   },
+  "husky": {
+    "hooks": {
+      "pre-commit": "yarn lint"
+    }
+  },
   "dependencies": {
     "@types/cookie-parser": "^1.4.5",
     "@types/lodash": "^4.14.201",
