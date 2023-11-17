@@ -1,27 +1,28 @@
-import mongoose, { Query } from "mongoose";
-import IBoard from "./board.interface";
-import { SCHEMA_TYPE } from "@core/utils";
+import mongoose, { Query } from 'mongoose';
+import {SCHEMA_TYPE} from '@core/utils'
+
+import IBoard from './board.interface'
 
 const BoardSchema = new mongoose.Schema({
-  title : {
+  title: {
     type: String,
-    required: [true, "Title is required"],
-    minlength: [3, "Title must be at least 3 characters long"],
-    maxlength: [30, "Title must be at most 30 characters long"],
+    required: [true, 'Title is required'],
+    minlength: [3, 'Title must be at least 3 characters long'],
+    maxlength: [30, 'Title must be at most 30 characters long'],
     trim: true,
   },
   description: {
     type: String,
-    required: [true, "Description is required"],
-    minlength: [2, "Description must be at least 2 characters long"],
-    maxlength: [100, "Description must be at most 100 characters long"],
+    required: [true, 'Description is required'],
+    minlength: [2, 'Description must be at least 2 characters long'],
+    maxlength: [100, 'Description must be at most 100 characters long'],
     trim: true,
   },
   columnOrderIds: [
     {
       type: SCHEMA_TYPE,
       ref: 'Column'
-    }
+    },
   ],
   type: {
     type: String,
@@ -32,15 +33,17 @@ const BoardSchema = new mongoose.Schema({
     type: SCHEMA_TYPE,
     ref: 'TeamWorkspace'
   },
-  ownerIds: [{
-    type: SCHEMA_TYPE,
-    ref: 'User'
-  }],
+  ownerIds: [
+    {
+      type: SCHEMA_TYPE,
+      ref: 'User'
+    },
+  ],
   memberIds: [
     {
       type: SCHEMA_TYPE,
       ref: 'User'
-    }
+    },
   ],
   createdAt: {
     type: Date,
@@ -55,21 +58,15 @@ const BoardSchema = new mongoose.Schema({
     default: true,
     select: false
   },
-  isDestroyed: {
-    type: Boolean,
-    default: false,
-    select: false
-  }
 })
-BoardSchema.index({ "title": "text"})
+BoardSchema.index({title: 'text'});
 
 BoardSchema.pre(/^find/, async function (next) {
   if (this instanceof Query) {
-      const label = this;
-      label.find({ isActive: { $ne: false } }).select('-__v');
+    const label = this
+    label.find({ isActive: { $ne: false } }).select('-__v')
   }
   next();
 });
-
 
 export default mongoose.model<IBoard & mongoose.Document>('Board', BoardSchema);

@@ -1,31 +1,30 @@
 import nodemailer from 'nodemailer'
-import Logger from './logger'
-import { IUser } from '@modules/users'
-import pug from 'pug'
-import {convert} from 'html-to-text'
+import {IUser} from '@modules/users';
+import pug from 'pug';
+import { convert } from 'html-to-text';
+
+import Logger from './logger';
 
 export class Email {
-  constructor(user : IUser, url : string, subUser?: IUser){
-    this.to = user.email;
-    this.name = user.lastName+ ' ' + user.firstName;
-    this.url = url;
-    this.from = `NoverTask <${process.env.AUTH_USERNAME}>`!;
-    this.subName = subUser?.lastName + ' ' + subUser?.firstName;
-  }
+  private to: string
+  private name: string
+  private url: string
+  private from: string
+  private subName?: string
+  constructor(user : IUser, url : string, subUser?: IUser) {
+  this.to = user.email
+  this.name = `${user.lastName} ${user.firstName}`;
+  this.url = url
+  this.from = `NoverTask <${process.env.AUTH_USERNAME}>`!
+  this.subName = `${subUser?.lastName} ${subUser?.firstName}`;
+}
 
-  private to : string;
-  private name : string;
-  private url : string;
-  private from : string;
-  private subName? : string;
-
-
-  newTransport(){
+  newTransport() {
     // if(process.env.NODE_ENV === 'production'){
     //   //Sendgrid
     //   return 1;
     // }
-  
+
     return nodemailer.createTransport({
       // service: 'gmail',
       // host: 'smtp-mail.outlook.com',
@@ -33,12 +32,12 @@ export class Email {
       auth: {
         user: process.env.AUTH_USERNAME,
         pass: process.env.AUTH_PASSWORD
-      }
+      },
     });
   }
 
-  async send(template : string, subject: string) {
-    //Render HTML based on a pug template
+  async send(template: string, subject: string) {
+    // Render HTML based on a pug template
     const html = pug.renderFile(`${__dirname}/../../views/email/${template}.pug`, {
       name: this.name,
       url: this.url,
@@ -46,58 +45,52 @@ export class Email {
       subUser: this.name,
       subName: this.subName
     })
-    //Define email options
+    // Define email options
     const mailOptions = {
       from: this.from,
       to: this.to,
       subject,
       html,
       text: convert(html)
-    };
+    }
 
-
-    //Create a transport and send mail
+    // Create a transport and send mail
     await this.newTransport().sendMail(mailOptions)
   }
 
-  async sendWelcome(){
+  async sendWelcome() {
     await this.send('Welcome', 'Welcome to the NoverTask!')
   }
 
-  async sendInvitationMember(){
+  async sendInvitationMember() {
     await this.send('confirmJoinTeam', `👋 ${this.subName} invited you to join them in NoverTask`)
   }
 }
 
-
-let transporter = nodemailer.createTransport({
+const transporter = nodemailer.createTransport({
   // host: 'smtp-mail.outlook.com',
   host: 'sandbox.smtp.mailtrap.io',
   auth: {
     user: process.env.AUTH_USERNAME,
-    pass: process.env.AUTH_PASSWORD
+    pass: process.env.AUTH_PASSWORD,
   }
-})
+});
 
-//test transporter
+// test transporter
 transporter.verify((error, success) => {
-  if(error) {
+  if (error) {
     Logger.error(error)
-  }
-  else {
+  } else {
     Logger.info('Ready to send email')
   }
 })
 
-
-const sendEmail = async (mailOptions : object) => {
-  try{
-    await transporter.sendMail(mailOptions)
-    return
+const sendEmail = async (mailOptions: object) => {
+  try {
+    await transporter.sendMail(mailOptions);
+  } catch (err) {
+    throw err;
   }
-  catch(err){
-    throw err
-  }
-}
+};
 
 export default sendEmail

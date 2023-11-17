@@ -1,15 +1,17 @@
-import { Route } from "@core/interfaces";
-import express from "express";
-import mongoose from "mongoose";
-import hpp from "hpp";
-import helmet from "helmet";
-import morgan from "morgan";
-import cors from "cors";
-import { Logger } from "@core/utils";
-import { errorMiddleWare } from "@core/middleware";
-import cookieParser from "cookie-parser";
+import { Route } from '@core/interfaces';
+import express from 'express';
+import mongoose from 'mongoose';
+import hpp from 'hpp';
+import helmet from 'helmet';
+import morgan from 'morgan';
+import cors from 'cors';
+import { Logger } from '@core/utils';
+import { errorMiddleWare } from '@core/middleware';
+import cookieParser from 'cookie-parser';
 import firebase, { initializeApp } from 'firebase/app';
+
 import config from './core/config/firebaseConfig';
+
 export default class App {
   public app: express.Application;
   public port: string | number;
@@ -18,7 +20,7 @@ export default class App {
   constructor(routes: Route[]) {
     this.app = express();
     this.port = process.env.PORT || 5000;
-    this.production = process.env.NODE_ENV == "production" ? true : false;
+    this.production = process.env.NODE_ENV == 'production'
     this.connectToDB();
     this.initializeMiddleware();
     this.initialRoutes(routes);
@@ -26,13 +28,13 @@ export default class App {
     this.initializeFireBase();
   }
 
-  private initializeFireBase(){
+  private initializeFireBase() {
     initializeApp(config.firebaseConfig);
   }
 
   private initialRoutes(routes: Route[]) {
     routes.forEach((route) => {
-      this.app.use("/", route.router);
+      this.app.use('/', route.router);
     });
   }
 
@@ -40,28 +42,27 @@ export default class App {
     if (this.production) {
       this.app.use(hpp());
       this.app.use(helmet());
-      this.app.use(morgan("combined"));
+      this.app.use(morgan('combined'));
       this.app.use(
         cors({
-          origin: "http://localhost:3000",
+          origin: 'http://localhost:3000',
           credentials: true,
         })
-      );
+      )
       this.app.use(cookieParser());
     } else {
-      this.app.use(morgan("dev"));
+      this.app.use(morgan('dev'));
       this.app.use(
         cors({
           origin: true,
           credentials: true,
         })
-      );
+      )
       this.app.use(cookieParser());
     }
 
     this.app.use(express.json());
     this.app.use(express.urlencoded({ extended: true }));
-    
   }
 
   private initializeErrorMiddleware() {
@@ -69,20 +70,17 @@ export default class App {
   }
 
   private connectToDB() {
-    const connectString = process.env.DATABASE?.replace(
-      "<PASSWORD>",
-      process.env.PASSWORD || ""
-    );
+    const connectString = process.env.DATABASE?.replace('<PASSWORD>', process.env.PASSWORD || '');
 
     if (!connectString) {
-      Logger.error("Connection String is invalid");
+      Logger.error('Connection String is invalid');
       return;
     }
 
     mongoose.connect(connectString).catch((reason) => {
       Logger.error(reason);
     });
-    Logger.info("Database connected....");
+    Logger.info('Database connected....');
   }
 
   public listen() {

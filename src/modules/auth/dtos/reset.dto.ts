@@ -1,4 +1,4 @@
-import { IsEmail, IsNotEmpty } from "class-validator";
+import { IsEmail, IsNotEmpty } from 'class-validator';
 
 export default class ResetDto {
   @IsNotEmpty()
@@ -8,10 +8,8 @@ export default class ResetDto {
   public otp: string;
   @IsNotEmpty()
   public newPassword: string;
- 
+
   constructor(email: string, otp: string, newPassword: string, confirmPassword: string) {
-    this.email = email,
-    this.otp = otp,
-    this.newPassword = newPassword
+    (this.email = email), (this.otp = otp), (this.newPassword = newPassword);
   }
 }

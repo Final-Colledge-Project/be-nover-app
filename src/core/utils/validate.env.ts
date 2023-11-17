@@ -1,4 +1,4 @@
-import { cleanEnv, str } from "envalid"
+import { cleanEnv, str } from 'envalid';
 
 const validateEnv = () => {
   cleanEnv(process.env, {
@@ -7,4 +7,4 @@ const validateEnv = () => {
   })
 }
 
-export default validateEnv
+export default validateEnv;

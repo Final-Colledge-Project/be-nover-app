@@ -1,8 +1,9 @@
-import  mongoose  from "mongoose"
-import IUser from "./user.interface"
+import mongoose, { Query } from 'mongoose';
 import validator from 'validator'
-import { Query } from 'mongoose';
-import { AVATAR_DEFAULT } from "@core/utils";
+import {AVATAR_DEFAULT} from '@core/utils'
+
+import IUser from './user.interface'
+
 const UserSchema = new mongoose.Schema({
   firstName: {
     type: String,
@@ -58,7 +59,7 @@ const UserSchema = new mongoose.Schema({
     default: Date.now
   },
   passwordChangedAt: {
-    type: Date, 
+    type: Date,
     default: Date.now,
     select: false
   },
@@ -81,25 +82,23 @@ const UserSchema = new mongoose.Schema({
     type: Boolean,
     default: true,
     select: false
-  }
+  },
 })
 
 UserSchema.pre(/^find/, async function (next) {
   if (this instanceof Query) {
-      const user = this;
-      user.find({ active: { $ne: false } }).select('-__v');
+    const user = this
+    user.find({ active: { $ne: false } }).select('-__v')
   }
   next();
 });
 
-
-UserSchema.pre('save', function(next){
-  if(!this.isModified('password') || this.isNew)
+UserSchema.pre('save', function(next) {
+  if (!this.isModified('password') || this.isNew) {
     return next()
+  }
   this.passwordChangedAt = new Date(Date.now() - 1000)
   next();
 });
 
-
-
-export default mongoose.model<IUser & mongoose.Document>('User', UserSchema)
+export default mongoose.model<IUser & mongoose.Document>('User', UserSchema);

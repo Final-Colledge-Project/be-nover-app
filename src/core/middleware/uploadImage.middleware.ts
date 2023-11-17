@@ -2,8 +2,9 @@ import { HttpException } from '@core/exceptions';
 import { MAX_SIZE_IMAGE } from '@core/utils';
 import { Request } from 'express';
 import multer from 'multer';
+
 const multerStorage = multer.memoryStorage();
-const multerFilter = (req : Request, file : Request['file'], cb: Function) => {
+const multerFilter = (req: Request, file: Request['file'], cb: Function) => {
   if (file?.mimetype.startsWith('image')) {
     cb(null, true);
   } else {

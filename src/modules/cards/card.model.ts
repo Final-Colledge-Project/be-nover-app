@@ -1,6 +1,7 @@
-import mongoose from "mongoose";
-import ICard from "./card.interface";
-import { PRIORITY, SCHEMA_TYPE } from "@core/utils";
+import mongoose from 'mongoose';
+import {PRIORITY, SCHEMA_TYPE} from '@core/utils'
+
+import ICard from './card.interface'
 
 const CardSchema = new mongoose.Schema({
   boardId: {
@@ -17,15 +18,15 @@ const CardSchema = new mongoose.Schema({
   },
   title: {
     type: String,
-    required: [true, "Title is required"],
-    minlength: [2, "Title must be at least 2 characters long"],
-    maxlength: [20, "Title must be at most 20 characters long"],
+    required: [true, 'Title is required'],
+    minlength: [2, 'Title must be at least 2 characters long'],
+    maxlength: [20, 'Title must be at most 20 characters long'],
     trim: true,
   },
   description: {
     type: String,
-    minlength: [2, "Description must be at least 2 characters long"],
-    maxlength: [200, "Description must be at most 200 characters long"],
+    minlength: [2, 'Description must be at least 2 characters long'],
+    maxlength: [200, 'Description must be at most 200 characters long'],
     trim: true,
   },
   cover: {
@@ -44,7 +45,7 @@ const CardSchema = new mongoose.Schema({
     {
       type: SCHEMA_TYPE,
       ref: 'User',
-    }
+    },
   ],
   comments: [
     {
@@ -66,22 +67,22 @@ const CardSchema = new mongoose.Schema({
       },
       content: {
         type: String,
-        minlength: [2, "Content must be at least 2 characters long"],
-        maxlength: [200, "Content must be at most 200 characters long"],
+        minlength: [2, 'Content must be at least 2 characters long'],
+        maxlength: [200, 'Content must be at most 200 characters long'],
         trim: true,
       },
       createdAt: {
         type: Date,
         default: Date.now,
-      }
-    }
+      },
+    },
   ],
-  checkList:[
+  checkList: [
     {
       item: {
         type: String,
-        minlength: [2, "Name task must be at least 2 characters long"],
-        maxlength: [100, "Name task must be at most 100 characters long"],
+        minlength: [2, 'Name task must be at least 2 characters long'],
+        maxlength: [100, 'Name task must be at most 100 characters long'],
       },
       isDone: {
         type: Boolean,
@@ -102,27 +103,29 @@ const CardSchema = new mongoose.Schema({
       updatedAt: {
         type: Date,
         default: Date.now,
-      }
-    }
+      },
+    },
   ],
-  attachments: [{
-    fileName: {
-      type: String,
-      default: null
+  attachments: [
+    {
+      fileName: {
+        type: String,
+        default: null
+      },
+      fileType: {
+        type: String,
+        default: null,
+      },
+      fileUrl: {
+        type: String,
+        default: null,
+      },
+      createAt: {
+        type: Date,
+        default: Date.now,
+      }
     },
-    fileType: {
-      type: String,
-      default: null,
-    },
-    fileUrl: {
-      type: String,
-      default: null,
-    },
-    createAt: {
-      type: Date,
-      default: Date.now,
-    }
-  }],
+  ],
   createdAt: {
     type: Date,
     default: Date.now,
@@ -148,6 +151,6 @@ const CardSchema = new mongoose.Schema({
     type: Boolean,
     default: true,
     select: false,
-  }
+  },
 });
-export default mongoose.model<ICard & mongoose.Document>("Card", CardSchema);
+export default mongoose.model<ICard & mongoose.Document>('Card', CardSchema);
