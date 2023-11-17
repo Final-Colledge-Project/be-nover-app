@@ -1,3 +1,3 @@
-import Route from './route.interface'
+import Route from "./route.interface"
 
 export { Route }

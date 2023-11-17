@@ -3,6 +3,6 @@ export interface DataStoredInToken {
 }
 
 export interface TokenData {
-  accessToken: string
+  accessToken: string,
   refreshToken: string
 }

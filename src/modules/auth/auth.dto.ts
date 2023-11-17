@@ -1,4 +1,4 @@
-import { IsEmail, IsNotEmpty } from 'class-validator';
+import { IsEmail, IsNotEmpty } from "class-validator";
 
 export default class AuthDto {
   @IsNotEmpty()
@@ -11,4 +11,5 @@ export default class AuthDto {
     this.email = email
     this.password = password
   }
+  
 }

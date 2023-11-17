@@ -1,9 +1,8 @@
-import { Router } from 'express'
+import { Router } from "express";
 
 interface Route {
-  path: string
+  path: String,
   router: Router
 }
 
-// eslint-disable-next-line prettier/prettier
-export default Route;
+export default Route

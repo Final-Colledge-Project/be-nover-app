@@ -1,7 +1,6 @@
-import mongoose from 'mongoose'
+import  mongoose  from "mongoose"
 import validator from 'validator'
-
-import IOtp from './otp.interface';
+import IOtp from "./otp.interface"
 
 const OTPSchema = new mongoose.Schema({
   email: {
@@ -23,7 +22,7 @@ const OTPSchema = new mongoose.Schema({
   expireAt: {
     type: Date,
     default: Date.now
-  },
+  }
 })
 
-export default mongoose.model<IOtp & mongoose.Document>('Otp', OTPSchema);
+export default mongoose.model<IOtp & mongoose.Document>('Otp', OTPSchema)
