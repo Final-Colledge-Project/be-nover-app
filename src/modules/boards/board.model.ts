@@ -17,6 +17,10 @@ const BoardSchema = new mongoose.Schema({
     maxlength: [100, "Description must be at most 100 characters long"],
     trim: true,
   },
+  cover: {
+    type: String,
+    default: null,
+  },
   columnOrderIds: [
     {
       type: SCHEMA_TYPE,

@@ -76,7 +76,7 @@ const CardSchema = new mongoose.Schema({
       }
     }
   ],
-  checkList:[
+  subTask:[
     {
       item: {
         type: String,

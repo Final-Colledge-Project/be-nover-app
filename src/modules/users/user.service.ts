@@ -8,6 +8,7 @@ import jwt from "jsonwebtoken";
 import UpdateUserDto from "./dtos/updateUser.dto";
 import ChangePasswordDto from "./dtos/changePasswordDto";
 import { Request, Response } from "express";
+import { StatusCodes } from "http-status-codes";
 class UserService {
   private userSchema = UserSchema;
 
@@ -71,12 +72,11 @@ class UserService {
     }
 
     const checkPhoneExist = await this.userSchema.find({
-      $and:[{phone: {$eq:model.phone}}, {_id: {$ne: userId}}]
+      $and:[{phone: {$eq:model.phone}}, {_id: userId}]
     }).exec()
 
-
     if(checkPhoneExist.length !== 0){
-        throw new HttpException(400, 'Phone is used by another user')
+        throw new HttpException(StatusCodes.BAD_REQUEST, 'Phone is used by another user')
     }
 
     const updateUserById = await this.userSchema.findByIdAndUpdate(userId, {

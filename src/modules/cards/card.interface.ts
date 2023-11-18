@@ -10,7 +10,7 @@ export default interface ICard {
   dueDate: Date;
   memberIds: string[];
   comments: IComment[];
-  checklists: ITask[];
+  subTask: ITask[];
   tasks: ITask[];
   attachments: IAttachment[];
   createdAt: Date;
