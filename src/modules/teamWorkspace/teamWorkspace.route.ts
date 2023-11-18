@@ -19,17 +19,17 @@ export default class TeamWorkspaceRoute implements Route {
       authMiddleware,
       this.teamWorkspaceController.createTeamWorkspace
     )
-    this.router.post(
-      this.path + '/:id/invitation',
-      validationMiddleware(JoinGroupDto, true),
-      authMiddleware,
-      this.teamWorkspaceController.sendInvitationToTeamWorkspace
-    )
-    this.router.get(
-      this.path + '/:id/acceptation',
-      authMiddleware,
-      this.teamWorkspaceController.acceptInvitationToTeamWorkspace
-    )
+    // this.router.post(
+    //   this.path + '/:id/invitation',
+    //   validationMiddleware(JoinGroupDto, true),
+    //   authMiddleware,
+    //   this.teamWorkspaceController.sendInvitationToTeamWorkspace
+    // )
+    // this.router.get(
+    //   this.path + '/:id/acceptation',
+    //   authMiddleware,
+    //   this.teamWorkspaceController.acceptInvitationToTeamWorkspace
+    // )
     this.router.post(
       this.path + '/:id/assign-admin',
       validationMiddleware(JoinGroupDto, true),

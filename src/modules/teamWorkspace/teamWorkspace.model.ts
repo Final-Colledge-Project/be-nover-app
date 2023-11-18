@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 import { Query } from "mongoose";
 import ITeamWorkspace from "./teamWorkspace.interface";
-import { SCHEMA_TYPE } from "@core/utils";
+import { MODEL_NAME, SCHEMA_TYPE } from "@core/utils";
 const TeamWorkspaceSchema = new mongoose.Schema({
   name: {
     type: String,
@@ -13,7 +13,7 @@ const TeamWorkspaceSchema = new mongoose.Schema({
   workspaceAdmins: [{
     user: {
       type: SCHEMA_TYPE,
-      ref: 'User'
+      ref: MODEL_NAME.user
     },
     role: {
       type: String,
@@ -24,7 +24,7 @@ const TeamWorkspaceSchema = new mongoose.Schema({
   workspaceMembers: [{
     user: {
       type: SCHEMA_TYPE,
-      ref: 'User'
+      ref: MODEL_NAME.user
     },
     joinDate: {
       type: Date,
@@ -35,26 +35,7 @@ const TeamWorkspaceSchema = new mongoose.Schema({
   createdAt: {
     type: Date,
     default: Date.now,
-  },
-  invitedMembers: [{
-    user: {
-        type: SCHEMA_TYPE,
-        ref: 'User'
-    },
-    requestDate: {
-      type: Date,
-      default: Date.now
-    },
-    status: {
-      type: String,
-      enum: ['pending', 'accepted'],
-    }
-  }],
-  active: {
-    type: Boolean,
-    default: true,
-    select: false
-  },
+  }
 })
 
 TeamWorkspaceSchema.pre(/^find/, async function (next) {
@@ -65,4 +46,4 @@ TeamWorkspaceSchema.pre(/^find/, async function (next) {
   next();
 });
 
-export default mongoose.model<ITeamWorkspace & mongoose.Document>("TeamWorkspace", TeamWorkspaceSchema);
+export default mongoose.model<ITeamWorkspace & mongoose.Document>(MODEL_NAME.teamWorkspace, TeamWorkspaceSchema);

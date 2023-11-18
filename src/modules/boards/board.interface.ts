@@ -13,3 +13,4 @@ export default interface IBoard {
   isDestroyed: boolean;
 }
 
+

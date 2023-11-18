@@ -136,8 +136,6 @@ class UserService {
       !cookies?.jwt
           ? user.refreshToken
           : user.refreshToken.filter(rt => rt !== cookies.jwt) || [];
-    
-    console.log('User refresh tokens: ', user.refreshToken);
 
     if (cookies?.jwt) {
         /* 
@@ -150,7 +148,6 @@ class UserService {
 
         // Detected refresh token reuse!
         if (!foundToken) {
-            console.log('attempted refresh token reuse at login!')
             // clear out ALL previous refresh tokens
             newRefreshTokenArray = [];
         }

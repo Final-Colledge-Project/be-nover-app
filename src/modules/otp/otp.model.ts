@@ -1,6 +1,7 @@
 import  mongoose  from "mongoose"
 import validator from 'validator'
 import IOtp from "./otp.interface"
+import { MODEL_NAME } from "@core/utils"
 
 const OTPSchema = new mongoose.Schema({
   email: {
@@ -25,4 +26,4 @@ const OTPSchema = new mongoose.Schema({
   }
 })
 
-export default mongoose.model<IOtp & mongoose.Document>('Otp', OTPSchema)
+export default mongoose.model<IOtp & mongoose.Document>(MODEL_NAME.otp, OTPSchema)

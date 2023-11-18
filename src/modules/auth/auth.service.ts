@@ -47,8 +47,6 @@ class AuthService {
       !cookies?.jwt
           ? user.refreshToken
           : user.refreshToken.filter(rt => rt !== cookies.jwt) || [];
-    
-    console.log('User refresh tokens: ', user.refreshToken);
 
     if (cookies?.jwt) {
         /* 
@@ -151,8 +149,6 @@ class AuthService {
       !cookies?.jwt
           ? newUser.refreshToken
           : newUser.refreshToken.filter(rt => rt !== cookies.jwt) || [];
-    
-    console.log('User refresh tokens: ', newUser.refreshToken);
 
     if (cookies?.jwt) {
         /* 

@@ -23,4 +23,10 @@ export default class BoardController {
     const boards = await this.boardService.getAllBoardByWorkspaceId(workspaceId, req, userId);
     res.status(200).json({ length: boards.length, data: boards, message: "Get all board successfully" });
   })
+  public getBoardDetail = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+    const userId = req.user.id
+    const boardId = req.params.id
+    const board = await this.boardService.getBoardDetail(boardId, userId)
+    res.status(200).json({ data: board, message: 'Get board detail successfully' })
+  })
 }

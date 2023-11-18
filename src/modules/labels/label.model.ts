@@ -1,5 +1,6 @@
 import mongoose, { Query } from "mongoose";
 import ILabel from "./label.interface";
+import { MODEL_NAME } from "@core/utils";
 
 const LabelSchema = new mongoose.Schema({
   name: {
@@ -17,7 +18,7 @@ const LabelSchema = new mongoose.Schema({
   },
   boardId: {
     type: mongoose.Schema.ObjectId,
-    ref: 'Board'
+    ref: MODEL_NAME.board
   },
   createdAt: {
     type: Date,
@@ -42,4 +43,4 @@ LabelSchema.pre(/^find/, async function (next) {
   next();
 });
 
-export default mongoose.model<ILabel & mongoose.Document>("Label", LabelSchema);
+export default mongoose.model<ILabel & mongoose.Document>(MODEL_NAME.label, LabelSchema);

@@ -1,3 +1,5 @@
+import ICard from "@modules/cards/card.interface";
+
 export default interface IColumn {
   _id: string;
   title: string;
@@ -6,4 +8,8 @@ export default interface IColumn {
   createdAt: Date;
   updatedAt: Date;
   isActive: boolean;
+}
+
+export interface IResColumn extends IColumn {
+  cards: ICard[]
 }

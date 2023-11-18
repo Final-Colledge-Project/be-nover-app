@@ -1,15 +1,15 @@
 import mongoose from "mongoose";
 import ICard from "./card.interface";
-import { PRIORITY, SCHEMA_TYPE } from "@core/utils";
+import { MODEL_NAME, PRIORITY, SCHEMA_TYPE } from "@core/utils";
 
 const CardSchema = new mongoose.Schema({
   boardId: {
     type: SCHEMA_TYPE,
-    ref: 'Board',
+    ref: MODEL_NAME.board,
   },
   columnId: {
     type: SCHEMA_TYPE,
-    ref: 'Column',
+    ref: MODEL_NAME.column,
   },
   cardId: {
     type: String,
@@ -43,14 +43,14 @@ const CardSchema = new mongoose.Schema({
   memberIds: [
     {
       type: SCHEMA_TYPE,
-      ref: 'User',
+      ref: MODEL_NAME.user,
     }
   ],
   comments: [
     {
       user: {
         type: mongoose.Schema.ObjectId,
-        ref: 'User',
+        ref: MODEL_NAME.user,
       },
       email: {
         type: String,
@@ -89,7 +89,7 @@ const CardSchema = new mongoose.Schema({
       },
       assignedTo: {
         type: SCHEMA_TYPE,
-        ref: 'User',
+        ref: MODEL_NAME.user,
       },
       createdAt: {
         type: Date,
@@ -133,11 +133,11 @@ const CardSchema = new mongoose.Schema({
   },
   reporterId: {
     type: SCHEMA_TYPE,
-    ref: 'User',
+    ref: MODEL_NAME.user,
   },
   labelId: {
     type: SCHEMA_TYPE,
-    ref: 'Label'
+    ref: MODEL_NAME.label,
   },
   priority: {
     type: String,
@@ -150,4 +150,4 @@ const CardSchema = new mongoose.Schema({
     select: false,
   }
 });
-export default mongoose.model<ICard & mongoose.Document>("Card", CardSchema);
+export default mongoose.model<ICard & mongoose.Document>(MODEL_NAME.card, CardSchema);

@@ -15,7 +15,6 @@ export default class APIFeatures{
   public query :  any
   public queryString: QueryString
 
-
   filter(){
     if(!this.queryString.search) {
       const excludedFields = ['page', 'sort', 'limit', 'fields']

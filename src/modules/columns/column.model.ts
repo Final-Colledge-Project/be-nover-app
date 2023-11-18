@@ -1,8 +1,6 @@
 import mongoose from "mongoose";
 import IColumn from "./column.interface";
-import { SCHEMA_TYPE } from "@core/utils";
-
-
+import { MODEL_NAME, SCHEMA_TYPE } from "@core/utils";
 const ColumnSchema = new mongoose.Schema({
   title: {
     type: String,
@@ -13,12 +11,12 @@ const ColumnSchema = new mongoose.Schema({
   },
   boardId: {
     type: SCHEMA_TYPE,
-    ref: 'Board',
+    ref: MODEL_NAME.board,
   },
   cardOrderIds: [
     {
       type: SCHEMA_TYPE,
-      ref: 'Card',
+      ref: MODEL_NAME.card,
     }
   ],
   createdAt: {
@@ -35,4 +33,4 @@ const ColumnSchema = new mongoose.Schema({
     select: false,
   }
 });
-export default mongoose.model<IColumn & mongoose.Document>("Column", ColumnSchema);
+export default mongoose.model<IColumn & mongoose.Document>(MODEL_NAME.column, ColumnSchema);

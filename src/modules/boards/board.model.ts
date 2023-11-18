@@ -1,6 +1,6 @@
 import mongoose, { Query } from "mongoose";
 import IBoard from "./board.interface";
-import { SCHEMA_TYPE } from "@core/utils";
+import { MODEL_NAME, MODE_ACCESS, SCHEMA_TYPE } from "@core/utils";
 
 const BoardSchema = new mongoose.Schema({
   title : {
@@ -20,26 +20,26 @@ const BoardSchema = new mongoose.Schema({
   columnOrderIds: [
     {
       type: SCHEMA_TYPE,
-      ref: 'Column'
+      ref: MODEL_NAME.column
     }
   ],
   type: {
     type: String,
-    enum: ['public', 'private'],
-    default: 'public'
+    enum: [MODE_ACCESS.public, MODE_ACCESS.private],
+    default: MODE_ACCESS.private
   },
   teamWorkspaceId: {
     type: SCHEMA_TYPE,
-    ref: 'TeamWorkspace'
+    ref: MODEL_NAME.teamWorkspace
   },
   ownerIds: [{
     type: SCHEMA_TYPE,
-    ref: 'User'
+    ref: MODEL_NAME.user
   }],
   memberIds: [
     {
       type: SCHEMA_TYPE,
-      ref: 'User'
+      ref: MODEL_NAME.user
     }
   ],
   createdAt: {
@@ -72,4 +72,4 @@ BoardSchema.pre(/^find/, async function (next) {
 });
 
 
-export default mongoose.model<IBoard & mongoose.Document>('Board', BoardSchema);
+export default mongoose.model<IBoard & mongoose.Document>(MODEL_NAME.board, BoardSchema);

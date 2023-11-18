@@ -1,4 +1,4 @@
-import { OBJECT_ID, isEmptyObject, isWorkspaceAdmin, isWorkspaceMember } from '@core/utils';
+import { MODE_ACCESS, OBJECT_ID, isBoardMember, isEmptyObject, isWorkspaceAdmin, isWorkspaceMember } from '@core/utils';
 import IBoard from './board.interface';
 import BoardSchema from './board.model';
 import CreateBoardDto from './dtos/createBoardDto';
@@ -6,6 +6,9 @@ import { HttpException } from '@core/exceptions';
 import mongoose, { Document, Model } from 'mongoose';
 import { Request } from 'express';
 import APIFeatures from '@core/utils/apiFeature';
+import {cloneDeep} from 'lodash';
+import ICard from '@modules/cards/card.interface';
+import { IResColumn } from '@modules/columns';
 export default class BoardService {
   private boardSchema = BoardSchema;
   public async createBoard(model: CreateBoardDto, ownerId: string): Promise<IBoard> {
@@ -77,5 +80,54 @@ export default class BoardService {
     const feature = new APIFeatures(this.boardSchema.find({teamWorkspaceId: workspaceId,  $text: {$search: nameBoard}}), req.query).filter().sort().limit().paginate();
     const boards = await feature.query;
     return boards;
+  }
+
+  public async getBoardDetail(boardId: string, userId: string): Promise<object> {
+    const existBoard = await this.boardSchema.findById(boardId).exec();
+    if (!existBoard) {
+      throw new HttpException(409, 'Board not found');
+    }
+    const checkWorkspaceMember = await isWorkspaceMember(existBoard.teamWorkspaceId, userId);
+    const checkBoardMember = await isBoardMember(boardId, userId);
+    if (Boolean(checkWorkspaceMember) === false) {
+      throw new HttpException(409, 'You has not permission to get board detail');
+    }
+    if (Boolean(checkBoardMember) === false && existBoard.type === MODE_ACCESS.private) {
+      throw new HttpException(409, 'Board is private');
+    }
+
+    const boardDetail = await this.boardSchema
+      .aggregate([
+        {
+          $match: {
+            _id: new OBJECT_ID(boardId),
+            isActive: true
+          },
+        },
+        {
+          $lookup: {
+            from: 'columns',
+            localField: '_id',
+            foreignField: 'boardId',
+            as: 'columns'
+          },
+        },
+        {
+          $lookup: {
+            from: 'cards',
+            localField: '_id',
+            foreignField: 'boardId',
+            as: 'cards'
+          },
+        },
+      ])
+      .exec();
+    // cloneDeep create new one without effecting original one
+    const resBoard = cloneDeep(boardDetail[0] || {});
+    resBoard.columns.forEach((column: IResColumn) => {
+      column.cards = resBoard.cards.filter((card: ICard) => card.columnId.toString() === column._id.toString())
+    })
+    delete resBoard.cards;
+    return resBoard;
   }
 }

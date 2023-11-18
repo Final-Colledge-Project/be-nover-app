@@ -8,7 +8,6 @@ export default class ColumnController {
   public createColumn = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
     const userId = req.user.id;
     const model : CreateColumnDto = req.body;
-    console.log("🚀 ~ file: column.controller.ts:11 ~ ColumnController ~ createColumn=catchAsync ~ model:", model);
     await this.columnService.createColumn(model, userId);
     res.status(201).json({ message: "Create column successfully" });
   })

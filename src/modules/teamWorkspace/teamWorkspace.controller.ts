@@ -16,19 +16,19 @@ export default class TeamWorkspaceController {
     const teamWorkspace = await this.teamWorkspaceService.createTeamWorkspace(model);
     res.status(201).json({ data: teamWorkspace, message: "Create team workspace successfully" });
   })
-  public sendInvitationToTeamWorkspace = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
-    const adminId = req.user.id;
-    const workspaceId = req.params.id;
-    const model : JoinGroupDto = req.body;
-    await this.teamWorkspaceService.sendInvitationToTeamWorkspace(model, adminId, workspaceId);
-    res.status(200).json({message: "Send invitation successfully" });
-  })
-  public acceptInvitationToTeamWorkspace = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
-    const userId = req.user.id;
-    const workspaceId = req.params.id;
-    await this.teamWorkspaceService.acceptInvitationToTeamWorkspace(userId, workspaceId);
-    res.status(200).json({message: "Accept invitation successfully" });
-  })
+  // public sendInvitationToTeamWorkspace = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+  //   const adminId = req.user.id;
+  //   const workspaceId = req.params.id;
+  //   const model : JoinGroupDto = req.body;
+  //   await this.teamWorkspaceService.sendInvitationToTeamWorkspace(model, adminId, workspaceId);
+  //   res.status(200).json({message: "Send invitation successfully" });
+  // })
+  // public acceptInvitationToTeamWorkspace = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+  //   const userId = req.user.id;
+  //   const workspaceId = req.params.id;
+  //   await this.teamWorkspaceService.acceptInvitationToTeamWorkspace(userId, workspaceId);
+  //   res.status(200).json({message: "Accept invitation successfully" });
+  // })
   public assignMemberToAdmin = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
     const adminId = req.user.id;
     const workspaceId = req.params.id;

@@ -4,7 +4,6 @@ export default interface ITeamWorkspace {
   workspaceAdmins: IWorkspaceAdmin[];
   workspaceMembers: IMember[];
   createdAt: Date;
-  invitedMembers: IInvitedMember[];
   active: boolean;
 }
 export interface IWorkspaceAdmin {
@@ -14,9 +13,4 @@ export interface IWorkspaceAdmin {
 export interface IMember {
   user: string;
   joinDate: Date;
-}
-export interface IInvitedMember {
-  user: string;
-  requestDate: Date;
-  status: string;
 }
