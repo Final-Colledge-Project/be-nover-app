@@ -327,10 +327,18 @@ export default class InvitationService {
           $project: {
             _id: 1,
             createdAt: 1,
-            teamWorkspace: 1,
-            senders: 1,
-            receiver: 1,
-            teamWorkspaceMember: 1
+            teamWorkspace: {
+              $arrayElemAt: ['$teamWorkspace', 0]
+            },
+            senders: {
+              $arrayElemAt: ['$senders', 0]
+            },
+            receiver: {
+              $arrayElemAt: ['$receiver', 0]
+            },
+            teamWorkspaceMember: {
+              $arrayElemAt: ['$teamWorkspaceMember', 0]
+            }
           },
         }
       ])
