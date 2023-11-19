@@ -133,7 +133,7 @@ class TeamWorkspaceService {
             },
             {
               $project: {
-                _id: 0,
+                _id: 1,
                 fullName: { $concat: ["$firstName", " ", "$lastName"] },
                 avatar: 1,
                 email: 1
@@ -192,7 +192,7 @@ class TeamWorkspaceService {
             },
             {
               $project: {
-                _id: 0,
+                _id: 1,
                 fullName: { $concat: ["$firstName", " ", "$lastName"] },
                 avatar: 1,
                 email: 1
