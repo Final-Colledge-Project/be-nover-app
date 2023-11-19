@@ -202,10 +202,19 @@ export default class InvitationService {
                   name: { $first: '$name'},
                   workspaceAdmins: {
                     $push: {
-                      user: '$workspaceAdmins.user',
+                      user: {
+                       $arrayElemAt:  ['$workspaceAdmins.user', 0]
+                      },
                       role: '$workspaceAdmins.role',
                     }
                   }
+                }
+              },
+              {
+                $project: {
+                  _id: 0,
+                  name: 1,
+                  workspaceAdmins: 1
                 }
               }
             ]
@@ -259,7 +268,9 @@ export default class InvitationService {
                   _id: '$_id',
                   workspaceMembers: {
                     $push: {
-                      user: '$workspaceMembers.user'
+                      user: {
+                        $arrayElemAt: ['$workspaceMembers.user', 0]
+                      }
                     }
                   }
                 }

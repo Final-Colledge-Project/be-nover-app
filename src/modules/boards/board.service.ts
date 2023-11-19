@@ -1,99 +1,164 @@
-import { MODE_ACCESS, OBJECT_ID, isBoardMember, isEmptyObject, isWorkspaceAdmin, isWorkspaceMember } from '@core/utils';
-import IBoard from './board.interface';
-import BoardSchema from './board.model';
-import CreateBoardDto from './dtos/createBoardDto';
-import { HttpException } from '@core/exceptions';
-import mongoose, { Document, Model } from 'mongoose';
-import { Request } from 'express';
-import APIFeatures from '@core/utils/apiFeature';
-import {cloneDeep} from 'lodash';
-import ICard from '@modules/cards/card.interface';
-import { IResColumn } from '@modules/columns';
+import {
+  MODE_ACCESS,
+  OBJECT_ID,
+  isBoardMember,
+  isEmptyObject,
+  isWorkspaceAdmin,
+  isWorkspaceMember,
+} from "@core/utils";
+import IBoard from "./board.interface";
+import BoardSchema from "./board.model";
+import CreateBoardDto from "./dtos/createBoardDto";
+import { HttpException } from "@core/exceptions";
+import mongoose, { Document, Model } from "mongoose";
+import { Request } from "express";
+import APIFeatures from "@core/utils/apiFeature";
+import { cloneDeep } from "lodash";
+import ICard from "@modules/cards/card.interface";
+import { IResColumn } from "@modules/columns";
 export default class BoardService {
   private boardSchema = BoardSchema;
-  public async createBoard(model: CreateBoardDto, ownerId: string): Promise<IBoard> {
-    if(isEmptyObject(model)){
+  public async createBoard(
+    model: CreateBoardDto,
+    ownerId: string
+  ): Promise<IBoard> {
+    if (isEmptyObject(model)) {
       throw new HttpException(400, "Model is empty");
     }
     const checkAdmin = await isWorkspaceAdmin(model.teamWorkspaceId, ownerId);
-    if(!!checkAdmin === false){
-      throw new HttpException(409, 'You has not permission to create board');
+    if (!!checkAdmin === false) {
+      throw new HttpException(409, "You has not permission to create board");
     }
-    const existedBoard = await this.boardSchema.findOne({title: model.title, teamWorkspaceId: model.teamWorkspaceId}).exec();
-    if(existedBoard){
-      throw new HttpException(409, 'Board already exists');
+    const existedBoard = await this.boardSchema
+      .findOne({ title: model.title, teamWorkspaceId: model.teamWorkspaceId })
+      .exec();
+    if (existedBoard) {
+      throw new HttpException(409, "Board already exists");
     }
     const createdBoard = await this.boardSchema.create({
       ...model,
-      ownerIds: [ownerId]
-    })
-    if (!createdBoard){
-      throw new HttpException(409, 'Board not created');
+      ownerIds: [ownerId],
+    });
+    if (!createdBoard) {
+      throw new HttpException(409, "Board not created");
     }
     return createdBoard;
   }
-  public async addMemberToBoard(userId: string, boardId: string, memberId: string): Promise<IBoard> {
+  public async addMemberToBoard(
+    userId: string,
+    boardId: string,
+    memberId: string
+  ): Promise<IBoard> {
     const board = await this.boardSchema.findById(boardId).exec();
-    if(!board){
-      throw new HttpException(409, 'Board not found');
+    if (!board) {
+      throw new HttpException(409, "Board not found");
     }
     const workspaceId = board.teamWorkspaceId;
     const checkMember = await isWorkspaceMember(workspaceId, memberId);
     const checkAdmin = await isWorkspaceAdmin(workspaceId, userId);
-    if (!!checkAdmin === false){
-      throw new HttpException(409, 'You has not permission to add member to board');
+    if (!!checkAdmin === false) {
+      throw new HttpException(
+        409,
+        "You has not permission to add member to board"
+      );
     }
-    if(!!checkMember === false){
-      throw new HttpException(409, 'Member not found');
+    if (!!checkMember === false) {
+      throw new HttpException(409, "Member not found");
     }
-    const existedMember = board.memberIds.find((id) => id.toString() === memberId);
-    const existedAdmin = board.ownerIds.find((id) => id.toString() === memberId);
-    if(!!existedMember){
-      throw new HttpException(409, 'Member already exists');
+    const existedMember = board.memberIds.find(
+      (id) => id.toString() === memberId
+    );
+    const existedAdmin = board.ownerIds.find(
+      (id) => id.toString() === memberId
+    );
+    if (!!existedMember) {
+      throw new HttpException(409, "Member already exists");
     }
-    if(!!existedAdmin){
-      throw new HttpException(409, 'Member is the admin');
+    if (!!existedAdmin) {
+      throw new HttpException(409, "Member is the admin");
     }
     board.memberIds.unshift(memberId);
     await board.save();
     return board;
   }
   public async pushColumnToBoard(columnId: string): Promise<Document<IBoard>> {
-    const board =  await this.boardSchema.findByIdAndUpdate(
-    {_id: new OBJECT_ID(columnId)}, 
-    {$push: {columnOrderIds: new OBJECT_ID(columnId)}},
-    {returnDocument: 'after'}).exec();  
-    if(!board) {
-      throw new HttpException(409, 'Board not found');
+    const board = await this.boardSchema
+      .findByIdAndUpdate(
+        { _id: new OBJECT_ID(columnId) },
+        { $push: { columnOrderIds: new OBJECT_ID(columnId) } },
+        { returnDocument: "after" }
+      )
+      .exec();
+    if (!board) {
+      throw new HttpException(409, "Board not found");
     }
-    return board
+    return board;
   }
-  public async getAllBoardByWorkspaceId(workspaceId: string, req: Request, userId: string): Promise<IBoard[]> {
+  public async getAllBoardByWorkspaceId(
+    workspaceId: string,
+    req: Request,
+    userId: string
+  ): Promise<IBoard[]> {
     const checkWorkspaceMember = await isWorkspaceMember(workspaceId, userId);
-    if(!!checkWorkspaceMember === false){
-      throw new HttpException(409, 'You has not permission to get all board on this workspace');
+    if (!!checkWorkspaceMember === false) {
+      throw new HttpException(
+        409,
+        "You has not permission to get all board on this workspace"
+      );
     }
-    let nameBoard = ''
+    let nameBoard = "";
     if (!!req.query.search) {
       nameBoard = req.query.search.toString();
     }
-    const feature = new APIFeatures(this.boardSchema.find({teamWorkspaceId: workspaceId,  $text: {$search: nameBoard}}), req.query).filter().sort().limit().paginate();
-    const boards = await feature.query;
+    let boards: IBoard[] = [];
+    if(nameBoard === ""){
+      boards = await this.boardSchema
+      .find({ teamWorkspaceId: workspaceId })
+      .exec();
+      return boards;
+    }
+    else{
+      const feature = new APIFeatures(
+        this.boardSchema.find({
+          teamWorkspaceId: workspaceId,
+          $text: { $search: nameBoard },
+        }),
+        req.query
+      )
+        .filter()
+        .sort()
+        .limit()
+        .paginate();
+      boards = await feature.query;
+    }
+    
     return boards;
   }
 
-  public async getBoardDetail(boardId: string, userId: string): Promise<object> {
+  public async getBoardDetail(
+    boardId: string,
+    userId: string
+  ): Promise<object> {
     const existBoard = await this.boardSchema.findById(boardId).exec();
     if (!existBoard) {
-      throw new HttpException(409, 'Board not found');
+      throw new HttpException(409, "Board not found");
     }
-    const checkWorkspaceMember = await isWorkspaceMember(existBoard.teamWorkspaceId, userId);
+    const checkWorkspaceMember = await isWorkspaceMember(
+      existBoard.teamWorkspaceId,
+      userId
+    );
     const checkBoardMember = await isBoardMember(boardId, userId);
     if (Boolean(checkWorkspaceMember) === false) {
-      throw new HttpException(409, 'You has not permission to get board detail');
+      throw new HttpException(
+        409,
+        "You has not permission to get board detail"
+      );
     }
-    if (Boolean(checkBoardMember) === false && existBoard.type === MODE_ACCESS.private) {
-      throw new HttpException(409, 'Board is private');
+    if (
+      Boolean(checkBoardMember) === false &&
+      existBoard.type === MODE_ACCESS.private
+    ) {
+      throw new HttpException(409, "Board is private");
     }
 
     const boardDetail = await this.boardSchema
@@ -101,23 +166,23 @@ export default class BoardService {
         {
           $match: {
             _id: new OBJECT_ID(boardId),
-            isActive: true
+            isActive: true,
           },
         },
         {
           $lookup: {
-            from: 'columns',
-            localField: '_id',
-            foreignField: 'boardId',
-            as: 'columns'
+            from: "columns",
+            localField: "_id",
+            foreignField: "boardId",
+            as: "columns",
           },
         },
         {
           $lookup: {
-            from: 'cards',
-            localField: '_id',
-            foreignField: 'boardId',
-            as: 'cards'
+            from: "cards",
+            localField: "_id",
+            foreignField: "boardId",
+            as: "cards",
           },
         },
       ])
@@ -125,8 +190,10 @@ export default class BoardService {
     // cloneDeep create new one without effecting original one
     const resBoard = cloneDeep(boardDetail[0] || {});
     resBoard.columns.forEach((column: IResColumn) => {
-      column.cards = resBoard.cards.filter((card: ICard) => card.columnId.toString() === column._id.toString())
-    })
+      column.cards = resBoard.cards.filter(
+        (card: ICard) => card.columnId.toString() === column._id.toString()
+      );
+    });
     delete resBoard.cards;
     return resBoard;
   }

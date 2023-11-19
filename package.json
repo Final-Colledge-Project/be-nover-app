@@ -53,6 +53,7 @@
     "@types/pug": "^2.0.8",
     "@types/validator": "^13.11.1",
     "cross-env": "^7.0.3",
+    "dayjs": "^1.11.10",
     "http-status-codes": "^2.3.0",
     "nodemon": "^3.0.1",
     "ts-node": "^10.9.1",

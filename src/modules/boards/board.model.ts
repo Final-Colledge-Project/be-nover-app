@@ -30,7 +30,7 @@ const BoardSchema = new mongoose.Schema({
   type: {
     type: String,
     enum: [MODE_ACCESS.public, MODE_ACCESS.private],
-    default: MODE_ACCESS.private
+    default: MODE_ACCESS.public
   },
   teamWorkspaceId: {
     type: SCHEMA_TYPE,
@@ -53,6 +53,10 @@ const BoardSchema = new mongoose.Schema({
   updatedAt: {
     type: Date,
     default: Date.now
+  },
+  dueDate: {
+    type: Date,
+    default: null
   },
   isActive: {
     type: Boolean,

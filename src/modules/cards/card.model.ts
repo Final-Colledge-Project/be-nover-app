@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
 import ICard from "./card.interface";
-import { MODEL_NAME, PRIORITY, SCHEMA_TYPE } from "@core/utils";
+import { MODEL_NAME, PRIORITY, SCHEMA_TYPE, SUBTASK_STATUS } from "@core/utils";
+import { Query } from "mongoose";
 
 const CardSchema = new mongoose.Schema({
   boardId: {
@@ -34,7 +35,7 @@ const CardSchema = new mongoose.Schema({
   },
   startDate: {
     type: Date,
-    default: null,
+    default: Date.now,
   },
   dueDate: {
     type: Date,
@@ -78,14 +79,15 @@ const CardSchema = new mongoose.Schema({
   ],
   subTask:[
     {
-      item: {
+      name: {
         type: String,
         minlength: [2, "Name task must be at least 2 characters long"],
         maxlength: [100, "Name task must be at most 100 characters long"],
       },
-      isDone: {
-        type: Boolean,
-        default: false,
+      status: {
+        type: String,
+        enum: [SUBTASK_STATUS.todo, SUBTASK_STATUS.inprogress, SUBTASK_STATUS.completed, SUBTASK_STATUS.cancel],
+        default: SUBTASK_STATUS.todo,
       },
       assignedTo: {
         type: SCHEMA_TYPE,
@@ -144,10 +146,25 @@ const CardSchema = new mongoose.Schema({
     enum: [PRIORITY.lowest, PRIORITY.low, PRIORITY.medium, PRIORITY.high, PRIORITY.highest],
     default: PRIORITY.medium
   },
+  isDone: {
+    type: Boolean,
+    default: false,
+  },
+  isOverdue: {
+    type: Boolean,
+    default: false,
+  },
   isActive: {
     type: Boolean,
     default: true,
     select: false,
   }
+});
+CardSchema.pre(/^find/, async function (next) {
+  if (this instanceof Query) {
+      const label = this;
+      label.find({ isActive: { $ne: false } }).select('-__v');
+  }
+  next();
 });
 export default mongoose.model<ICard & mongoose.Document>(MODEL_NAME.card, CardSchema);

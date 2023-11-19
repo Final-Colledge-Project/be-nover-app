@@ -10,6 +10,7 @@ export * from "./constant"
 export * from "./checkPermission";
 export * from "./getUrl";
 export * from './apiFeature';
+export * from './formatDate';
 export {
   Logger, 
   validateEnv, 

@@ -10,6 +10,7 @@ export default interface IBoard {
   memberIds: string[];
   createdAt: Date;
   updatedAt: Date;
+  dueDate: Date;
   isActive: boolean;
   isDestroyed: boolean;
 }

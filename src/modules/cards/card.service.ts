@@ -1,4 +1,4 @@
-import { OBJECT_ID, isBoardMember, isEmptyObject } from '@core/utils';
+import { OBJECT_ID, isBoardMember, isCardNumber, isEmptyObject } from '@core/utils';
 import CardSchema from './card.model';
 import CreateCardDto from './dtos/createCardDto';
 import { HttpException } from '@core/exceptions';
@@ -6,6 +6,10 @@ import { BoardSchema } from '@modules/boards';
 import { ColumnSchema } from '@modules/columns';
 import ICard from './card.interface';
 import { generateCardId } from '@core/utils/helpers';
+import UpdateCardDto from './dtos/updateCardDto';
+import { StatusCodes } from 'http-status-codes';
+import assignUserDto from './dtos/assignUserDto';
+import { UserSchema } from '@modules/users';
 export default class CardService {
   private cardSchema = CardSchema;
   public async createCard(model: CreateCardDto, userId: string): Promise<void> {
@@ -33,7 +37,7 @@ export default class CardService {
     });
     await ColumnSchema.findByIdAndUpdate(
       {_id: new OBJECT_ID(newCard.columnId)}, 
-      {$push: {cardOrderIds: newCard._id}},
+      {$push: {cardOrderIds: newCard._id}, updateAt: Date.now},
       {new: true}).exec();  
   }
   public async getCardById(cardId: string): Promise<ICard> {
@@ -42,5 +46,55 @@ export default class CardService {
       throw new HttpException(409, 'Card not found');
     }
     return card;
+  }
+  public async updateCard(cardId: string, model: UpdateCardDto, userId: string): Promise<ICard> {
+    if(isEmptyObject(model)){
+      throw new HttpException(StatusCodes.BAD_REQUEST, "Model is empty");
+    }
+    const card = await this.cardSchema.findById(cardId).exec();
+    if(!card) {
+      throw new HttpException(StatusCodes.CONFLICT, 'Card not found');
+    }
+    const checkBoardMember = await isBoardMember(card.boardId, userId);
+    if(!checkBoardMember) {
+      throw new HttpException(StatusCodes.FORBIDDEN, 'You are not member of this board');
+    }
+    const updateCard = await this.cardSchema.findByIdAndUpdate(
+      {_id: cardId},
+      {...model, updatedAt: Date.now()},
+      {new: true}
+    ).exec();
+    if(!updateCard) {
+      throw new HttpException(StatusCodes.CONFLICT, 'Update card failed');
+    }
+    return updateCard;
+  } 
+  public async assignMemberToCard(userId: string, cardId: string, model: assignUserDto) : Promise<void> {
+    if (isEmptyObject(model)) {
+      throw new HttpException(StatusCodes.BAD_REQUEST, "Model is empty");
+    }
+    const user = UserSchema.findOne({email: model.email}).exec();
+    if(!user) {
+      throw new HttpException(StatusCodes.CONFLICT, 'User not found');
+    }
+    const card = await this.cardSchema.findById(cardId).exec();
+    if(!card) {
+      throw new HttpException(StatusCodes.CONFLICT, 'Card not found');
+    }
+    const checkBoardMember = await isBoardMember(card.boardId, userId);
+    if (!checkBoardMember) {
+      throw new HttpException(StatusCodes.FORBIDDEN, 'You are not member of this board');
+    }
+    const checkCardMember = await isCardNumber(cardId, userId);
+    if(checkCardMember) {
+      throw new HttpException(StatusCodes.CONFLICT, 'User is already member of this card');
+    }
+    await this.cardSchema.findByIdAndUpdate({
+      _id: cardId
+    }, {
+      $push: {memberIds: userId}, updatedAt: Date.now()
+    },
+    {new: true}
+    )
   }
 }

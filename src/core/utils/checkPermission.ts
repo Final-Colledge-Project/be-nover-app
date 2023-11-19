@@ -1,4 +1,5 @@
 import { BoardSchema } from "@modules/boards";
+import { CardSchema } from "@modules/cards";
 import { TeamWorkspaceSchema } from "@modules/teamWorkspace";
 import { IMember, IWorkspaceAdmin } from "@modules/teamWorkspace/teamWorkspace.interface";
 
@@ -63,5 +64,17 @@ export const isBoardMember = async (boardId : string, memberId: string) => {
     return false;
   }
 
+  return true;
+}
+
+export const isCardNumber = async (cardId : string, userId: string) => {
+  const card = await CardSchema.findById(cardId).exec();
+  const checkMember =  card?.memberIds.find((member : string ) => {
+    return member.toString() === userId
+  });    
+  
+  if(!!checkMember === false){
+    return false;
+  }
   return true;
 }

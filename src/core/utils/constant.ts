@@ -29,3 +29,9 @@ export const MODEL_NAME = {
   label: 'Label',
   otp: 'Otp',
 }
+export const SUBTASK_STATUS = {
+  todo: 'todo',
+  inprogress: 'inprogress',
+  completed: 'completed',
+  cancel: 'cancel'
+}

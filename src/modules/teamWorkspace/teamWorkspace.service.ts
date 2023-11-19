@@ -1,10 +1,11 @@
-import { Email, isEmptyObject, isSuperAdmin, isWorkspaceAdmin, isWorkspaceMember } from "@core/utils";
+import { Email, getDateNow, isEmptyObject, isSuperAdmin, isWorkspaceAdmin, isWorkspaceMember } from "@core/utils";
 import CreateTeamWorkspaceDto from "./dtos/createTeamWorkspace.dto";
 import TeamWorkspaceSchema from "./teamWorkspace.model";
 import { HttpException } from "@core/exceptions";
 import JoinGroupDto from "./dtos/joinGroup.dto";
 import { UserSchema } from "@modules/users";
 import  { IWorkspaceAdmin } from "./teamWorkspace.interface";
+import dayjs from "dayjs";
 class TeamWorkspaceService {
   public teamWorkspaceSchema = TeamWorkspaceSchema;
   public async createTeamWorkspace(model: CreateTeamWorkspaceDto): Promise<Object> {
@@ -21,60 +22,18 @@ class TeamWorkspaceService {
     }
     const newWorskspace = await this.teamWorkspaceSchema.create({
       name: model.name,
-      workspaceAdmins : [{user: superAdminId, role: 'superAdmin'}],
+      workspaceAdmins : [{user: superAdminId, role: 'superAdmin'}]
     });
     if(!newWorskspace){
       throw new HttpException(409, 'Create team workspace failed');
     }
+    
     return {
       id: newWorskspace.id,
       name: newWorskspace.name,
       workspaceSuperAdmins: superAdminId
     }
   }
-  // public async sendInvitationToTeamWorkspace(model: JoinGroupDto, adminId: string, workspaceId: string): Promise<any> {
-  //   if (isEmptyObject(model)) {
-  //     throw new HttpException(400, "Model is empty");
-  //   } 
-
-  //   const adminUser = await UserSchema.findById(adminId).exec();
-  //   const invitedUser = await UserSchema.findOne({email: model.emailUser}).exec();
-  //   if(!adminUser){
-  //     throw new HttpException(409, 'You are not an user');
-  //   }
-  //   if(!invitedUser){
-  //     throw new HttpException(409, 'User not found');
-  //   }
-  //   const teamWorkspace= await this.teamWorkspaceSchema.findById(workspaceId).exec();
-
-  //   if(!teamWorkspace){
-  //     throw new HttpException(409, 'Workspace not found');
-  //   }
-
-  //   const checkMember = await isWorkspaceMember(workspaceId, invitedUser.id)
-  //   if(await isWorkspaceAdmin(workspaceId, adminId) === false){
-  //     throw new HttpException(409, 'You are not the admin');
-  //   } 
-    
-  //   if( checkMember === true){
-  //     throw new HttpException(409, 'User is already a member');
-  //   }
-  //   const url = ''
-  //   await new Email(invitedUser, url, adminUser).sendInvitationMember();
-
-  //   const existInvitedMember = await teamWorkspace.invitedMembers.find((member) => member.user.toString() === invitedUser.id);
-    
-  //   if(!existInvitedMember){
-  //     teamWorkspace.invitedMembers.unshift({
-  //       user: invitedUser.id, 
-  //       requestDate: new Date(Date.now()),
-  //       status: 'pending'
-  //     } as IInvitedMember);
-  //   }
-
-  //   await teamWorkspace.save();
-  // }
-  
   public async assignMemberToAdmin(model: JoinGroupDto, workspaceId: string, adminId: string): Promise<void> {
     if (isEmptyObject(model)) {
       throw new HttpException(400, "Model is empty");
@@ -100,9 +59,17 @@ class TeamWorkspaceService {
     } as IWorkspaceAdmin)
     await teamWorkspace.save();
   }
-  public async getDetailInvitation(workspaceId: string, userId: string) {
-    
-  } 
+  public async getTeamWorkspaceById(userId: string, workspaceId: string) {
+    const checkMember = await isWorkspaceMember(workspaceId, userId);
+    if(checkMember === false){
+      throw new HttpException(409, 'You are not member of this workspace');
+    }
+    const workspace = await this.teamWorkspaceSchema.findById(workspaceId).exec();
+    if(!workspace){
+      throw new HttpException(409, 'Workspace not found');
+    }
+    return workspace;
+  }
 
 }
 
