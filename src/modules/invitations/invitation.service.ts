@@ -120,19 +120,21 @@ export default class InvitationService {
         }
       )
       .exec();
-    if(status === INVITE_STATUS.accepted) {
-      await this.teamWorkspaceSchema.findOneAndUpdate(
-        {
-          _id: workspaceId,
-        },
-        {
-          $push: {
-            workspaceMembers: {
-              user: userId,
-            },
+    if (status === INVITE_STATUS.accepted) {
+      await this.teamWorkspaceSchema
+        .findOneAndUpdate(
+          {
+            _id: workspaceId,
           },
-        }
-      ).exec();
+          {
+            $push: {
+              workspaceMembers: {
+                user: userId,
+              },
+            },
+          }
+        )
+        .exec();
     }
   }
   public async getInvitationDetail(
@@ -155,183 +157,183 @@ export default class InvitationService {
         },
         {
           $lookup: {
-            from: 'teamworkspaces',
-            let: { workspaceId: '$workspaceId' },
-            localField: 'workspaceId',
-            foreignField: '_id',
-            as: 'teamWorkspace',
+            from: "teamworkspaces",
+            let: { workspaceId: "$workspaceId" },
+            localField: "workspaceId",
+            foreignField: "_id",
+            as: "teamWorkspace",
             pipeline: [
               {
                 $match: {
                   $expr: {
-                    $eq: ['$_id', '$$workspaceId']
-                  }
-                }
+                    $eq: ["$_id", "$$workspaceId"],
+                  },
+                },
               },
               {
-                $unwind: '$workspaceAdmins'
+                $unwind: "$workspaceAdmins",
               },
               {
                 $lookup: {
-                  from: 'users',
-                  let: { workspaceAdmins: '$workspaceAdmins.user' },
-                  localField: 'workspaceAdmins.user',
-                  foreignField: '_id',
+                  from: "users",
+                  let: { workspaceAdmins: "$workspaceAdmins.user" },
+                  localField: "workspaceAdmins.user",
+                  foreignField: "_id",
                   pipeline: [
                     {
                       $match: {
                         $expr: {
-                          $eq: ['$_id', '$$workspaceAdmins']
-                        }
-                      }
+                          $eq: ["$_id", "$$workspaceAdmins"],
+                        },
+                      },
                     },
                     {
                       $project: {
                         _id: 0,
-                        fullName: { $concat: ['$firstName', ' ', '$lastName'] },
+                        fullName: { $concat: ["$firstName", " ", "$lastName"] },
                         avatar: 1,
-                      }
-                    }
+                      },
+                    },
                   ],
-                  as: 'workspaceAdmins.user'
-                }
+                  as: "workspaceAdmins.user",
+                },
               },
               {
                 $group: {
-                  _id: '$_id',
-                  name: { $first: '$name'},
+                  _id: "$_id",
+                  name: { $first: "$name" },
                   workspaceAdmins: {
                     $push: {
                       user: {
-                       $arrayElemAt:  ['$workspaceAdmins.user', 0]
+                        $arrayElemAt: ["$workspaceAdmins.user", 0],
                       },
-                      role: '$workspaceAdmins.role',
-                    }
-                  }
-                }
+                      role: "$workspaceAdmins.role",
+                    },
+                  },
+                },
               },
               {
                 $project: {
                   _id: 0,
                   name: 1,
-                  workspaceAdmins: 1
-                }
-              }
-            ]
+                  workspaceAdmins: 1,
+                },
+              },
+            ],
           },
         },
         {
           $lookup: {
-            from: 'teamworkspaces',
-            let: { workspaceId: '$workspaceId' },
-            localField: 'workspaceId',
-            foreignField: '_id',
-            as: 'teamWorkspaceMember',
+            from: "teamworkspaces",
+            let: { workspaceId: "$workspaceId" },
+            localField: "workspaceId",
+            foreignField: "_id",
+            as: "teamWorkspaceMember",
             pipeline: [
               {
                 $match: {
                   $expr: {
-                    $eq: ['$_id', '$$workspaceId']
-                  }
-                }
+                    $eq: ["$_id", "$$workspaceId"],
+                  },
+                },
               },
               {
-                $unwind: '$workspaceMembers' // unwind the workspaceAdmins array
+                $unwind: "$workspaceMembers", // unwind the workspaceAdmins array
               },
               {
                 $lookup: {
-                  from: 'users',
-                  let: { workspaceMembers: '$workspaceMembers.user' },
-                  localField: 'workspaceMembers.user',
-                  foreignField: '_id',
+                  from: "users",
+                  let: { workspaceMembers: "$workspaceMembers.user" },
+                  localField: "workspaceMembers.user",
+                  foreignField: "_id",
                   pipeline: [
                     {
                       $match: {
                         $expr: {
-                          $eq: ['$_id', '$$workspaceMembers']
-                        }
-                      }
+                          $eq: ["$_id", "$$workspaceMembers"],
+                        },
+                      },
                     },
                     {
                       $project: {
                         _id: 0,
-                        fullName: { $concat: ['$firstName', ' ', '$lastName'] },
+                        fullName: { $concat: ["$firstName", " ", "$lastName"] },
                         avatar: 1,
-                      }
-                    }
+                      },
+                    },
                   ],
-                  as: 'workspaceMembers.user'
-                }
+                  as: "workspaceMembers.user",
+                },
               },
               {
                 $group: {
-                  _id: '$_id',
+                  _id: "$_id",
                   workspaceMembers: {
                     $push: {
                       user: {
-                        $arrayElemAt: ['$workspaceMembers.user', 0]
-                      }
-                    }
-                  }
-                }
+                        $arrayElemAt: ["$workspaceMembers.user", 0],
+                      },
+                    },
+                  },
+                },
               },
               {
                 $project: {
                   _id: 0,
-                  workspaceMembers: 1
-                }
-              }
+                  workspaceMembers: 1,
+                },
+              },
             ],
           },
         },
         {
           $lookup: {
-            from: 'users',
-            let: { senderId: '$senderId' },
-            localField: 'senderId',
-            foreignField: '_id',
+            from: "users",
+            let: { senderId: "$senderId" },
+            localField: "senderId",
+            foreignField: "_id",
             pipeline: [
               {
                 $match: {
                   $expr: {
-                    $eq: ['$_id', '$$senderId']
-                  }
-                }
+                    $eq: ["$_id", "$$senderId"],
+                  },
+                },
               },
               {
                 $project: {
                   _id: 0,
-                  fullName: { $concat: ['$firstName', ' ', '$lastName'] },
-                  avatar: 1
-                }
-              }
+                  fullName: { $concat: ["$firstName", " ", "$lastName"] },
+                  avatar: 1,
+                },
+              },
             ],
-            as: 'senders',
+            as: "senders",
           },
         },
         {
           $lookup: {
-            from: 'users',
-            let: { receiverId: '$receiverId' },
-            localField: 'receiverId',
-            foreignField: '_id',
+            from: "users",
+            let: { receiverId: "$receiverId" },
+            localField: "receiverId",
+            foreignField: "_id",
             pipeline: [
               {
                 $match: {
                   $expr: {
-                    $eq: ['$_id', '$$receiverId']
-                  }
-                }
+                    $eq: ["$_id", "$$receiverId"],
+                  },
+                },
               },
               {
                 $project: {
                   _id: 0,
-                  fullName: { $concat: ['$firstName', ' ', '$lastName'] },
-                  avatar: 1
-                }
-              }
+                  fullName: { $concat: ["$firstName", " ", "$lastName"] },
+                  avatar: 1,
+                },
+              },
             ],
-            as: 'receiver',
+            as: "receiver",
           },
         },
         {
@@ -339,19 +341,19 @@ export default class InvitationService {
             _id: 1,
             createdAt: 1,
             teamWorkspace: {
-              $arrayElemAt: ['$teamWorkspace', 0]
+              $arrayElemAt: ["$teamWorkspace", 0],
             },
             senders: {
-              $arrayElemAt: ['$senders', 0]
+              $arrayElemAt: ["$senders", 0],
             },
             receiver: {
-              $arrayElemAt: ['$receiver', 0]
+              $arrayElemAt: ["$receiver", 0],
             },
             teamWorkspaceMember: {
-              $arrayElemAt: ['$teamWorkspaceMember', 0]
-            }
+              $arrayElemAt: ["$teamWorkspaceMember", 0],
+            },
           },
-        }
+        },
       ])
       .exec();
     return invitationDetail[0];

@@ -30,4 +30,10 @@ export default class TeamWorkspaceController {
     const teamWorkspace = await this.teamWorkspaceService.getTeamWorkspaceById(userId, workspaceId);
     res.status(StatusCodes.OK).json({ data: teamWorkspace, message: "Get team workspace successfully" });
   })
+  public getMemberTeamWorkspace = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+    const userId = req.user.id;
+    const workspaceId = req.params.id;
+    const teamWorkspace = await this.teamWorkspaceService.getMemberTeamWorkspace(userId, workspaceId);
+    res.status(StatusCodes.OK).json({ data: teamWorkspace, message: "Get team workspace detail successfully" });
+  })
 }
