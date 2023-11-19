@@ -136,6 +136,7 @@ class TeamWorkspaceService {
                 _id: 0,
                 fullName: { $concat: ["$firstName", " ", "$lastName"] },
                 avatar: 1,
+                email: 1
               },
             },
           ],
@@ -194,6 +195,7 @@ class TeamWorkspaceService {
                 _id: 0,
                 fullName: { $concat: ["$firstName", " ", "$lastName"] },
                 avatar: 1,
+                email: 1
               },
             },
           ],
@@ -219,8 +221,6 @@ class TeamWorkspaceService {
         },
       },
     ]);
-
-
     return {
       ...workspaceAdmins[0],
       ...workspaceMember[0]

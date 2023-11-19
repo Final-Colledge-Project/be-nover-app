@@ -31,7 +31,7 @@ export default class TeamWorkspaceRoute implements Route {
       this.teamWorkspaceController.getTeamWorkspaceById
     )
     this.router.get(
-      this.path + '/:id/detail',
+      this.path + '/:id/members',
       authMiddleware,
       this.teamWorkspaceController.getMemberTeamWorkspace
     )
