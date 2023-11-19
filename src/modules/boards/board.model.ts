@@ -62,11 +62,6 @@ const BoardSchema = new mongoose.Schema({
     type: Boolean,
     default: true,
     select: false
-  },
-  isDestroyed: {
-    type: Boolean,
-    default: false,
-    select: false
   }
 })
 BoardSchema.index({ "title": "text"})

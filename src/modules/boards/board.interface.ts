@@ -12,7 +12,6 @@ export default interface IBoard {
   updatedAt: Date;
   dueDate: Date;
   isActive: boolean;
-  isDestroyed: boolean;
 }
 
 

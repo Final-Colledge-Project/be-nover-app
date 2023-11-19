@@ -214,6 +214,7 @@ export default class BoardService {
           _id: '$teamWorkspaceId',
           board: {
             $push: {
+              _id: '$_id',
               title: '$title',
               cover: '$cover',
               type:  '$type' ,
