@@ -197,4 +197,62 @@ export default class BoardService {
     delete resBoard.cards;
     return resBoard;
   }
+  public async getAllUserBoard(userId: string): Promise<IBoard[]> {
+    const boards = await this.boardSchema
+      .find({ $or: [{ ownerIds: userId }, { memberIds: userId }] })
+      .exec();
+
+    const userBoards = await this.boardSchema.aggregate([
+      {
+        $match: {
+          $or: [{ ownerIds: new OBJECT_ID(userId) }, {memberIds: new OBJECT_ID(userId)}],
+          isActive: true
+        },
+      },
+      {
+        $group: {
+          _id: '$teamWorkspaceId',
+          board: {
+            $push: {
+              title: '$title',
+              cover: '$cover',
+              type:  '$type' ,
+              teamWorkspaceId: '$teamWorkspaceId',
+              ownerIds: '$ownerIds',
+              memberIds: '$memberIds',
+              createdAt: '$createdAt',
+              dueDate: '$dueDate'
+            }
+          }
+        }
+      },
+      {
+        $lookup: {
+          from: 'teamworkspaces',
+          localField: '_id',
+          foreignField: '_id',
+          as: 'teamWorkspace'
+        }
+      },
+      {
+        $project: {
+          _id: 0,
+          teamWorkspace: {
+            $arrayElemAt: ['$teamWorkspace', 0]
+          },
+          board: 1
+        }
+      },
+      {
+        $project: {
+          _id: '$teamWorkspace._id',
+          name: '$teamWorkspace.name',
+          board: 1
+        }
+      }
+    ])
+    return userBoards;
+
+
+  }
 }

@@ -33,5 +33,10 @@ export default class BoardRoute implements Route {
       authMiddleware,
       this.boardController.getBoardDetail
     );
+    this.router.get(
+      this.path,
+      authMiddleware,
+      this.boardController.getAllUserBoard
+    )
   }
 }
