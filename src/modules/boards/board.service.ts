@@ -111,13 +111,12 @@ export default class BoardService {
       nameBoard = req.query.search.toString();
     }
     let boards: IBoard[] = [];
-    if(nameBoard === ""){
+    if (nameBoard === "") {
       boards = await this.boardSchema
-      .find({ teamWorkspaceId: workspaceId })
-      .exec();
+        .find({ teamWorkspaceId: workspaceId })
+        .exec();
       return boards;
-    }
-    else{
+    } else {
       const feature = new APIFeatures(
         this.boardSchema.find({
           teamWorkspaceId: workspaceId,
@@ -131,7 +130,7 @@ export default class BoardService {
         .paginate();
       boards = await feature.query;
     }
-    
+
     return boards;
   }
 
@@ -183,6 +182,106 @@ export default class BoardService {
             localField: "_id",
             foreignField: "boardId",
             as: "cards",
+            pipeline: [
+              {
+                $match: {
+                  isActive: true,
+                },
+              },
+              {
+                $lookup: {
+                  from: "labels",
+                  localField: "labelId",
+                  let: { labelId: "$labelId" },
+                  foreignField: "_id",
+                  as: "label",
+                  pipeline: [
+                    {
+                      $match: {
+                        $expr: {
+                          $eq: ["$_id", "$$labelId"],
+                        },
+                      },
+                    },
+                    {
+                      $project: {
+                        _id: 1,
+                        name: 1,
+                        color: 1,
+                      },
+                    },
+                  ],
+                },
+              },
+              {
+                $unwind: "$memberIds",
+              },
+              {
+                $lookup: {
+                  from: "users",
+                  let: { memberIds: "$memberIds" },
+                  localField: "memberIds",
+                  foreignField: "_id",
+                  as: "members",
+                  pipeline: [
+                    {
+                      $match: {
+                        $expr: {
+                          $eq: ["$_id", "$$memberIds"],
+                        },
+                      },
+                    },
+                    {
+                      $project: {
+                        _id: 1,
+                        fullName: { $concat: ["$firstName", " ", "$lastName"] },
+                        avatar: 1,
+                      },
+                    },
+                  ],
+                },
+              },
+              {
+                $group: {
+                  _id: "$_id",
+                  boardId: { $first: "$boardId" },
+                  cardId: { $first: "$_id" },
+                  columnId: { $first: "$columnId" },
+                  title: { $first: "$title" },
+                  cover: { $first: "$cover" },
+                  startDate: { $first: "$startDate" },
+                  dueDate: { $first: "$dueDate" },
+                  label: { $first: "$label" },
+                  priority: { $first: "$priority" },
+                  isDone: { $first: "$isDone" },
+                  isOverdue: { $first: "$isOverdue" },
+                  memberIds: {
+                    $push: {
+                      $arrayElemAt: ["$members", 0],
+                    },
+                  },
+                },
+              }
+            ],
+        
+          },
+        },
+        {
+          $project: {
+            _id: 1,
+            title: 1,
+            description: 1,
+            cover: 1,
+            columnOrderIds: 1,
+            type: 1,
+            teamWorkspaceId: 1,
+            cardId: 1,
+            ownerIds: 1,
+            memberIds: 1,
+            createdAt: 1,
+            dueDate: 1,
+            columns: '$columns',
+            cards: '$cards'
           },
         },
       ])
@@ -195,7 +294,7 @@ export default class BoardService {
       );
     });
     delete resBoard.cards;
-    return resBoard[0];
+    return resBoard;
   }
   public async getAllUserBoard(userId: string): Promise<IBoard[]> {
     const boards = await this.boardSchema
@@ -205,53 +304,56 @@ export default class BoardService {
     const userBoards = await this.boardSchema.aggregate([
       {
         $match: {
-          $or: [{ ownerIds: new OBJECT_ID(userId) }, {memberIds: new OBJECT_ID(userId)}],
-          isActive: true
+          $or: [
+            { ownerIds: new OBJECT_ID(userId) },
+            { memberIds: new OBJECT_ID(userId) },
+          ],
+          isActive: true,
         },
       },
       {
         $group: {
-          _id: '$teamWorkspaceId',
+          _id: "$teamWorkspaceId",
           board: {
             $push: {
-              _id: '$_id',
-              title: '$title',
-              cover: '$cover',
-              type:  '$type' ,
-              teamWorkspaceId: '$teamWorkspaceId',
-              ownerIds: '$ownerIds',
-              memberIds: '$memberIds',
-              createdAt: '$createdAt',
-              dueDate: '$dueDate'
-            }
-          }
-        }
+              _id: "$_id",
+              title: "$title",
+              cover: "$cover",
+              type: "$type",
+              teamWorkspaceId: "$teamWorkspaceId",
+              ownerIds: "$ownerIds",
+              memberIds: "$memberIds",
+              createdAt: "$createdAt",
+              dueDate: "$dueDate",
+            },
+          },
+        },
       },
       {
         $lookup: {
-          from: 'teamworkspaces',
-          localField: '_id',
-          foreignField: '_id',
-          as: 'teamWorkspace'
-        }
+          from: "teamworkspaces",
+          localField: "_id",
+          foreignField: "_id",
+          as: "teamWorkspace",
+        },
       },
       {
         $project: {
           _id: 0,
           teamWorkspace: {
-            $arrayElemAt: ['$teamWorkspace', 0]
+            $arrayElemAt: ["$teamWorkspace", 0],
           },
-          board: 1
-        }
+          board: 1,
+        },
       },
       {
         $project: {
-          _id: '$teamWorkspace._id',
-          name: '$teamWorkspace.name',
-          board: 1
-        }
-      }
-    ])
+          _id: "$teamWorkspace._id",
+          name: "$teamWorkspace.name",
+          board: 1,
+        },
+      },
+    ]);
     return userBoards;
   }
 }

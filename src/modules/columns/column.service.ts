@@ -3,6 +3,7 @@ import ColumnSchema from './column.model';
 import CreateColumnDto from './dtos/createColumnDto';
 import { HttpException } from '@core/exceptions';
 import { BoardSchema } from '@modules/boards';
+import IColumn from './column.interface';
 
 export default class ColumnService {
   private columnSchema = ColumnSchema;
@@ -33,5 +34,12 @@ export default class ColumnService {
       {_id: new OBJECT_ID(newColumn.boardId)}, 
       {$push: {columnOrderIds: newColumn._id}},
       {new: true}).exec();  
+  }
+  public async getColumnById(columnId: string): Promise<IColumn> {
+    const column = await this.columnSchema.findById(columnId).exec();
+    if(!column){
+      throw new HttpException(409, 'Column not found');
+    }
+    return column;
   }
 }
