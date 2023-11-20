@@ -195,7 +195,7 @@ export default class BoardService {
       );
     });
     delete resBoard.cards;
-    return resBoard;
+    return resBoard[0];
   }
   public async getAllUserBoard(userId: string): Promise<IBoard[]> {
     const boards = await this.boardSchema
@@ -253,7 +253,5 @@ export default class BoardService {
       }
     ])
     return userBoards;
-
-
   }
 }

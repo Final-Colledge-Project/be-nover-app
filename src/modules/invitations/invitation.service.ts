@@ -189,7 +189,7 @@ export default class InvitationService {
                     },
                     {
                       $project: {
-                        _id: 0,
+                        _id: 1,
                         fullName: { $concat: ["$firstName", " ", "$lastName"] },
                         avatar: 1,
                       },
@@ -214,7 +214,7 @@ export default class InvitationService {
               },
               {
                 $project: {
-                  _id: 0,
+                  _id: 1,
                   name: 1,
                   workspaceAdmins: 1,
                 },
@@ -256,7 +256,7 @@ export default class InvitationService {
                     },
                     {
                       $project: {
-                        _id: 0,
+                        _id: 1,
                         fullName: { $concat: ["$firstName", " ", "$lastName"] },
                         avatar: 1,
                       },
@@ -302,7 +302,7 @@ export default class InvitationService {
               },
               {
                 $project: {
-                  _id: 0,
+                  _id: 1,
                   fullName: { $concat: ["$firstName", " ", "$lastName"] },
                   avatar: 1,
                 },
@@ -327,7 +327,7 @@ export default class InvitationService {
               },
               {
                 $project: {
-                  _id: 0,
+                  _id: 1,
                   fullName: { $concat: ["$firstName", " ", "$lastName"] },
                   avatar: 1,
                 },

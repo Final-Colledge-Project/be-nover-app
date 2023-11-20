@@ -4,7 +4,6 @@ export default class CreateCardDto {
     columnId: string,
     title: string,
     description: string,
-    cover: string,
     startDate: Date,
     dueDate: Date,
     labelId: string,
@@ -13,7 +12,6 @@ export default class CreateCardDto {
     this.columnId = columnId;
     this.title = title;
     this.description = description;
-    this.cover = cover;
     this.startDate = startDate;
     this.dueDate = dueDate;
     this.labelId = labelId;
@@ -40,8 +38,6 @@ export default class CreateCardDto {
     message: 'Description must be at most 200 characters long',
   })
   public description;
-  @IsString()
-  public cover: string;
   public startDate: Date;
   public dueDate: Date;
   @IsString()
