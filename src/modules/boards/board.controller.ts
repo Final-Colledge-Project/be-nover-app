@@ -34,4 +34,10 @@ export default class BoardController {
     const boards = await this.boardService.getAllUserBoard(userId)
     res.status(200).json({ length: boards.length, data: boards, message: 'Get all user board successfully' })
   })
+  public getMemberByBoardId = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+    const boardId = req.params.id
+    const userId = req.user.id
+    const members = await this.boardService.getMemberByBoardId(boardId, userId)
+    res.status(200).json({ data: members, message: 'Get all member by board id successfully' })
+  })
 }

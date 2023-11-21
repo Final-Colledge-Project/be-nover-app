@@ -261,9 +261,8 @@ export default class BoardService {
                     },
                   },
                 },
-              }
+              },
             ],
-        
           },
         },
         {
@@ -280,8 +279,8 @@ export default class BoardService {
             memberIds: 1,
             createdAt: 1,
             dueDate: 1,
-            columns: '$columns',
-            cards: '$cards'
+            columns: "$columns",
+            cards: "$cards",
           },
         },
       ])
@@ -355,5 +354,40 @@ export default class BoardService {
       },
     ]);
     return userBoards;
+  }
+  public async getMemberByBoardId(
+    boardId: string,
+    userId: string
+  ): Promise<Object> {
+    const checkBoardMember = await isBoardMember(boardId, userId);
+    if (!!checkBoardMember === false) {
+      throw new HttpException(
+        409,
+        "You has not permission to get member of this board"
+      );
+    }
+    const members = await this.boardSchema
+      .findById(boardId)
+      .select("memberIds")
+      .populate({
+        path: "memberIds",
+        select: "firstName lastName avatar email",
+      })
+      .exec();
+
+    const oweners = await this.boardSchema
+      .findById(boardId)
+      .select("ownerIds")
+      .populate({
+        path: "ownerIds",
+        select: "firstName lastName avatar email",
+      })
+      .exec();
+
+    return {
+      boardId: boardId,
+      oweners: oweners?.ownerIds,
+      members: members?.memberIds,
+    };
   }
 }

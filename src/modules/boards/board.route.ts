@@ -29,7 +29,7 @@ export default class BoardRoute implements Route {
       this.boardController.getAllBoardByWorkspaceId
     );
     this.router.get(
-      `${this.path}/:id`,
+      this.path + "/:id",
       authMiddleware,
       this.boardController.getBoardDetail
     );
@@ -37,6 +37,11 @@ export default class BoardRoute implements Route {
       this.path,
       authMiddleware,
       this.boardController.getAllUserBoard
+    );
+    this.router.get(
+      this.path + "/:id/members",
+      authMiddleware,
+      this.boardController.getMemberByBoardId
     )
   }
 }
