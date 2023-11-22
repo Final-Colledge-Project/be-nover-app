@@ -87,7 +87,7 @@ const UserSchema = new mongoose.Schema({
 UserSchema.pre(/^find/, async function (next) {
   if (this instanceof Query) {
       const user = this;
-      user.find({ active: { $ne: false } }).select('-__v');
+      user.find({ active: { $ne: false }, verify: {$ne: false} }).select('-__v');
   }
   next();
 });

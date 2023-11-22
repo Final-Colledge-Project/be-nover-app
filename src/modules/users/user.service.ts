@@ -172,6 +172,17 @@ class UserService {
       }
       return updatedUser;
   }
+  public async getBulkUsers() : Promise<IUser[]> {
+    const users = await this.userSchema.find()
+    .select({
+        firstName: 1,
+        lastName: 1,
+        avatar: 1,
+        email: 1
+    })
+    .exec();
+    return users
+  }
 }
 
 export default UserService;

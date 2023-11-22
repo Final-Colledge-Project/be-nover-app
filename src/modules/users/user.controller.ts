@@ -56,4 +56,8 @@ export default class UserController {
     const user = await this.userService.uploadAvatar(userId, imageUrl)
     res.status(200).json({data: user, message: "Upload avatar successfully"})
   })
+  public getBulkUsers = catchAsync( async (req: Request, res: Response, next: NextFunction) => {
+    const users = await this.userService.getBulkUsers()
+    res.status(200).json({data: users, message: "Get bulk users successfully"})
+  })
 }
