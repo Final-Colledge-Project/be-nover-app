@@ -114,10 +114,17 @@ export default class BoardService {
     }
     let boards: IBoard[] = [];
     if (nameBoard === "") {
-      boards = await this.boardSchema
-        .find({ teamWorkspaceId: workspaceId })
-        .exec();
-      return boards;
+      const feature = new APIFeatures(
+        this.boardSchema.find({
+          teamWorkspaceId: workspaceId
+        }),
+        req.query
+      )
+        .filter()
+        .sort()
+        .limit()
+        .paginate();
+      boards = await feature.query;
     } else {
       const feature = new APIFeatures(
         this.boardSchema.find({
