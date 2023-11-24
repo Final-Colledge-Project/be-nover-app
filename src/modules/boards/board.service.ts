@@ -16,8 +16,10 @@ import APIFeatures from "@core/utils/apiFeature";
 import { cloneDeep } from "lodash";
 import ICard from "@modules/cards/card.interface";
 import { IResColumn } from "@modules/columns";
+import { TeamWorkspaceSchema } from "@modules/teamWorkspace";
 export default class BoardService {
   private boardSchema = BoardSchema;
+  private workspaceSchema = TeamWorkspaceSchema;
   public async createBoard(
     model: CreateBoardDto,
     ownerId: string
@@ -295,10 +297,60 @@ export default class BoardService {
     delete resBoard.cards;
     return resBoard;
   }
-  public async getAllUserBoard(userId: string): Promise<IBoard[]> {
-    const boards = await this.boardSchema
-      .find({ $or: [{ ownerIds: userId }, { memberIds: userId }] })
-      .exec();
+  public async getAllUserBoard(userId: string): Promise<object> {
+    const workspaces = await this.workspaceSchema.find({
+      $or: [
+        { ownerIds: new OBJECT_ID(userId) },
+        { memberIds: new OBJECT_ID(userId) },
+      ],
+      isActive: true,
+    });
+
+    if (!workspaces) {
+      throw new HttpException(409, "Workspace not found");
+    }
+
+    const workspaceWithNoBoard = await this.workspaceSchema.aggregate([
+      {
+        $lookup: {
+          from: "boards",
+          localField: "_id",
+          foreignField: "teamWorkspaceId",
+          as: "boards",
+        },
+      },
+      {
+        $match: {
+          $or: [
+           { workspaceAdmins: {
+              $elemMatch: {
+                user: new OBJECT_ID(userId),
+              },
+            }},
+           { 
+            workspaceMembers: {
+              $elemMatch: {
+                user: new OBJECT_ID(userId),
+              },
+            }}
+          ],
+          isActive: true,
+          boards: {$eq: []}
+         }
+          // $or: [
+          //   { workspaceAdmins: new OBJECT_ID(userId) },
+          //   { workspaceMembers: new OBJECT_ID(userId) },
+          // ],
+          // isActive: true,
+          // reference: {},
+        },
+        {
+          $project: {
+            _id: 1,
+            name: 1,
+          }
+        }
+    ]);
 
     const userBoards = await this.boardSchema.aggregate([
       {
@@ -353,7 +405,10 @@ export default class BoardService {
         },
       },
     ]);
-    return userBoards;
+    return {
+      workspaceHasBoards: userBoards,
+      workspaceWithNoBoard: workspaceWithNoBoard
+    };
   }
   public async getMemberByBoardId(
     boardId: string,
