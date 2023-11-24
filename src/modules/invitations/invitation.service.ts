@@ -38,11 +38,9 @@ export default class InvitationService {
     const teamWorkspace = await this.teamWorkspaceSchema
       .findById(workspaceId)
       .exec();
-
     if (!teamWorkspace) {
       throw new HttpException(StatusCodes.CONFLICT, "Workspace not found");
     }
-
     const checkMember = await isWorkspaceMember(workspaceId, invitedUser.id);
     if ((await isWorkspaceAdmin(workspaceId, adminId)) === false) {
       throw new HttpException(StatusCodes.CONFLICT, "You are not the admin");
@@ -78,14 +76,14 @@ export default class InvitationService {
         receiverId: new OBJECT_ID(invitedUser.id),
         status: INVITE_STATUS.pending,
       });
-      const url = "";
-      await new Email(
-        invitedUser,
-        url,
-        adminUser,
-        invitation
-      ).sendInvitationMember();
     }
+    const url = `http://localhost:5173/u/invitation/${invitation._id}`;
+    await new Email(
+      invitedUser,
+      url,
+      adminUser,
+      invitation
+    ).sendInvitationMember();
   }
   public async responseInvitation(
     userId: string,
