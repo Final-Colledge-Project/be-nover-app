@@ -12,9 +12,9 @@ export default class CardController {
     const newCard = await this.cardService.createCard(model, userId);
     res.status(StatusCodes.CREATED).json({data: newCard, message: "Create card successfully" });
   })
-  public getCardById = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+  public getDetailCardById = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
     const cardId = req.params.id;
-    const card = await this.cardService.getCardById(cardId);
+    const card = await this.cardService.getDetailCardById(cardId);
     res.status(StatusCodes.OK).json({ data: card, message: "Get card successfully" });
   })
   public updateCard = catchAsync(async (req: Request, res: Response, next: NextFunction) => {

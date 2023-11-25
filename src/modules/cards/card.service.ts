@@ -17,7 +17,10 @@ import assignUserDto from "./dtos/assignUserDto";
 import { UserSchema } from "@modules/users";
 export default class CardService {
   private cardSchema = CardSchema;
-  public async createCard(model: CreateCardDto, userId: string): Promise<ICard> {
+  public async createCard(
+    model: CreateCardDto,
+    userId: string
+  ): Promise<ICard> {
     if (isEmptyObject(model)) {
       throw new HttpException(400, "Model is empty");
     }
@@ -49,12 +52,95 @@ export default class CardService {
     ).exec();
     return newCard;
   }
-  public async getCardById(cardId: string): Promise<ICard> {
-    const card = await this.cardSchema.findById(cardId).exec();
+  public async getDetailCardById(cardId: string): Promise<object> {
+    const card = await this.cardSchema
+      .aggregate([
+        {
+          $match: {
+            _id: new OBJECT_ID(cardId),
+          },
+        },
+        {
+          $lookup: {
+            from: "users",
+            let: { reporterId: "$reporterId" },
+            localField: "reporterId",
+            foreignField: "_id",
+            as: "reporter",
+            pipeline: [
+              {
+                $match: {
+                  $expr: {
+                    $eq: ["$_id", "$$reporterId"],
+                  },
+                },
+              },
+              {
+                $project: {
+                  _id: 1,
+                  fullName: { $concat: ["$firstName", " ", "$lastName"] },
+                  avatar: 1,
+                },
+              },
+            ],
+          },
+        },
+        {
+          $lookup: {
+            from: "labels",
+            localField: "labelId",
+            let: { labelId: "$labelId" },
+            foreignField: "_id",
+            as: "label",
+            pipeline: [
+              {
+                $match: {
+                  $expr: {
+                    $eq: ["$_id", "$$labelId"],
+                  },
+                },
+              },
+              {
+                $project: {
+                  _id: 1,
+                  name: 1,
+                  color: 1,
+                },
+              },
+            ],
+          },
+        },
+        {
+          $project: {
+            _id: 1,
+            boardId: 1,
+            columnId: 1,
+            cardId: 1,
+            title: 1,
+            description: 1,
+            cover: 1,
+            attachments: 1,
+            startDate: 1,
+            dueDate: 1,
+            createdAt: 1,
+            updatedAt: 1,
+            reporter: {
+              $arrayElemAt: ["$reporter", 0],
+            },
+            label: {
+              $arrayElemAt: ["$label", 0],
+            },
+            priority: 1,
+            isOverdue: 1,
+            isActive: 1,
+          },
+        },
+      ])
+      .exec();
     if (!card) {
       throw new HttpException(409, "Card not found");
     }
-    return card;
+    return card[0];
   }
   public async updateCard(
     cardId: string,
