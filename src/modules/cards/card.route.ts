@@ -23,9 +23,14 @@ export default class CardRoute implements Route {
       this.cardController.getDetailCardById
     ),
     this.router.patch(
-      this.path + '/:id/assign-member',
+      this.path + '/:id/assign-member/:assigneeId',
       authMiddleware,
       this.cardController.assignMemberToCard
+    )
+    this.router.get(
+      this.path + '/:id/members',
+      authMiddleware,
+      this.cardController.getMemsInCard
     )
   }
 }

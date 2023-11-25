@@ -5,6 +5,7 @@ import {
   isEmptyObject,
   isWorkspaceAdmin,
   isWorkspaceMember,
+  viewedBoardPermission,
 } from "@core/utils";
 import IBoard from "./board.interface";
 import BoardSchema from "./board.model";
@@ -102,7 +103,7 @@ export default class BoardService {
     userId: string
   ): Promise<IBoard[]> {
     const checkWorkspaceMember = await isWorkspaceMember(workspaceId, userId);
-    if (!!checkWorkspaceMember === false) {
+    if (checkWorkspaceMember === false) {
       throw new HttpException(
         409,
         "You has not permission to get all board on this workspace"
@@ -146,28 +147,13 @@ export default class BoardService {
     boardId: string,
     userId: string
   ): Promise<object> {
-    const existBoard = await this.boardSchema.findById(boardId).exec();
-    if (!existBoard) {
-      throw new HttpException(409, "Board not found");
-    }
-    const checkWorkspaceMember = await isWorkspaceMember(
-      existBoard.teamWorkspaceId,
-      userId
-    );
-    const checkBoardMember = await isBoardMember(boardId, userId);
-    if (Boolean(checkWorkspaceMember) === false) {
+    const isViewedBoard = await viewedBoardPermission(boardId, userId);
+    if (isViewedBoard === false) {
       throw new HttpException(
-        409,
-        "You has not permission to get board detail"
+        403,
+        "You has not permission to get detail this board"
       );
     }
-    if (
-      Boolean(checkBoardMember) === false &&
-      existBoard.type === MODE_ACCESS.private
-    ) {
-      throw new HttpException(409, "Board is private");
-    }
-
     const boardDetail = await this.boardSchema
       .aggregate([
         {
@@ -256,7 +242,7 @@ export default class BoardService {
                 $group: {
                   _id: "$_id",
                   boardId: { $first: "$boardId" },
-                  cardId: { $first: "$_id" },
+                  cardId: { $first: "$cardId" },
                   columnId: { $first: "$columnId" },
                   title: { $first: "$title" },
                   cover: { $first: "$cover" },

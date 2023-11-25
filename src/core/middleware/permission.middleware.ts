@@ -1,9 +1,8 @@
 import { HttpException } from "@core/exceptions";
 import { UserSchema } from "@modules/users";
-
-
+import { NextFunction, Request, Response } from "express";
 const permissionMiddleware =  (roles: string[]) => {
-  return async (req: any, res: any, next: any) => {
+  return async (req: Request, res: Response, next: NextFunction) => {
     const user = await UserSchema.findById(req.user.id).select('+role').exec();
     if (!user) {
       return next(

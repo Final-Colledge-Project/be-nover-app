@@ -5,6 +5,7 @@ import {
   IMember,
   IWorkspaceAdmin,
 } from "@modules/teamWorkspace/teamWorkspace.interface";
+import { MODE_ACCESS } from "./constant";
 
 export const isWorkspaceAdmin = async (
   teamWorkspaceId: string,
@@ -42,7 +43,6 @@ export const isWorkspaceMember = async (
   const checkAdmin = teamWorkspace?.workspaceAdmins.find(
     (admin: IWorkspaceAdmin) => admin.user.toString() === memberId
   );
-
   if (!!checkMember === false && !!checkAdmin === false) {
     return false;
   }
@@ -106,3 +106,17 @@ export const isCardNumber = async (cardId: string, userId: string) => {
   }
   return true;
 };
+
+export const viewedBoardPermission = async (boardId: string, userId: string) => {
+  const board = await BoardSchema.findById(boardId).exec();
+  const workspaceId = await TeamWorkspaceSchema.findById(board?.teamWorkspaceId).exec();
+  const checkWorkspaceMember = await isWorkspaceMember(workspaceId?.id, userId);
+  const checkBoardMember = await isBoardMember(board?.id, userId);
+  if(checkWorkspaceMember === false) {
+    return false
+  }
+  if (board?.type === MODE_ACCESS.private && checkBoardMember === false) {
+    return false;
+  }
+  return true;
+}

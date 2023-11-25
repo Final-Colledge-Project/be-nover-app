@@ -3,6 +3,8 @@ import {
   isBoardMember,
   isCardNumber,
   isEmptyObject,
+  isWorkspaceMember,
+  viewedBoardPermission,
 } from "@core/utils";
 import CardSchema from "./card.model";
 import CreateCardDto from "./dtos/createCardDto";
@@ -52,7 +54,22 @@ export default class CardService {
     ).exec();
     return newCard;
   }
-  public async getDetailCardById(cardId: string): Promise<object> {
+  public async getDetailCardById(
+    cardId: string,
+    userId: string
+  ): Promise<object> {
+    const existed = await this.cardSchema.findById(cardId).exec();
+    if (!existed) {
+      throw new HttpException(StatusCodes.CONFLICT, "Card not found");
+    }
+
+    const isViewedBoard = await viewedBoardPermission(existed.boardId, userId);
+    if (isViewedBoard === false) {
+      throw new HttpException(
+        StatusCodes.FORBIDDEN,
+        "You are not member of this board"
+      );
+    }
     const card = await this.cardSchema
       .aggregate([
         {
@@ -176,12 +193,9 @@ export default class CardService {
   public async assignMemberToCard(
     userId: string,
     cardId: string,
-    model: assignUserDto
+    assigneeId: string
   ): Promise<void> {
-    if (isEmptyObject(model)) {
-      throw new HttpException(StatusCodes.BAD_REQUEST, "Model is empty");
-    }
-    const member = await UserSchema.findOne({ email: model.email }).exec();
+    const member = await UserSchema.findById(assigneeId).exec();
     if (!member) {
       throw new HttpException(StatusCodes.CONFLICT, "User not found");
     }
@@ -194,6 +208,16 @@ export default class CardService {
       throw new HttpException(
         StatusCodes.FORBIDDEN,
         "You are not member of this board"
+      );
+    }
+    const checkBoarMemberByAssignee = await isBoardMember(
+      card.boardId,
+      assigneeId
+    );
+    if (!checkBoarMemberByAssignee) {
+      throw new HttpException(
+        StatusCodes.FORBIDDEN,
+        "Assignee is not member of this board"
       );
     }
     const checkCardMember = await isCardNumber(cardId, member.id);
@@ -213,5 +237,83 @@ export default class CardService {
       },
       { new: true }
     );
+  }
+  public async getMemberInCard(
+    cardId: string,
+    userId: string
+  ): Promise<object> {
+    const existCard = await this.cardSchema.findById(cardId).exec();
+    if (!existCard) {
+      throw new HttpException(StatusCodes.CONFLICT, "Card not found");
+    }
+    const isViewedBoard = await viewedBoardPermission(
+      existCard.boardId,
+      userId
+    );
+    if (isViewedBoard === false) {
+      throw new HttpException(
+        StatusCodes.FORBIDDEN,
+        "You are not member of this board"
+      );
+    }
+    const card = await this.cardSchema.aggregate([
+      {
+        $match: {
+          _id: new OBJECT_ID(cardId),
+          isActive: true,
+        },
+      },
+      {
+        $unwind: {
+          path: "$memberIds",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $lookup: {
+          from: "users",
+          let: { memberIds: "$memberIds" },
+          localField: "memberIds",
+          foreignField: "_id",
+          as: "members",
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $eq: ["$_id", "$$memberIds"],
+                },
+              },
+            },
+            {
+              $project: {
+                _id: 1,
+                fullName: { $concat: ["$firstName", " ", "$lastName"] },
+                avatar: 1,
+              },
+            },
+          ],
+        },
+      },
+      {
+        $group: {
+          _id: "$_id",
+          members: {
+            $push: {
+              $arrayElemAt: ["$members", 0],
+            },
+          },
+        },
+      },
+      {
+        $project: {
+          _id: 1,
+          members: 1,
+        },
+      },
+    ]);
+    if (!card) {
+      throw new HttpException(StatusCodes.CONFLICT, "Card not found");
+    }
+    return card[0];
   }
 }
