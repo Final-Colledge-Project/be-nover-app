@@ -169,7 +169,10 @@ export default class InvitationService {
                 },
               },
               {
-                $unwind: "$workspaceAdmins",
+                $unwind: {
+                  path: "$workspaceAdmins",
+                  preserveNullAndEmptyArrays: true,
+                },
               },
               {
                 $lookup: {
@@ -236,7 +239,10 @@ export default class InvitationService {
                 },
               },
               {
-                $unwind: "$workspaceMembers", // unwind the workspaceAdmins array
+                $unwind: {
+                  path: "$workspaceMembers",
+                  preserveNullAndEmptyArrays: true,
+                }, 
               },
               {
                 $lookup: {

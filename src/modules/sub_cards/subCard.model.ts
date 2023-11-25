@@ -18,9 +18,9 @@ const SubCardSchema = new mongoose.Schema({
     required: [true, "Name task is required"],
   },
   status: {
-    type: SCHEMA_TYPE,
-    ref: MODEL_NAME.column,
+    type: String,
     enum: [SUBTASK_STATUS.todo, SUBTASK_STATUS.inprogress, SUBTASK_STATUS.completed, SUBTASK_STATUS.cancel],
+    default: SUBTASK_STATUS.todo,
   },
   assignedTo: {
     type: SCHEMA_TYPE,

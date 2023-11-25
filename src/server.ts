@@ -12,6 +12,7 @@ import { ColumnRoute } from "@modules/columns";
 import { CardRoute } from "@modules/cards";
 import { LabelRoute } from "@modules/labels";
 import { InvitationRoute } from "@modules/invitations";
+import { SubCardRoute } from "@modules/sub_cards";
 validateEnv();
 const routes = [
   new IndexRoute(),
@@ -24,7 +25,8 @@ const routes = [
   new ColumnRoute(),
   new CardRoute(),
   new LabelRoute(),
-  new InvitationRoute()
+  new InvitationRoute(),
+  new SubCardRoute()
 ];
 const app = new App(routes);
 app.listen();

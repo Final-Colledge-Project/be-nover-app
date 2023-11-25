@@ -113,7 +113,10 @@ class TeamWorkspaceService {
         },
       },
       {
-        $unwind: "$workspaceAdmins",
+        $unwind: {
+          path: "$workspaceAdmins",
+          preserveNullAndEmptyArrays: true,
+        },
       },
       {
         $lookup: {
@@ -172,8 +175,11 @@ class TeamWorkspaceService {
         },
       },
       {
-        $unwind: "$workspaceMembers", // unwind the workspaceAdmins array
-      },
+        $unwind: {
+          path: "$workspaceMembers",
+          preserveNullAndEmptyArrays: true,
+        },
+      }, // unwind the workspaceAdmins array
       {
         $lookup: {
           from: "users",

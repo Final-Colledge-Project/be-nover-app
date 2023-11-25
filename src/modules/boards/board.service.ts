@@ -142,7 +142,6 @@ export default class BoardService {
 
     return boards;
   }
-
   public async getBoardDetail(
     boardId: string,
     userId: string
@@ -371,6 +370,7 @@ export default class BoardService {
           $project: {
             _id: 1,
             name: 1,
+            createdAt: 1,
           }
         }
     ]);
@@ -401,6 +401,7 @@ export default class BoardService {
               dueDate: "$dueDate",
             },
           },
+          createdAt: {$first: "$createdAt"}
         },
       },
       {
@@ -418,6 +419,7 @@ export default class BoardService {
             $arrayElemAt: ["$teamWorkspace", 0],
           },
           board: 1,
+          createdAt: 1
         },
       },
       {
@@ -425,6 +427,7 @@ export default class BoardService {
           _id: "$teamWorkspace._id",
           name: "$teamWorkspace.name",
           board: 1,
+          createdAt: 1
         },
       },
     ]);
