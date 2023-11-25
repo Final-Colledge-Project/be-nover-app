@@ -20,7 +20,7 @@ const CardSchema = new mongoose.Schema({
     type: String,
     required: [true, "Title is required"],
     minlength: [2, "Title must be at least 2 characters long"],
-    maxlength: [20, "Title must be at most 20 characters long"],
+    maxlength: [50, "Title must be at most 50 characters long"],
     trim: true,
   },
   description: {
@@ -45,7 +45,8 @@ const CardSchema = new mongoose.Schema({
     {
       type: SCHEMA_TYPE,
       ref: MODEL_NAME.user,
-    }
+      default: []
+    },
   ],
   comments: [
     {
@@ -77,34 +78,10 @@ const CardSchema = new mongoose.Schema({
       }
     }
   ],
-  subTask:[
+  subCards:[
     {
-      name: {
-        type: String,
-        minlength: [2, "Name task must be at least 2 characters long"],
-        maxlength: [100, "Name task must be at most 100 characters long"],
-      },
-      status: {
-        type: String,
-        enum: [SUBTASK_STATUS.todo, SUBTASK_STATUS.inprogress, SUBTASK_STATUS.completed, SUBTASK_STATUS.cancel],
-        default: SUBTASK_STATUS.todo,
-      },
-      assignedTo: {
-        type: SCHEMA_TYPE,
-        ref: MODEL_NAME.user,
-      },
-      createdAt: {
-        type: Date,
-        default: Date.now,
-      },
-      dueDate: {
-        type: Date,
-        default: null,
-      },
-      updatedAt: {
-        type: Date,
-        default: Date.now,
-      }
+      type: SCHEMA_TYPE,
+      ref: MODEL_NAME.subCard
     }
   ],
   attachments: [{
@@ -145,10 +122,6 @@ const CardSchema = new mongoose.Schema({
     type: String,
     enum: [PRIORITY.lowest, PRIORITY.low, PRIORITY.medium, PRIORITY.high, PRIORITY.highest],
     default: PRIORITY.medium
-  },
-  isDone: {
-    type: Boolean,
-    default: false,
   },
   isOverdue: {
     type: Boolean,

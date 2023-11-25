@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 import { Query } from "mongoose";
 import ITeamWorkspace from "./teamWorkspace.interface";
-import { MODEL_NAME, SCHEMA_TYPE, getDateNow } from "@core/utils";
+import { MODEL_NAME, SCHEMA_TYPE } from "@core/utils";
 const TeamWorkspaceSchema = new mongoose.Schema({
   name: {
     type: String,

@@ -1,7 +1,6 @@
 import {
   Email,
   OBJECT_ID,
-  getDateNow,
   isEmptyObject,
   isSuperAdmin,
   isWorkspaceAdmin,
@@ -13,7 +12,6 @@ import { HttpException } from "@core/exceptions";
 import JoinGroupDto from "./dtos/joinGroup.dto";
 import { UserSchema } from "@modules/users";
 import { IWorkspaceAdmin } from "./teamWorkspace.interface";
-import dayjs from "dayjs";
 class TeamWorkspaceService {
   public teamWorkspaceSchema = TeamWorkspaceSchema;
   public async createTeamWorkspace(
@@ -110,7 +108,7 @@ class TeamWorkspaceService {
       {
         $match: {
           $expr: {
-            $eq: ["$_id" ,new OBJECT_ID(workspaceId)]
+            $eq: ["$_id", new OBJECT_ID(workspaceId)],
           },
         },
       },
@@ -136,7 +134,7 @@ class TeamWorkspaceService {
                 _id: 1,
                 fullName: { $concat: ["$firstName", " ", "$lastName"] },
                 avatar: 1,
-                email: 1
+                email: 1,
               },
             },
           ],
@@ -160,16 +158,16 @@ class TeamWorkspaceService {
       {
         $project: {
           name: 1,
-          workspaceAdmins: 1
+          workspaceAdmins: 1,
         },
-      }
+      },
     ]);
-    
+
     const workspaceMember = await this.teamWorkspaceSchema.aggregate([
       {
         $match: {
           $expr: {
-            $eq: ["$_id" ,new OBJECT_ID(workspaceId)]
+            $eq: ["$_id", new OBJECT_ID(workspaceId)],
           },
         },
       },
@@ -195,7 +193,7 @@ class TeamWorkspaceService {
                 _id: 1,
                 fullName: { $concat: ["$firstName", " ", "$lastName"] },
                 avatar: 1,
-                email: 1
+                email: 1,
               },
             },
           ],
@@ -223,7 +221,7 @@ class TeamWorkspaceService {
     ]);
     return {
       ...workspaceAdmins[0],
-      ...workspaceMember[0]
+      ...workspaceMember[0],
     };
   }
 }

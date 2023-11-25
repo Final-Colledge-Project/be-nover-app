@@ -28,6 +28,7 @@ export const MODEL_NAME = {
   teamWorkspace: 'TeamWorkspace',
   label: 'Label',
   otp: 'Otp',
+  subCard: 'SubCard'
 }
 export const SUBTASK_STATUS = {
   todo: 'todo',

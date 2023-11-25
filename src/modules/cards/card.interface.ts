@@ -10,18 +10,16 @@ export default interface ICard {
   dueDate: Date;
   memberIds: string[];
   comments: IComment[];
-  subTask: ISubTask[];
+  subTasks: string[];
   attachments: IAttachment[];
   createdAt: Date;
   updatedAt: Date;
   reporterId: string;
   labelId: string;
   priority: string;
-  isDone: boolean;
   isOverdue: boolean;
   isActive: boolean;
 }
-
 export interface IComment {
   user: string;
   email: string,
@@ -30,23 +28,6 @@ export interface IComment {
   content: string,
   createdAt: Date,
 }
-
-enum subTaskStatus {
-  todo = 'todo',
-  inprogress = 'inprogress',
-  completed = 'completed',
-  cancel = 'cancel'
-}
-
-export interface ISubTask {
-  name: string,
-  status: subTaskStatus,
-  assignedTo: string,
-  createAt: Date,
-  dueDate: Date,
-  updateAt: Date
-}
-
 export interface IAttachment {
   fileName: string,
   fileType: string,

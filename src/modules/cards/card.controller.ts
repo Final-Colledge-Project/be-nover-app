@@ -9,8 +9,8 @@ export default class CardController {
   public createCard = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
     const userId = req.user.id;
     const model = req.body;
-    await this.cardService.createCard(model, userId);
-    res.status(StatusCodes.CREATED).json({ message: "Create card successfully" });
+    const newCard = await this.cardService.createCard(model, userId);
+    res.status(StatusCodes.CREATED).json({data: newCard, message: "Create card successfully" });
   })
   public getCardById = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
     const cardId = req.params.id;
@@ -30,5 +30,5 @@ export default class CardController {
     const model : assignUserDto = req.body;
     await this.cardService.assignMemberToCard(userId, cardId, model);
     res.status(StatusCodes.OK).json({ message: "Assign member to card successfully" });
-  })
+  }) 
 }

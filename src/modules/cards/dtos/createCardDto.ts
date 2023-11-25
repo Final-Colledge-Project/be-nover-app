@@ -1,4 +1,6 @@
-import { IsNotEmpty, IsString, MaxLength, Min, MinLength } from "class-validator";
+import { formatDate } from "@core/utils";
+import { Transform, TransformFnParams } from "class-transformer";
+import { IsDateString, IsNotEmpty, IsString, MaxLength, Min, MinLength } from "class-validator";
 export default class CreateCardDto {
   constructor(
     columnId: string,
@@ -25,8 +27,8 @@ export default class CreateCardDto {
   @MinLength(2, {
     message: 'Title must be at least 2 characters long',
   })
-  @MaxLength(20, {
-    message: 'Title must be at most 20 characters long',
+  @MaxLength(50, {
+    message: 'Title must be at most 50 characters long',
   })
   public title: string;
   @IsNotEmpty()
@@ -38,7 +40,11 @@ export default class CreateCardDto {
     message: 'Description must be at most 200 characters long',
   })
   public description;
+  @Transform(({value} : TransformFnParams) => formatDate(value) )
+  @IsDateString()
   public startDate: Date;
+  @Transform(({value} : TransformFnParams) => formatDate(value) )
+  @IsDateString()
   public dueDate: Date;
   @IsString()
   public labelId: string;

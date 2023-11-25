@@ -17,7 +17,7 @@ import assignUserDto from "./dtos/assignUserDto";
 import { UserSchema } from "@modules/users";
 export default class CardService {
   private cardSchema = CardSchema;
-  public async createCard(model: CreateCardDto, userId: string): Promise<void> {
+  public async createCard(model: CreateCardDto, userId: string): Promise<ICard> {
     if (isEmptyObject(model)) {
       throw new HttpException(400, "Model is empty");
     }
@@ -44,9 +44,10 @@ export default class CardService {
     });
     await ColumnSchema.findByIdAndUpdate(
       { _id: new OBJECT_ID(newCard.columnId) },
-      { $push: { cardOrderIds: newCard._id } },
+      { $push: { cardOrderIds: newCard._id }, $set: { updatedAt: Date.now() } },
       { new: true }
     ).exec();
+    return newCard;
   }
   public async getCardById(cardId: string): Promise<ICard> {
     const card = await this.cardSchema.findById(cardId).exec();
@@ -122,6 +123,7 @@ export default class CardService {
       },
       {
         $push: { memberIds: member.id },
+        $set: { updatedAt: Date.now() },
       },
       { new: true }
     );

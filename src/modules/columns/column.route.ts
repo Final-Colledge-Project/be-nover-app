@@ -22,5 +22,10 @@ export default class ColumnRoute implements Route {
       authMiddleware,
       this.columnController.getColumnById
     )
+    this.router.get(
+      this.path + '/board/:id',
+      authMiddleware,
+      this.columnController.getColumnByBoardId
+    )
   }
 }

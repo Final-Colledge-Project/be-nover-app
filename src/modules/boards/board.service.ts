@@ -223,7 +223,10 @@ export default class BoardService {
                 },
               },
               {
-                $unwind: "$memberIds",
+                $unwind:{
+                  path:  "$memberIds",
+                  "preserveNullAndEmptyArrays": true
+                },
               },
               {
                 $lookup: {
@@ -267,8 +270,27 @@ export default class BoardService {
                   memberIds: {
                     $push: {
                       $arrayElemAt: ["$members", 0],
-                    },
+                    }
                   },
+                },
+              },
+              {
+                $project: {
+                  _id: 1,
+                  boardId: 1,
+                  cardId: 1,
+                  columnId: 1,
+                  title: 1,
+                  cover: 1,
+                  startDate: 1,
+                  dueDate: 1,
+                  label: {
+                    $arrayElemAt: ["$label", 0]
+                  },
+                  priority: 1,
+                  isDone: 1,
+                  isOverdue: 1,
+                  memberIds: 1,
                 },
               },
             ],
@@ -344,12 +366,6 @@ export default class BoardService {
           isActive: true,
           boards: {$eq: []}
          }
-          // $or: [
-          //   { workspaceAdmins: new OBJECT_ID(userId) },
-          //   { workspaceMembers: new OBJECT_ID(userId) },
-          // ],
-          // isActive: true,
-          // reference: {},
         },
         {
           $project: {
