@@ -1,6 +1,7 @@
 import {
   MODE_ACCESS,
   OBJECT_ID,
+  isBoardAdmin,
   isBoardMember,
   isEmptyObject,
   isWorkspaceAdmin,
@@ -18,6 +19,7 @@ import { cloneDeep } from "lodash";
 import ICard from "@modules/cards/card.interface";
 import { IResColumn } from "@modules/columns";
 import { TeamWorkspaceSchema } from "@modules/teamWorkspace";
+import UpdateBoardDto from "./dtos/updateBoardDto";
 export default class BoardService {
   private boardSchema = BoardSchema;
   private workspaceSchema = TeamWorkspaceSchema;
@@ -456,5 +458,27 @@ export default class BoardService {
       oweners: oweners?.ownerIds,
       members: members?.memberIds,
     };
+  }
+  public async updateBoard(model: UpdateBoardDto, boardId: string, userId: string) : Promise<IBoard> {
+    if(isEmptyObject(model)){
+      throw new HttpException(400, "Model is empty");
+    }
+    const existBoard = await this.boardSchema.findById(boardId).exec();
+    if(!existBoard){
+      throw new HttpException(404, "Board not found");
+    }
+    const checkAdmin = await isBoardAdmin(boardId, userId);
+    if(!checkAdmin){
+      throw new HttpException(403, "You are not admin of this board");
+    }
+    const updatedBoard = await this.boardSchema.findByIdAndUpdate(boardId, {
+      ...model,
+      updatedAt: Date.now()
+    }, {new: true}).exec();
+    if(!updatedBoard){
+      throw new HttpException(409, "Board not updated");
+    }
+    updatedBoard.save();
+    return updatedBoard;
   }
 }

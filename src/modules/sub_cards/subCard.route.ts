@@ -17,5 +17,15 @@ export default class SubCardRoute implements Route {
       authMiddleware,
       this.subCardController.createSubCard
     )
+    this.router.patch(
+      this.path + "/:id/assign-member/:assigneeId",
+      authMiddleware,
+      this.subCardController.assignMemberToSubCard
+    )
+    this.router.get(
+      this.path + "/card/:id",
+      authMiddleware,
+      this.subCardController.getAllSubCardInCard
+    )
   }
 }

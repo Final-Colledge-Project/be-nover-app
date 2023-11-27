@@ -27,7 +27,7 @@ export const generateSubCardId = (
   cardId: string,
   lengthSubCard: number
 ): string => {
-  return `[${cardId}] ${lengthSubCard + 1}`;
+  return `[${cardId}]-${lengthSubCard + 1}`;
 };
 export const formatDate = (date: string | Date) => {
   return dayjs(date).format("YYYY-MM-DD HH:mm:ss");
