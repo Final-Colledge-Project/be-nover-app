@@ -3,6 +3,7 @@ import { catchAsync } from "@core/utils";
 import ColumnService from "./column.service";
 import CreateColumnDto from "./dtos/createColumnDto";
 import { StatusCodes } from "http-status-codes";
+import UpdateColumnDto from "./dtos/updateColumnDtos";
 
 export default class ColumnController {
   private columnService = new ColumnService();
@@ -22,5 +23,12 @@ export default class ColumnController {
     const userId = req.user.id;
     const columns = await this.columnService.getColumnsByBoardId(boardId, userId);
     res.status(StatusCodes.OK).json({ data: columns, message: "Get columns successfully" });
+  })
+  public updateColumn = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+    const columnId = req.params.id;
+    const model : UpdateColumnDto = req.body;
+    const userId = req.user.id;
+    const updatedColumn = await this.columnService.updateColumn(model, columnId, userId);
+    res.status(StatusCodes.OK).json({ data: updatedColumn, message: "Update column successfully" });
   })
 }

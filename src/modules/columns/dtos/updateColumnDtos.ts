@@ -1,8 +1,8 @@
-import { IsNotEmpty, IsString, MaxLength, MinLength } from "class-validator";
+import { IsArray, IsNotEmpty, IsString, MaxLength, MinLength } from "class-validator";
 export default class UpdateColumnDto {
-  constructor(title: string, boardId: string) {
+  constructor(title: string, cardOrderIds: string[]) {
     this.title = title,
-    this.boardId = boardId
+    this.cardOrderIds = cardOrderIds
   }
   @IsNotEmpty()
   @IsString()
@@ -14,6 +14,6 @@ export default class UpdateColumnDto {
   })
   public title: string;
   @IsNotEmpty()
-  @IsString()
-  public boardId: string;
+  @IsArray()
+  public cardOrderIds: string[];
 }

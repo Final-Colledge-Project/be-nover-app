@@ -3,6 +3,7 @@ import { Router } from "express";
 import ColumnController from "./column.controller";
 import { authMiddleware, validationMiddleware } from "@core/middleware";
 import CreateColumnDto from "./dtos/createColumnDto";
+import UpdateColumnDto from "./dtos/updateColumnDtos";
 export default class ColumnRoute implements Route {
   public path = '/api/v1/columns';
   public router = Router();
@@ -26,6 +27,12 @@ export default class ColumnRoute implements Route {
       this.path + '/board/:id',
       authMiddleware,
       this.columnController.getColumnByBoardId
+    )
+    this.router.patch(
+      this.path + '/:id',
+      validationMiddleware(UpdateColumnDto, true),
+      authMiddleware,
+      this.columnController.updateColumn
     )
   }
 }

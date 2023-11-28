@@ -1,4 +1,4 @@
-import mongoose from "mongoose";
+import mongoose, { Query } from "mongoose";
 import IColumn from "./column.interface";
 import { MODEL_NAME, SCHEMA_TYPE } from "@core/utils";
 const ColumnSchema = new mongoose.Schema({
@@ -32,5 +32,12 @@ const ColumnSchema = new mongoose.Schema({
     default: true,
     select: false,
   }
+});
+ColumnSchema.pre(/^find/, async function (next) {
+  if (this instanceof Query) {
+      const label = this;
+      label.find({ isActive: { $ne: false } }).select('-__v');
+  }
+  next();
 });
 export default mongoose.model<IColumn & mongoose.Document>(MODEL_NAME.column, ColumnSchema);

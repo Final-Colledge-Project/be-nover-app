@@ -10,6 +10,7 @@ import { HttpException } from "@core/exceptions";
 import { BoardSchema } from "@modules/boards";
 import IColumn from "./column.interface";
 import { StatusCodes } from "http-status-codes";
+import UpdateColumnDto from "./dtos/updateColumnDtos";
 export default class ColumnService {
   private columnSchema = ColumnSchema;
   private boardSchema = BoardSchema;
@@ -73,4 +74,25 @@ export default class ColumnService {
     }
     return columns;
   }
+  public async updateColumn(model: UpdateColumnDto, columnId: string, userId: string) : Promise<IColumn> {
+    if(isEmptyObject(model)){
+      throw new HttpException(StatusCodes.BAD_REQUEST, "Model is empty");
+    }
+    const existColumn = await this.columnSchema.findById(columnId).exec();
+    if(!existColumn){
+      throw new HttpException(StatusCodes.CONFLICT, "Column not found");
+    }
+    if(!await isBoardMember(existColumn.boardId, userId)){
+      throw new HttpException(StatusCodes.FORBIDDEN, "You are not member of this board");
+    }
+    const updatedColumn = await this.columnSchema.findByIdAndUpdate(columnId, {
+      ...model,
+      updatedAt: Date.now(),
+    }, {new: true}).exec();
+    if(!updatedColumn){
+      throw new HttpException(StatusCodes.CONFLICT, "Column not updated");
+    }
+    return updatedColumn;
+  }
+  
 }
