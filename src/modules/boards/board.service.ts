@@ -20,6 +20,7 @@ import ICard from "@modules/cards/card.interface";
 import { IResColumn } from "@modules/columns";
 import { TeamWorkspaceSchema } from "@modules/teamWorkspace";
 import UpdateBoardDto from "./dtos/updateBoardDto";
+import AddMemsToBoardDto from "./dtos/addMemsToBoard";
 export default class BoardService {
   private boardSchema = BoardSchema;
   private workspaceSchema = TeamWorkspaceSchema;
@@ -52,14 +53,22 @@ export default class BoardService {
   public async addMemberToBoard(
     userId: string,
     boardId: string,
-    memberId: string
+    memberIds: AddMemsToBoardDto,
   ): Promise<IBoard> {
     const board = await this.boardSchema.findById(boardId).exec();
     if (!board) {
       throw new HttpException(409, "Board not found");
     }
     const workspaceId = board.teamWorkspaceId;
-    const checkMember = await isWorkspaceMember(workspaceId, memberId);
+    memberIds.memberIds.forEach(async (memberId: string) => {
+      const checkMember = await isWorkspaceMember(workspaceId, memberId);
+      if (!!checkMember === false) {
+        throw new HttpException(
+          409,
+          "Member does not exists in this workspace"
+        );
+      }
+    })
     const checkAdmin = await isWorkspaceAdmin(workspaceId, userId);
     if (!!checkAdmin === false) {
       throw new HttpException(
@@ -67,22 +76,12 @@ export default class BoardService {
         "You has not permission to add member to board"
       );
     }
-    if (!!checkMember === false) {
-      throw new HttpException(409, "Member not found");
-    }
-    const existedMember = board.memberIds.find(
-      (id) => id.toString() === memberId
-    );
-    const existedAdmin = board.ownerIds.find(
-      (id) => id.toString() === memberId
-    );
-    if (!!existedMember) {
-      throw new HttpException(409, "Member already exists");
-    }
-    if (!!existedAdmin) {
-      throw new HttpException(409, "Member is the admin");
-    }
-    board.memberIds.unshift(memberId);
+    const members = memberIds.memberIds;
+    members.forEach((memberId: string) => {
+      board.memberIds.unshift(memberId);
+    })
+    const memberList = [...new Set(board.memberIds)];
+    board.memberIds = memberList;
     await board.save();
     return board;
   }

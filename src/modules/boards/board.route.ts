@@ -4,6 +4,7 @@ import { Router } from "express";
 import { authMiddleware, validationMiddleware } from "@core/middleware";
 import CreateBoardDto from "./dtos/createBoardDto";
 import UpdateBoardDto from "./dtos/updateBoardDto";
+import AddMemsToBoardDto from "./dtos/addMemsToBoard";
 
 export default class BoardRoute implements Route {
   public path = "/api/v1/boards";
@@ -20,7 +21,8 @@ export default class BoardRoute implements Route {
       this.boardController.createBoard
     );
     this.router.patch(
-      this.path + "/:id/member/:memberId",
+      this.path + "/:id/members",
+      validationMiddleware(AddMemsToBoardDto, true),
       authMiddleware,
       this.boardController.addMemberToBoard
     );
