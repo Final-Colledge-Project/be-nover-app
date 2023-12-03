@@ -3,6 +3,7 @@ import BoardService from "./board.service";
 import { NextFunction, Request, Response } from "express";
 import CreateBoardDto from "./dtos/createBoardDto";
 import { StatusCodes } from "http-status-codes";
+import AddMemsToBoardDto from "./dtos/addMemsToBoard";
 export default class BoardController {
   private boardService = new BoardService();
   public createBoard = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
@@ -14,7 +15,7 @@ export default class BoardController {
   public addMemberToBoard = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
     const userId = req.user.id;
     const boardId = req.params.id;
-    const memberId = req.params.memberId;
+    const memberId : AddMemsToBoardDto = req.body;
     const board = await this.boardService.addMemberToBoard(userId, boardId, memberId);
     res.status(StatusCodes.OK).json({ data: board, message: "Add member to board successfully" });
   })

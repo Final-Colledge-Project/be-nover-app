@@ -20,6 +20,7 @@ import ICard from "@modules/cards/card.interface";
 import { IResColumn } from "@modules/columns";
 import { TeamWorkspaceSchema } from "@modules/teamWorkspace";
 import UpdateBoardDto from "./dtos/updateBoardDto";
+import AddMemsToBoardDto from "./dtos/addMemsToBoard";
 export default class BoardService {
   private boardSchema = BoardSchema;
   private workspaceSchema = TeamWorkspaceSchema;
@@ -52,14 +53,22 @@ export default class BoardService {
   public async addMemberToBoard(
     userId: string,
     boardId: string,
-    memberId: string
+    memberIds: AddMemsToBoardDto
   ): Promise<IBoard> {
     const board = await this.boardSchema.findById(boardId).exec();
     if (!board) {
       throw new HttpException(409, "Board not found");
     }
     const workspaceId = board.teamWorkspaceId;
-    const checkMember = await isWorkspaceMember(workspaceId, memberId);
+    memberIds.memberIds.forEach(async (memberId: string) => {
+      const checkMember = await isWorkspaceMember(workspaceId, memberId);
+      if (!!checkMember === false) {
+        throw new HttpException(
+          409,
+          "Member does not exists in this workspace"
+        );
+      }
+    });
     const checkAdmin = await isBoardAdmin(boardId, userId);
     if (!!checkAdmin === false) {
       throw new HttpException(
@@ -67,22 +76,12 @@ export default class BoardService {
         "You has not permission to add member to board"
       );
     }
-    if (!!checkMember === false) {
-      throw new HttpException(409, "Member not found");
-    }
-    const existedMember = board.memberIds.find(
-      (id) => id.toString() === memberId
-    );
-    const existedAdmin = board.ownerIds.find(
-      (id) => id.toString() === memberId
-    );
-    if (!!existedMember) {
-      throw new HttpException(409, "Member already exists");
-    }
-    if (!!existedAdmin) {
-      throw new HttpException(409, "Member is the admin");
-    }
-    board.memberIds.unshift(memberId);
+    const members = memberIds.memberIds;
+    members.forEach((memberId: string) => {
+      board.memberIds.unshift(memberId);
+    });
+    const memberList = [...new Set(board.memberIds)];
+    board.memberIds = memberList;
     await board.save();
     return board;
   }
@@ -119,7 +118,7 @@ export default class BoardService {
     if (nameBoard === "") {
       const feature = new APIFeatures(
         this.boardSchema.find({
-          teamWorkspaceId: workspaceId
+          teamWorkspaceId: workspaceId,
         }),
         req.query
       )
@@ -210,9 +209,9 @@ export default class BoardService {
                 },
               },
               {
-                $unwind:{
-                  path:  "$memberIds",
-                  "preserveNullAndEmptyArrays": true
+                $unwind: {
+                  path: "$memberIds",
+                  preserveNullAndEmptyArrays: true,
                 },
               },
               {
@@ -257,7 +256,7 @@ export default class BoardService {
                   memberIds: {
                     $push: {
                       $arrayElemAt: ["$members", 0],
-                    }
+                    },
                   },
                 },
               },
@@ -272,7 +271,7 @@ export default class BoardService {
                   startDate: 1,
                   dueDate: 1,
                   label: {
-                    $arrayElemAt: ["$label", 0]
+                    $arrayElemAt: ["$label", 0],
                   },
                   priority: 1,
                   isDone: 1,
@@ -338,29 +337,32 @@ export default class BoardService {
       {
         $match: {
           $or: [
-           { workspaceAdmins: {
-              $elemMatch: {
-                user: new OBJECT_ID(userId),
+            {
+              workspaceAdmins: {
+                $elemMatch: {
+                  user: new OBJECT_ID(userId),
+                },
               },
-            }},
-           { 
-            workspaceMembers: {
-              $elemMatch: {
-                user: new OBJECT_ID(userId),
+            },
+            {
+              workspaceMembers: {
+                $elemMatch: {
+                  user: new OBJECT_ID(userId),
+                },
               },
-            }}
+            },
           ],
           isActive: true,
-          boards: {$eq: []}
-         }
+          boards: { $eq: [] },
         },
-        {
-          $project: {
-            _id: 1,
-            name: 1,
-            createdAt: 1,
-          }
-        }
+      },
+      {
+        $project: {
+          _id: 1,
+          name: 1,
+          createdAt: 1,
+        },
+      },
     ]);
 
     const userBoards = await this.boardSchema.aggregate([
@@ -389,7 +391,7 @@ export default class BoardService {
               dueDate: "$dueDate",
             },
           },
-          createdAt: {$first: "$createdAt"}
+          createdAt: { $first: "$createdAt" },
         },
       },
       {
@@ -407,7 +409,7 @@ export default class BoardService {
             $arrayElemAt: ["$teamWorkspace", 0],
           },
           board: 1,
-          createdAt: 1
+          createdAt: 1,
         },
       },
       {
@@ -415,13 +417,13 @@ export default class BoardService {
           _id: "$teamWorkspace._id",
           name: "$teamWorkspace.name",
           board: 1,
-          createdAt: 1
+          createdAt: 1,
         },
       },
     ]);
     return {
       workspaceHasBoards: userBoards,
-      workspaceWithNoBoard: workspaceWithNoBoard
+      workspaceWithNoBoard: workspaceWithNoBoard,
     };
   }
   public async getMemberByBoardId(
@@ -459,23 +461,33 @@ export default class BoardService {
       members: members?.memberIds,
     };
   }
-  public async updateBoard(model: UpdateBoardDto, boardId: string, userId: string) : Promise<IBoard> {
-    if(isEmptyObject(model)){
+  public async updateBoard(
+    model: UpdateBoardDto,
+    boardId: string,
+    userId: string
+  ): Promise<IBoard> {
+    if (isEmptyObject(model)) {
       throw new HttpException(400, "Model is empty");
     }
     const existBoard = await this.boardSchema.findById(boardId).exec();
-    if(!existBoard){
+    if (!existBoard) {
       throw new HttpException(404, "Board not found");
     }
     const checkAdmin = await isBoardAdmin(boardId, userId);
-    if(!checkAdmin){
+    if (!checkAdmin) {
       throw new HttpException(403, "You are not admin of this board");
     }
-    const updatedBoard = await this.boardSchema.findByIdAndUpdate(boardId, {
-      ...model,
-      updatedAt: Date.now()
-    }, {new: true}).exec();
-    if(!updatedBoard){
+    const updatedBoard = await this.boardSchema
+      .findByIdAndUpdate(
+        boardId,
+        {
+          ...model,
+          updatedAt: Date.now(),
+        },
+        { new: true }
+      )
+      .exec();
+    if (!updatedBoard) {
       throw new HttpException(409, "Board not updated");
     }
     updatedBoard.save();

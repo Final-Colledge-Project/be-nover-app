@@ -161,6 +161,23 @@ export default class SubCardService {
     if (!existSubCard) {
       throw new HttpException(StatusCodes.CONFLICT, "Subcard not found");
     }
-    
+    const existCard = await this.cardSchema
+      .findById(existSubCard.cardId)
+      .exec();
+    if (!existCard) {
+      throw new HttpException(StatusCodes.CONFLICT, "Card not found");
+    }
+    const checkBoardMember = await isBoardMember(existCard.boardId, userId);
+    if (!checkBoardMember) {
+      throw new HttpException(
+        StatusCodes.FORBIDDEN,
+        "You are not member of this board"
+      );
+    }
+    await this.subCardSchema.findByIdAndUpdate(subCardId, {
+      assignedTo: null,
+      isActive: false,
+      updatedAt: Date.now(),
+    });
   }
 }
