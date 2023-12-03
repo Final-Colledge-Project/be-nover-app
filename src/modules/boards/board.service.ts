@@ -60,7 +60,7 @@ export default class BoardService {
     }
     const workspaceId = board.teamWorkspaceId;
     const checkMember = await isWorkspaceMember(workspaceId, memberId);
-    const checkAdmin = await isWorkspaceAdmin(workspaceId, userId);
+    const checkAdmin = await isBoardAdmin(boardId, userId);
     if (!!checkAdmin === false) {
       throw new HttpException(
         409,
