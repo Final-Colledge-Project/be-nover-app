@@ -1,5 +1,5 @@
 import { MODEL_NAME, SCHEMA_TYPE, SUBTASK_STATUS } from "@core/utils";
-import mongoose from "mongoose";
+import mongoose, { Query } from "mongoose";
 import ISubCard from "./subCard.interface";
 const SubCardSchema = new mongoose.Schema({
   cardId: {
@@ -42,5 +42,12 @@ const SubCardSchema = new mongoose.Schema({
     type: Boolean,
     default: true,
   },
+});
+SubCardSchema.pre(/^find/, async function (next) {
+  if (this instanceof Query) {
+      const label = this;
+      label.find({ isActive: { $ne: false } }).select('-__v');
+  }
+  next();
 });
 export default mongoose.model<ISubCard & mongoose.Document>(MODEL_NAME.subCard, SubCardSchema);

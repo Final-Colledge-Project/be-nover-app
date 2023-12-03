@@ -428,11 +428,11 @@ export default class BoardService {
     boardId: string,
     userId: string
   ): Promise<Object> {
-    const checkBoardMember = await isBoardMember(boardId, userId);
-    if (!!checkBoardMember === false) {
+    const isViewedBoard = await viewedBoardPermission(boardId, userId);
+    if (isViewedBoard === false) {
       throw new HttpException(
-        409,
-        "You has not permission to get member of this board"
+        403,
+        "You has not permission to get detail this board"
       );
     }
     const members = await this.boardSchema
