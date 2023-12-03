@@ -60,15 +60,16 @@ export default class BoardService {
       throw new HttpException(409, "Board not found");
     }
     const workspaceId = board.teamWorkspaceId;
-    memberIds.memberIds.forEach(async (memberId: string) => {
-      const checkMember = await isWorkspaceMember(workspaceId, memberId);
-      if (!!checkMember === false) {
-        throw new HttpException(
-          409,
-          "Member does not exists in this workspace"
-        );
-      }
-    });
+    // memberIds.memberIds.forEach(async (memberId: string) => {
+    //   const checkMember = await isWorkspaceMember(workspaceId, memberId);
+    //   if (!!checkMember === false) {
+    //     throw new HttpException(
+    //       409,
+    //       "Member does not exists in this workspace"
+    //     );
+    //     return;
+    //   }
+    // });
     const checkAdmin = await isBoardAdmin(boardId, userId);
     if (!!checkAdmin === false) {
       throw new HttpException(
