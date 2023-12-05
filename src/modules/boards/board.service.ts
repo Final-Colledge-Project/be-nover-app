@@ -60,6 +60,11 @@ export default class BoardService {
       throw new HttpException(409, "Board not found");
     }
     const workspaceId = board.teamWorkspaceId;
+    const workspace = this.workspaceSchema.findById(workspaceId).exec();
+    if (!workspace) {
+      throw new HttpException(409, "Workspace not found");
+    }
+  
     // memberIds.memberIds.forEach(async (memberId: string) => {
     //   const checkMember = await isWorkspaceMember(workspaceId, memberId);
     //   if (!!checkMember === false) {
@@ -78,10 +83,7 @@ export default class BoardService {
       );
     }
     const members = memberIds.memberIds;
-    members.forEach((memberId: string) => {
-      board.memberIds.unshift(memberId);
-    });
-    const memberList = [...new Set(board.memberIds)];
+    const memberList = [...new Set([...board.memberIds, ...members])];
     board.memberIds = memberList;
     await board.save();
     return board;

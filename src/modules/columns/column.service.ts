@@ -85,6 +85,12 @@ export default class ColumnService {
     if(!await isBoardMember(existColumn.boardId, userId)){
       throw new HttpException(StatusCodes.FORBIDDEN, "You are not member of this board");
     }
+    if(model.title) {
+      const existTitle = await this.columnSchema.findOne({title: model.title, boardId: existColumn.boardId}).exec();
+      if(existTitle){
+        throw new HttpException(StatusCodes.CONFLICT, `Column with title ${model.title} already exists`);
+      }
+    }
     const updatedColumn = await this.columnSchema.findByIdAndUpdate(columnId, {
       ...model,
       updatedAt: Date.now(),
