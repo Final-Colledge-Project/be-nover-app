@@ -4,6 +4,7 @@ export default class UpdateCardDto {
   constructor(
     title: string,
     description: string,
+    columnId: string,
     cover: string,
     dueDate: Date,
     labelId: string,
@@ -17,6 +18,7 @@ export default class UpdateCardDto {
     this.labelId = labelId;
     this.priorityId = priorityId;
     this.isDone = isDone;
+    this.columnId = columnId;
   }
   @IsNotEmpty()
   @IsString()
@@ -46,4 +48,7 @@ export default class UpdateCardDto {
   @IsNotEmpty()
   @IsBoolean()
   public isDone: boolean;
+  @IsNotEmpty()
+  @IsString()
+  public columnId: string;
 }
