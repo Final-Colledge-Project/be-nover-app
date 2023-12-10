@@ -305,16 +305,7 @@ export default class BoardService {
     if (!workspaces) {
       throw new HttpException(StatusCodes.CONFLICT, "Workspace not found");
     }
-
-    const workspaceWithNoBoard = await this.workspaceSchema.aggregate([
-      {
-        $lookup: {
-          from: "boards",
-          localField: "_id",
-          foreignField: "teamWorkspaceId",
-          as: "boards",
-        },
-      },
+    const userBoards = await this.workspaceSchema.aggregate([
       {
         $match: {
           $or: [
@@ -334,84 +325,44 @@ export default class BoardService {
             },
           ],
           isActive: true,
-          boards: { $eq: [] },
+        },
+      },
+      {
+        $lookup: {
+          from: "boards",
+          localField: "_id",
+          foreignField: "teamWorkspaceId",
+          as: "boards",
+          pipeline: [
+            {
+              $match: {
+                isActive: true,
+              },
+            },
+            {
+              $project: {
+                _id: 1,
+                title: 1,
+                type: 1,
+                teamWorkspaceId: 1,
+                ownerIds: 1,
+                memberIds: 1,
+                createdAt: 1,
+              },
+            }
+          ],
         },
       },
       {
         $project: {
           _id: 1,
           name: 1,
+          boards: 1,
           createdAt: 1,
         },
       },
     ]);
-
-    const userBoards = await this.boardSchema.aggregate([
-      {
-        $match: {
-          $or: [
-            {
-              ownerIds: {
-                $elemMatch: {
-                  user: new OBJECT_ID(userId),
-                },
-              },
-            },
-            { memberIds: new OBJECT_ID(userId) },
-          ],
-          isActive: true,
-        },
-      },
-      {
-        $group: {
-          _id: "$teamWorkspaceId",
-          board: {
-            $push: {
-              _id: "$_id",
-              title: "$title",
-              cover: "$cover",
-              type: "$type",
-              teamWorkspaceId: "$teamWorkspaceId",
-              ownerIds: "$ownerIds",
-              memberIds: "$memberIds",
-              createdAt: "$createdAt",
-              dueDate: "$dueDate",
-            },
-          },
-          createdAt: { $first: "$createdAt" },
-        },
-      },
-      {
-        $lookup: {
-          from: "teamworkspaces",
-          localField: "_id",
-          foreignField: "_id",
-          as: "teamWorkspace",
-        },
-      },
-      {
-        $project: {
-          _id: 0,
-          teamWorkspace: {
-            $arrayElemAt: ["$teamWorkspace", 0],
-          },
-          board: 1,
-          createdAt: 1,
-        },
-      },
-      {
-        $project: {
-          _id: "$teamWorkspace._id",
-          name: "$teamWorkspace.name",
-          board: 1,
-          createdAt: 1,
-        },
-      },
-    ]);
-    return {
-      workspaceHasBoards: userBoards,
-      workspaceWithNoBoard: workspaceWithNoBoard,
-    };
+    return userBoards;
   }
   public async getMemberByBoardId(
     boardId: string,
