@@ -6,7 +6,7 @@ export default interface IBoard {
   columnOrderIds: string[];
   type: string;
   teamWorkspaceId: string;
-  ownerIds: string[];
+  ownerIds: IBoardAdmin[];
   memberIds: string[];
   createdAt: Date;
   updatedAt: Date;
@@ -14,4 +14,7 @@ export default interface IBoard {
   isActive: boolean;
 }
 
-
+export interface IBoardAdmin {
+  user: string;
+  role: string;
+}

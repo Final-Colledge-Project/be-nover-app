@@ -4,8 +4,10 @@ import {
   MODEL_NAME,
   OBJECT_ID,
   isEmptyObject,
+  isSuperAdmin,
   isWorkspaceAdmin,
   isWorkspaceMember,
+  permissionWorkspace,
 } from "@core/utils";
 import InvitationSchema from "./invitation.model";
 import { HttpException } from "@core/exceptions";
@@ -29,6 +31,16 @@ export default class InvitationService {
     const invitedUser = await UserSchema.findOne({
       email: model.emailUser,
     }).exec();
+    const checkPermissionWorkspace = await permissionWorkspace(
+      workspaceId,
+      adminId
+    );
+    if (!checkPermissionWorkspace) {
+      throw new HttpException(
+        StatusCodes.FORBIDDEN,
+        "You have not permission to invite member"
+      );
+    }
     if (!adminUser) {
       throw new HttpException(StatusCodes.CONFLICT, "You are not an user");
     }
@@ -41,12 +53,11 @@ export default class InvitationService {
     if (!teamWorkspace) {
       throw new HttpException(StatusCodes.CONFLICT, "Workspace not found");
     }
-    const checkMember = await isWorkspaceMember(workspaceId, invitedUser.id);
-    if ((await isWorkspaceAdmin(workspaceId, adminId)) === false) {
-      throw new HttpException(StatusCodes.CONFLICT, "You are not the admin");
-    }
 
-    if (checkMember === true) {
+    if (await isWorkspaceAdmin(workspaceId, invitedUser.id)) {
+      throw new HttpException(StatusCodes.CONFLICT, "User is already an admin");
+    }
+    if (await isWorkspaceMember(workspaceId, invitedUser.id)) {
       throw new HttpException(StatusCodes.CONFLICT, "User is already a member");
     }
     const existInvitation = await this.invitationSchema.findOne({
@@ -96,8 +107,10 @@ export default class InvitationService {
     if (!teamWorkspace) {
       throw new HttpException(StatusCodes.CONFLICT, "Workspace not found");
     }
-    const checkMember = await isWorkspaceMember(workspaceId, userId);
-    if (checkMember === true) {
+    if (await isWorkspaceAdmin(workspaceId, userId)) {
+      throw new HttpException(StatusCodes.CONFLICT, "User is already an admin");
+    }
+    if (await isWorkspaceMember(workspaceId, userId)) {
       throw new HttpException(StatusCodes.CONFLICT, "User is already a member");
     }
     const existedInvitation = await this.invitationSchema.findOne({
@@ -136,7 +149,6 @@ export default class InvitationService {
     }
   }
   public async getInvitationDetail(
-    userId: string,
     invitationId: string
   ): Promise<IInvitationWorkspace> {
     const existInvitation = await this.invitationSchema
@@ -242,7 +254,7 @@ export default class InvitationService {
                 $unwind: {
                   path: "$workspaceMembers",
                   preserveNullAndEmptyArrays: true,
-                }, 
+                },
               },
               {
                 $lookup: {

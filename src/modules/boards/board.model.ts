@@ -3,7 +3,7 @@ import IBoard from "./board.interface";
 import { MODEL_NAME, MODE_ACCESS, SCHEMA_TYPE } from "@core/utils";
 
 const BoardSchema = new mongoose.Schema({
-  title : {
+  title: {
     type: String,
     required: [true, "Title is required"],
     minlength: [3, "Title must be at least 3 characters long"],
@@ -24,27 +24,36 @@ const BoardSchema = new mongoose.Schema({
   columnOrderIds: [
     {
       type: SCHEMA_TYPE,
-      ref: MODEL_NAME.column
-    }
+      ref: MODEL_NAME.column,
+    },
   ],
   type: {
     type: String,
     enum: [MODE_ACCESS.public, MODE_ACCESS.private],
-    default: MODE_ACCESS.public
+    default: MODE_ACCESS.public,
   },
   teamWorkspaceId: {
     type: SCHEMA_TYPE,
-    ref: MODEL_NAME.teamWorkspace
+    ref: MODEL_NAME.teamWorkspace,
   },
-  ownerIds: [{
-    type: SCHEMA_TYPE,
-    ref: MODEL_NAME.user
-  }],
+  ownerIds: [
+    {
+      user: {
+        type: SCHEMA_TYPE,
+        ref: MODEL_NAME.user,
+      },
+      role: {
+        type: String,
+        enum: ["boardLead", "boardAdmin"],
+        default: "boardAdmin",
+      },
+    },
+  ],
   memberIds: [
     {
       type: SCHEMA_TYPE,
-      ref: MODEL_NAME.user
-    }
+      ref: MODEL_NAME.user,
+    },
   ],
   createdAt: {
     type: Date,
@@ -52,27 +61,29 @@ const BoardSchema = new mongoose.Schema({
   },
   updatedAt: {
     type: Date,
-    default: Date.now
+    default: Date.now,
   },
   dueDate: {
     type: Date,
-    default: null
+    default: null,
   },
   isActive: {
     type: Boolean,
     default: true,
-    select: false
-  }
-})
-BoardSchema.index({ "title": "text"})
+    select: false,
+  },
+});
+BoardSchema.index({ title: "text" });
 
 BoardSchema.pre(/^find/, async function (next) {
   if (this instanceof Query) {
-      const label = this;
-      label.find({ isActive: { $ne: false } }).select('-__v');
+    const label = this;
+    label.find({ isActive: { $ne: false } }).select("-__v");
   }
   next();
 });
 
-
-export default mongoose.model<IBoard & mongoose.Document>(MODEL_NAME.board, BoardSchema);
+export default mongoose.model<IBoard & mongoose.Document>(
+  MODEL_NAME.board,
+  BoardSchema
+);

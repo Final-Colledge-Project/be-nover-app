@@ -1,8 +1,11 @@
 import {
   OBJECT_ID,
   isBoardAdmin,
+  isBoardLead,
   isBoardMember,
   isEmptyObject,
+  permissionColumn,
+  viewedBoardPermission,
 } from "@core/utils";
 import ColumnSchema from "./column.model";
 import CreateColumnDto from "./dtos/createColumnDto";
@@ -25,8 +28,9 @@ export default class ColumnService {
     if (!board) {
       throw new HttpException(StatusCodes.CONFLICT, "Board not found");
     }
-    if (await !isBoardAdmin(model.boardId, userId)) {
-      throw new HttpException(StatusCodes.FORBIDDEN, "You are not admin of this board");
+    const checkPermissionCol = await permissionColumn(board.id, userId);
+    if(!checkPermissionCol){
+      throw new HttpException(StatusCodes.FORBIDDEN, "You have not permission to create column");
     }
     const existColumn = await this.columnSchema.findOne({
       title: model.title,
@@ -61,8 +65,7 @@ export default class ColumnService {
     boardId: string,
     userId: string
   ): Promise<IColumn[]> {
-    const checkMember = await isBoardMember(boardId, userId);
-    if (!checkMember) {
+    if (await viewedBoardPermission(boardId, userId) === false) {
       throw new HttpException(StatusCodes.FORBIDDEN, "You are not member of this board");
     }
     const columns = await this.columnSchema
@@ -82,8 +85,9 @@ export default class ColumnService {
     if(!existColumn){
       throw new HttpException(StatusCodes.CONFLICT, "Column not found");
     }
-    if(!await isBoardMember(existColumn.boardId, userId)){
-      throw new HttpException(StatusCodes.FORBIDDEN, "You are not member of this board");
+    const checkPermissionCol = await permissionColumn(existColumn.boardId, userId);
+    if(!checkPermissionCol){
+      throw new HttpException(StatusCodes.FORBIDDEN, "You have not permission to update column");
     }
     if(model.title) {
       const existTitle = await this.columnSchema.findOne({title: model.title, boardId: existColumn.boardId}).exec();
@@ -100,5 +104,4 @@ export default class ColumnService {
     }
     return updatedColumn;
   }
-  
 }

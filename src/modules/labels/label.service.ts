@@ -1,7 +1,7 @@
 import LabelSchema from "./label.model";
 import ILabel from "./label.interface";
 import { HttpException } from "@core/exceptions";
-import { isBoardAdmin, isEmptyObject } from "@core/utils";
+import { isBoardAdmin, isBoardLead, isEmptyObject, viewedBoardPermission } from "@core/utils";
 import CreateLabelDto from "./dtos/createLabelDto";
 import { BoardSchema } from "@modules/boards";
 import UpdateLabelDto from "./dtos/updateLabelDto";
@@ -18,8 +18,9 @@ export default class LabelService {
     if (!existBoard) {
       throw new HttpException(404, "Board not found");
     }
-    const checkAdmin = await isBoardAdmin(model.boardId, userId);
-    if (!checkAdmin) {
+    const boardLead = await isBoardLead(model.boardId, userId);
+    const boardAdmin = await isBoardAdmin(model.boardId, userId);
+    if (boardLead === false && boardAdmin === false) {
       throw new HttpException(403, "You are not admin of this board");
     }
 
@@ -29,10 +30,13 @@ export default class LabelService {
     }
     return newLabel;
   }
-  public async getLabelsByBoardId(boardId: string): Promise<ILabel[]> {
+  public async getLabelsByBoardId(boardId: string, userId: string ): Promise<ILabel[]> {
     const existBoard = await BoardSchema.findById(boardId).exec();
     if (!existBoard) {
       throw new HttpException(404, "Board not found");
+    }
+    if(await viewedBoardPermission(boardId, userId) === false){
+      throw new HttpException(403, "Board is private");
     }
     const labels = await this.labelSchema.find({ boardId: boardId }).exec();
     return labels;
@@ -52,8 +56,9 @@ export default class LabelService {
     if(!existLabel){
       throw new HttpException(404, "Label not found");
     }
-    const checkAdmin = await isBoardAdmin(existLabel.boardId, userId);
-    if(!checkAdmin){
+    const boardLead = await isBoardLead(existLabel.boardId, userId);
+    const boardAdmin = await isBoardAdmin(existLabel.boardId, userId);
+    if (boardLead === false && boardAdmin === false) {
       throw new HttpException(403, "You are not admin of this board");
     }
     const label = await this.labelSchema.findByIdAndUpdate(labelId, model, {new: true}).exec();
@@ -67,8 +72,9 @@ export default class LabelService {
     if(!existLabel){
       throw new HttpException(404, "Label not found");
     }
-    const checkAdmin = await isBoardAdmin(existLabel.boardId, userId);
-    if(!checkAdmin){
+    const boardLead = await isBoardLead(existLabel.boardId, userId);
+    const boardAdmin = await isBoardAdmin(existLabel.boardId, userId);
+    if (boardLead === false && boardAdmin === false) {
       throw new HttpException(403, "You are not admin of this board");
     }
     await this.labelSchema.findByIdAndUpdate(labelId, {isActive: false}, {new: true}).exec();

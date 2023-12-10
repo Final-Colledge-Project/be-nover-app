@@ -1,9 +1,8 @@
 import {
   OBJECT_ID,
-  generateCardId,
   generateSubCardId,
-  isBoardMember,
   isEmptyObject,
+  permissionCard,
   viewedBoardPermission,
 } from "@core/utils";
 import AddSubTaskDto from "./dtos/addSubTaskDto";
@@ -11,13 +10,11 @@ import SubCardSchema from "./subCard.model";
 import { HttpException } from "@core/exceptions";
 import { CardSchema } from "@modules/cards";
 import ISubCard from "./subCard.interface";
-import { UserSchema } from "@modules/users";
 import { StatusCodes } from "http-status-codes";
 import UpdateSubTaskDto from "./dtos/updateSubTaskDto";
 export default class SubCardService {
   private subCardSchema = SubCardSchema;
   private cardSchema = CardSchema;
-  private userSchema = UserSchema;
   public async createSubCard(
     model: AddSubTaskDto,
     userId: string
@@ -29,11 +26,11 @@ export default class SubCardService {
     if (!existCard) {
       throw new HttpException(StatusCodes.CONFLICT, "Card not found");
     }
-    const checkBoardMember = await isBoardMember(existCard.boardId, userId);
-    if (!checkBoardMember) {
+    const checkPermissionCard = await permissionCard(existCard.boardId, userId);
+    if (!checkPermissionCard) {
       throw new HttpException(
         StatusCodes.FORBIDDEN,
-        "You are not member of this board"
+        "You have not permission to create subcard"
       );
     }
     const lengthSubCardInCard = await this.subCardSchema
@@ -72,11 +69,11 @@ export default class SubCardService {
     if (!existedCard) {
       throw new HttpException(StatusCodes.CONFLICT, "Card not found");
     }
-    const checkBoardMember = await isBoardMember(existedCard.boardId, userId);
-    if (!checkBoardMember) {
+    const checkPermissionCard = await permissionCard(existedCard.boardId, userId);
+    if (!checkPermissionCard) {
       throw new HttpException(
         StatusCodes.FORBIDDEN,
-        "You are not member of this board"
+        "You have not permission to assign member to subcard"
       );
     }
     const isMemberInCard = existedCard.memberIds.includes(assigneeId);
@@ -137,11 +134,11 @@ export default class SubCardService {
     if (!existCard) {
       throw new HttpException(StatusCodes.CONFLICT, "Card not found");
     }
-    const checkBoardMember = await isBoardMember(existCard.boardId, userId);
-    if (!checkBoardMember) {
+    const checkPermissionCard = await permissionCard(existCard.boardId, userId);
+    if (!checkPermissionCard) {
       throw new HttpException(
         StatusCodes.FORBIDDEN,
-        "You are not member of this board"
+        "You have not permission to update subcard"
       );
     }
     const updatedSubCard = await this.subCardSchema
@@ -167,11 +164,11 @@ export default class SubCardService {
     if (!existCard) {
       throw new HttpException(StatusCodes.CONFLICT, "Card not found");
     }
-    const checkBoardMember = await isBoardMember(existCard.boardId, userId);
-    if (!checkBoardMember) {
+    const checkPermissionCard = await permissionCard(existCard.boardId, userId);
+    if (!checkPermissionCard) {
       throw new HttpException(
         StatusCodes.FORBIDDEN,
-        "You are not member of this board"
+        "You have not permission to delete subcard"
       );
     }
     await this.subCardSchema.findByIdAndUpdate(subCardId, {

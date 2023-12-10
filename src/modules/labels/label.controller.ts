@@ -3,6 +3,7 @@ import LabelService from "./label.service";
 import { catchAsync } from "@core/utils";
 import CreateLabelDto from "./dtos/createLabelDto";
 import UpdateLabelDto from "./dtos/updateLabelDto";
+import { StatusCodes } from "http-status-codes";
 export default class LabelController {
   private labelService = new LabelService();
   public createLabel = catchAsync(
@@ -11,14 +12,15 @@ export default class LabelController {
       const userId = req.user.id;
       const label = await this.labelService.createLabel(model, userId);
       res
-        .status(201)
+        .status(StatusCodes.CREATED)
         .json({ data: label, message: "Create label successfully" });
     }
   );
   public getLabelsByBoardId = catchAsync(
     async (req: Request, res: Response) => {
       const boardId = req.params.id;
-      const labels = await this.labelService.getLabelsByBoardId(boardId);
+      const userId = req.user.id;
+      const labels = await this.labelService.getLabelsByBoardId(boardId, userId);
       res
         .status(200)
         .json({ data: labels, message: "Get labels successfully" });

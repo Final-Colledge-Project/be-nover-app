@@ -66,8 +66,7 @@ class OTPService {
      const {expireAt} = matchedOtpRecord
 
      //check if otp has expired
-     
-
+    
      if (expireAt.getTime() < Date.now().valueOf()){
       await OTPSchema.deleteOne({email}) 
       throw new HttpException(400, "OTP has expired. Request for new one")

@@ -1,7 +1,6 @@
 import { catchAsync } from "@core/utils";
 import InvitationService from "./invitation.service";
 import {StatusCodes} from "http-status-codes";
-import { NextFunction } from "express";
 export default class InvitationController {
   private invitationService = new InvitationService();
   public sendInvitation =  catchAsync(async (req: any, res: any) => {
@@ -19,9 +18,8 @@ export default class InvitationController {
     res.status(StatusCodes.OK).json({ message: "Response invitation successfully" });
   })
   public getInvitationDetail = catchAsync(async (req: any, res: any) => {
-    const userId = req.user.id;
     const invitationId = req.params.id;
-    const invitation = await this.invitationService.getInvitationDetail(userId, invitationId);
+    const invitation = await this.invitationService.getInvitationDetail(invitationId);
     res.status(StatusCodes.OK).json({ data: invitation, message: "Get invitation successfully" });
   })
 }

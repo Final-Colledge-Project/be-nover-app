@@ -3,7 +3,7 @@ import {
   isBoardMember,
   isCardNumber,
   isEmptyObject,
-  isWorkspaceMember,
+  permissionCard,
   viewedBoardPermission,
 } from "@core/utils";
 import CardSchema from "./card.model";
@@ -24,19 +24,22 @@ export default class CardService {
     userId: string
   ): Promise<ICard> {
     if (isEmptyObject(model)) {
-      throw new HttpException(400, "Model is empty");
+      throw new HttpException(StatusCodes.BAD_REQUEST, "Model is empty");
     }
     const existColumn = await ColumnSchema.findById(model.columnId).exec();
     if (!existColumn) {
-      throw new HttpException(409, "Column not found");
+      throw new HttpException(StatusCodes.CONFLICT, "Column not found");
     }
     const existBoard = await BoardSchema.findById(existColumn.boardId).exec();
     if (!existBoard) {
-      throw new HttpException(409, "Board not found");
+      throw new HttpException(StatusCodes.CONFLICT, "Board not found");
     }
-    const checkBoardMember = await isBoardMember(existColumn.boardId, userId);
-    if (!checkBoardMember) {
-      throw new HttpException(403, "You are not member of this board");
+    const checkPermissionCard = await permissionCard(existBoard.id, userId);
+    if (!checkPermissionCard) {
+      throw new HttpException(
+        StatusCodes.FORBIDDEN,
+        "You have not permission to create card"
+      );
     }
     const lengthCardInBoard = await this.cardSchema
       .find({ boardId: existColumn.boardId })
@@ -171,11 +174,11 @@ export default class CardService {
     if (!card) {
       throw new HttpException(StatusCodes.CONFLICT, "Card not found");
     }
-    const checkBoardMember = await isBoardMember(card.boardId, userId);
-    if (!checkBoardMember) {
+    const checkPermissionCard = await permissionCard(card.boardId, userId);
+    if (!checkPermissionCard) {
       throw new HttpException(
         StatusCodes.FORBIDDEN,
-        "You are not member of this board"
+        "You have not permission to update card"
       );
     }
     const updateCard = await this.cardSchema
@@ -203,11 +206,11 @@ export default class CardService {
     if (!card) {
       throw new HttpException(StatusCodes.CONFLICT, "Card not found");
     }
-    const checkBoardMember = await isBoardMember(card.boardId, userId);
-    if (!checkBoardMember) {
+    const checkPermissionCard = await permissionCard(card.boardId, userId);
+    if (!checkPermissionCard) {
       throw new HttpException(
         StatusCodes.FORBIDDEN,
-        "You are not member of this board"
+        "You have not permission to assign member to card"
       );
     }
     const checkBoarMemberByAssignee = await isBoardMember(
