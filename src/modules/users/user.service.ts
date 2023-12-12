@@ -83,7 +83,7 @@ class UserService {
 
     const checkPhoneExist = await this.userSchema
       .find({
-        $and: [{ phone: { $eq: model.phone } }, { _id: userId }],
+        $and: [{ phone: { $eq: model.phone } }, { _id: { $ne: userId } }],
       })
       .exec();
 
