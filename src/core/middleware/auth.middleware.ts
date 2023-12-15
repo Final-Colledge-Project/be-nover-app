@@ -64,7 +64,7 @@ const authMiddleware = async (
     }
     //grant access to protected route
     if (!req.user) {
-      req.user = { id: "" };
+      req.user = { id: "", tokenLogin: "" };
     }
     req.user.id = currentUser.id;
     next();
