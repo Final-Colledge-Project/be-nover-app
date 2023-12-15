@@ -34,7 +34,7 @@ export default class UsersRoute implements Route {
     this.router.get(
       this.path,
       authMiddleware,
-      permissionMiddleware(["admin"]),
+      // permissionMiddleware(["admin"]),
       this.userController.getAllUsers
     );
 

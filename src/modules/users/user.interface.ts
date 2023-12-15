@@ -11,7 +11,14 @@ export default interface IUser {
   createdAt: Date;
   passwordChangedAt: Date;
   role: string;
-  verify: boolean,
+  verify: boolean;
   refreshToken: string[];
+  profileLogin: IProfileLogin;
   active: boolean;
+}
+
+interface IProfileLogin {
+  id: string;
+  provider: string;
+  tokenLogin: string;
 }

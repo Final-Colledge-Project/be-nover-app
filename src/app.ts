@@ -10,6 +10,8 @@ import { errorMiddleWare } from "@core/middleware";
 import cookieParser from "cookie-parser";
 import firebase, { initializeApp } from 'firebase/app';
 import config from './core/config/firebaseConfig';
+import './core/config/passportConfig';
+import passport from "passport";
 export default class App {
   public app: express.Application;
   public port: string | number;
@@ -61,7 +63,7 @@ export default class App {
 
     this.app.use(express.json());
     this.app.use(express.urlencoded({ extended: true }));
-    
+    this.app.use(passport.initialize())
   }
 
   private initializeErrorMiddleware() {
