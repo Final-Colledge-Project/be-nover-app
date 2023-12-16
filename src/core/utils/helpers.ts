@@ -30,5 +30,5 @@ export const generateSubCardId = (
   return `[${cardId}]-${lengthSubCard + 1}`;
 };
 export const formatDate = (date: string | Date) => {
-  return dayjs(date).format("YYYY-MM-DD HH:mm:ss");
+  return date ? dayjs(date).format("YYYY-MM-DD HH:mm:ss") : null;
 };
