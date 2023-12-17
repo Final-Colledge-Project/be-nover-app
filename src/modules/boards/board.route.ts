@@ -52,5 +52,10 @@ export default class BoardRoute implements Route {
       authMiddleware,
       this.boardController.updateBoard
     )
+    this.router.patch(
+      this.path + "/:id/members/:memberId",
+      authMiddleware,
+      this.boardController.grandBoardAdmin
+    )
   }
 }

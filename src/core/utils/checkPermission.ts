@@ -5,12 +5,12 @@ import {
   IMember,
   IWorkspaceAdmin,
 } from "@modules/teamWorkspace/teamWorkspace.interface";
-import { MODE_ACCESS } from "./constant";
+import { MODE_ACCESS, ROLE } from "./constant";
 
 export const isWorkspaceAdmin = async (
   teamWorkspaceId: string,
   adminId: string
-) => {
+): Promise<Boolean> => {
   const teamWorkspace = await TeamWorkspaceSchema.findById(
     teamWorkspaceId
   ).exec();
@@ -25,13 +25,13 @@ export const isWorkspaceAdmin = async (
     return false;
   }
 
-  return isAdmin?.role === "admin";
+  return isAdmin?.role === ROLE.admin;
 };
 
 export const isWorkspaceMember = async (
   teamWorkspaceId: string,
   memberId: string
-) => {
+): Promise<Boolean> => {
   const teamWorkspace = await TeamWorkspaceSchema.findById(
     teamWorkspaceId
   ).exec();
@@ -46,33 +46,42 @@ export const isWorkspaceMember = async (
 export const isSuperAdmin = async (
   teamWorkspaceId: string,
   superAdminId: string
-) => {
+): Promise<Boolean> => {
   const teamWorkspace = await TeamWorkspaceSchema.findById(
     teamWorkspaceId
   ).exec();
   const isAdmin = teamWorkspace?.workspaceAdmins.find(
     (admin) => admin.user.toString() === superAdminId
   );
-  return isAdmin?.role === "superAdmin";
+  return isAdmin?.role === ROLE.superAdmin;
 };
 
-export const isBoardLead = async (boardId: string, leadId: string) => {
+export const isBoardLead = async (
+  boardId: string,
+  leadId: string
+): Promise<Boolean> => {
   const existBoard = await BoardSchema.findById(boardId).exec();
   const isLead = existBoard?.ownerIds.find((lead) => {
     return lead.user.toString() === leadId;
   });
-  return isLead?.role === "boardLead";
+  return isLead?.role === ROLE.boardLead;
 };
 
-export const isBoardAdmin = async (boardId: string, adminId: string) => {
+export const isBoardAdmin = async (
+  boardId: string,
+  adminId: string
+): Promise<Boolean> => {
   const existBoard = await BoardSchema.findById(boardId).exec();
   const isAdmin = existBoard?.ownerIds.find((admin) => {
     return admin.user.toString() === adminId;
   });
-  return isAdmin?.role === "boardAdmin";
+  return isAdmin?.role === ROLE.boardAdmin;
 };
 
-export const isBoardMember = async (boardId: string, memberId: string) => {
+export const isBoardMember = async (
+  boardId: string,
+  memberId: string
+): Promise<Boolean> => {
   const teamWorkspace = await BoardSchema.findById(boardId).exec();
   const checkMember = teamWorkspace?.memberIds.find((member: string) => {
     return member.toString() === memberId;
@@ -80,7 +89,10 @@ export const isBoardMember = async (boardId: string, memberId: string) => {
   return checkMember ? true : false;
 };
 
-export const isCardNumber = async (cardId: string, userId: string) => {
+export const isCardNumber = async (
+  cardId: string,
+  userId: string
+): Promise<Boolean> => {
   const card = await CardSchema.findById(cardId).exec();
   const checkMember = card?.memberIds.find((member: string) => {
     return member.toString() === userId;
@@ -95,7 +107,7 @@ export const isCardNumber = async (cardId: string, userId: string) => {
 export const viewedBoardPermission = async (
   boardId: string,
   userId: string
-) => {
+): Promise<Boolean> => {
   const board = await BoardSchema.findById(boardId).exec();
   const workspaceId = await TeamWorkspaceSchema.findById(
     board?.teamWorkspaceId
@@ -115,7 +127,7 @@ export const viewedBoardPermission = async (
 export const viewWorkspacePermission = async (
   workspaceId: string,
   userId: string
-) => {
+): Promise<Boolean> => {
   const superAdmin = await isSuperAdmin(workspaceId, userId);
   const workspaceAdmin = await isWorkspaceAdmin(workspaceId, userId);
   const workspaceMember = await isWorkspaceMember(workspaceId, userId);
@@ -124,12 +136,15 @@ export const viewWorkspacePermission = async (
 export const permissionWorkspace = async (
   workspaceId: string,
   userId: string
-) => {
+): Promise<Boolean> => {
   const checkSuperAdmin = await isSuperAdmin(workspaceId, userId);
   const checkWorkspaceAdmin = await isWorkspaceAdmin(workspaceId, userId);
   return checkSuperAdmin || checkWorkspaceAdmin;
 };
-export const permissionBoard = async (boardId: string, userId: string) => {
+export const permissionBoard = async (
+  boardId: string,
+  userId: string
+): Promise<Boolean> => {
   const board = await BoardSchema.findById(boardId).exec();
   const checkSuperAdmin = await isSuperAdmin(
     board?.teamWorkspaceId || "",
@@ -139,7 +154,10 @@ export const permissionBoard = async (boardId: string, userId: string) => {
   const checkBoardAdmin = await isBoardAdmin(board?.id, userId);
   return checkSuperAdmin || checkBoardLead || checkBoardAdmin;
 };
-export const permissionColumn = async (boardId: string, userId: string) => {
+export const permissionColumn = async (
+  boardId: string,
+  userId: string
+): Promise<Boolean> => {
   const board = await BoardSchema.findById(boardId).exec();
   const checkSuperAdmin = await isSuperAdmin(
     board?.teamWorkspaceId || "",
@@ -149,7 +167,10 @@ export const permissionColumn = async (boardId: string, userId: string) => {
   const checkBoardAdmin = await isBoardAdmin(board?.id, userId);
   return checkSuperAdmin || checkBoardLead || checkBoardAdmin;
 };
-export const permissionCard = async (boardId: string, userId: string) => {
+export const permissionCard = async (
+  boardId: string,
+  userId: string
+): Promise<Boolean> => {
   const board = await BoardSchema.findById(boardId).exec();
   const checkSuperAdmin = await isSuperAdmin(
     board?.teamWorkspaceId || "",

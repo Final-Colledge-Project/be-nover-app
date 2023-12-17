@@ -1,6 +1,10 @@
 import {
   OBJECT_ID,
+  ROLE,
+  isBoardLead,
+  isBoardMember,
   isEmptyObject,
+  isSuperAdmin,
   permissionBoard,
   permissionWorkspace,
   viewWorkspacePermission,
@@ -349,7 +353,7 @@ export default class BoardService {
                 memberIds: 1,
                 createdAt: 1,
               },
-            }
+            },
           ],
         },
       },
@@ -386,7 +390,7 @@ export default class BoardService {
 
     const oweners = await this.boardSchema
       .findById(boardId)
-      .select("ownerIds.user")
+      .select("ownerIds.user ownerIds.role")
       .populate({
         path: "ownerIds.user",
         select: "firstName lastName avatar email",
@@ -433,5 +437,37 @@ export default class BoardService {
     }
     updatedBoard.save();
     return updatedBoard;
+  }
+  public async grandBoardAdmin(
+    userId: string,
+    boardId: string,
+    memberId: string
+  ): Promise<void> {
+    const board = await this.boardSchema.findById(boardId).exec();
+    if (!board) {
+      throw new HttpException(StatusCodes.CONFLICT, "Board not found");
+    }
+    const checkSuperAdmin = await isSuperAdmin(board.teamWorkspaceId, userId);
+    const checkBoardLead = await isBoardLead(boardId, userId);
+    if (!checkBoardLead && !checkSuperAdmin) {
+      throw new HttpException(
+        StatusCodes.FORBIDDEN,
+        "You are not permission to grand admin permission"
+      );
+    }
+    const checkBoardMember = await isBoardMember(boardId, memberId);
+    if (!checkBoardMember) {
+      throw new HttpException(
+        StatusCodes.CONFLICT,
+        "This member is not member of this board"
+      );
+    }
+    board.ownerIds.push({
+      user: memberId,
+      role: ROLE.boardAdmin,
+    })
+    const memBoard = cloneDeep(board.memberIds);
+    board.memberIds = memBoard.filter((mem : any) => mem.toString() !== memberId)
+    await board.save();
   }
 }

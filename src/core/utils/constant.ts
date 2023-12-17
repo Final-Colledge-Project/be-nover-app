@@ -36,3 +36,10 @@ export const SUBTASK_STATUS = {
   completed: 'completed',
   cancel: 'cancel'
 }
+export const ROLE = {
+  superAdmin: 'superAdmin',
+  admin: 'admin',
+  boardLead: 'boardLead',
+  boardAdmin: 'boardAdmin',
+  member: 'member'
+}
