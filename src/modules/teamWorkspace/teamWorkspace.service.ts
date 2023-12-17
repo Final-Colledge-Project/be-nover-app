@@ -78,10 +78,11 @@ class TeamWorkspaceService {
         "You are not permission to assign member to admin"
       );
     }
-    teamWorkspace.workspaceAdmins.unshift({
+    teamWorkspace.workspaceAdmins.push({
       user: member?.id,
       role: "admin",
     } as IWorkspaceAdmin);
+    teamWorkspace.workspaceMembers = teamWorkspace.workspaceMembers.filter((mem : any) => mem.user.toString() !== member?.id.toString())
     await teamWorkspace.save();
   }
   public async getTeamWorkspaceById(userId: string, workspaceId: string) {
