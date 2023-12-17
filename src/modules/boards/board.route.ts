@@ -53,9 +53,14 @@ export default class BoardRoute implements Route {
       this.boardController.updateBoard
     )
     this.router.patch(
-      this.path + "/:id/members/:memberId",
+      this.path + "/grand-ba/:id/members/:memberId",
       authMiddleware,
       this.boardController.grandBoardAdmin
+    )
+    this.router.delete(
+      this.path + "/revoke-ba/:id/members/:memberId",
+      authMiddleware,
+      this.boardController.revokeBoardAdmin
     )
   }
 }

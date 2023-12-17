@@ -1,10 +1,12 @@
 import {
   OBJECT_ID,
   ROLE,
+  isBoardAdmin,
   isBoardLead,
   isBoardMember,
   isEmptyObject,
   isSuperAdmin,
+  isWorkspaceMember,
   permissionBoard,
   permissionWorkspace,
   viewWorkspacePermission,
@@ -465,9 +467,52 @@ export default class BoardService {
     board.ownerIds.push({
       user: memberId,
       role: ROLE.boardAdmin,
-    })
+    });
     const memBoard = cloneDeep(board.memberIds);
-    board.memberIds = memBoard.filter((mem : any) => mem.toString() !== memberId)
+    board.memberIds = memBoard.filter(
+      (mem: any) => mem.toString() !== memberId
+    );
     await board.save();
+  }
+  public async revokeBoardAdmin(
+    userId: string,
+    boardId: string,
+    boardAdminId: string
+  ): Promise<void> {
+    const board = await this.boardSchema.findById(boardId).exec();
+    if (!board) {
+      throw new HttpException(StatusCodes.CONFLICT, "Board not found");
+    }
+    const checkSuperAdmin = await isSuperAdmin(board.teamWorkspaceId, userId);
+    const checkBoardLead = await isBoardLead(boardId, userId);
+    if (!checkBoardLead && !checkSuperAdmin) {
+      throw new HttpException(
+        StatusCodes.FORBIDDEN,
+        "You are not permission to grand admin permission"
+      );
+    }
+    const checkWorkspaceMem = await isWorkspaceMember(
+      board.teamWorkspaceId,
+      boardAdminId
+    );
+    if (!checkWorkspaceMem) {
+      throw new HttpException(
+        StatusCodes.CONFLICT,
+        "This member is not member of this workspace"
+      );
+    }
+    const checkBoardAdmin = await isBoardAdmin(boardId, boardAdminId);
+    if (!checkBoardAdmin) {
+      throw new HttpException(
+        StatusCodes.CONFLICT,
+        "This member is not admin of this board"
+      );
+    }
+    const checkBoardMember = await isBoardMember(boardId, boardAdminId);
+    if (!checkBoardMember) {
+      board.ownerIds = board.ownerIds.filter((admin: any) => admin.user.toString() !== boardAdminId);
+      board.memberIds.push(boardAdminId);
+      await board.save();
+    }
   }
 }
