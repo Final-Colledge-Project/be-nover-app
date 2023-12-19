@@ -319,4 +319,17 @@ export default class CardService {
     }
     return card[0];
   }
+  public async uploadCoverCard(userId : string, cardId: string, cover: string) : Promise<String> {
+    const existCard = await this.cardSchema.findById(cardId).exec();
+    if (!existCard) {
+      throw new HttpException(StatusCodes.CONFLICT, "Card not found");
+    }
+    const checkPermissionCard = await permissionCard(existCard.boardId, userId);
+    if(!checkPermissionCard) {
+      throw new HttpException(StatusCodes.FORBIDDEN, "You have not permission to upload cover card");
+    }
+    existCard.cover = cover;
+    await existCard.save();
+    return existCard.cover;
+  }
 }

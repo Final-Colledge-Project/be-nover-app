@@ -1,6 +1,6 @@
 import { Router } from "express";
 import CardController from "./card.controller";
-import { authMiddleware, validationMiddleware } from "@core/middleware";
+import { authMiddleware, uploadSingleImage, validationMiddleware } from "@core/middleware";
 import CreateCardDto from "./dtos/createCardDto";
 import { Route } from "@core/interfaces";
 import UpdateCardDto from "./dtos/updateCardDto";
@@ -39,5 +39,11 @@ export default class CardRoute implements Route {
       authMiddleware,
       this.cardController.updateCard
     )
+    this.router.patch(
+      this.path + "/:id/upload-cover",
+      authMiddleware,
+      uploadSingleImage("cover"),
+      this.cardController.uploadCoverCard
+    );
   }
 }

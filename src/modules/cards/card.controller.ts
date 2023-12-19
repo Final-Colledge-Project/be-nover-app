@@ -1,4 +1,4 @@
-import { catchAsync } from "@core/utils";
+import { catchAsync, getImageUrl } from "@core/utils";
 import CardService from "./card.service";
 import { NextFunction, Request, Response } from "express";
 import UpdateCardDto from "./dtos/updateCardDto";
@@ -37,5 +37,12 @@ export default class CardController {
     const userId = req.user.id;
     const members = await this.cardService.getMemberInCard(cardId, userId);
     res.status(StatusCodes.OK).json({ data: members, message: "Get members in card successfully" });
+  })
+  public uploadCoverCard = catchAsync( async (req: Request, res: Response, next: NextFunction) => {
+    const userId = req.user.id;
+    const cardId = req.params.id;
+    const imageUrl = await getImageUrl(req)
+    const cardCover = await this.cardService.uploadCoverCard(userId, cardId, imageUrl)
+    res.status(200).json({data: cardCover, message: "Upload card cover successfully"})
   })
 }

@@ -5,6 +5,7 @@ import {
   isSuperAdmin,
   isWorkspaceAdmin,
   isWorkspaceMember,
+  permissionWorkspace,
   viewWorkspacePermission,
 } from "@core/utils";
 import CreateTeamWorkspaceDto from "./dtos/createTeamWorkspace.dto";
@@ -12,7 +13,7 @@ import TeamWorkspaceSchema from "./teamWorkspace.model";
 import { HttpException } from "@core/exceptions";
 import JoinGroupDto from "./dtos/joinGroup.dto";
 import { UserSchema } from "@modules/users";
-import { IWorkspaceAdmin } from "./teamWorkspace.interface";
+import ITeamWorkspace, { IWorkspaceAdmin } from "./teamWorkspace.interface";
 import { StatusCodes } from "http-status-codes";
 class TeamWorkspaceService {
   public teamWorkspaceSchema = TeamWorkspaceSchema;
@@ -230,6 +231,7 @@ class TeamWorkspaceService {
       ...workspaceMember[0],
     };
   }
+  
 }
 
 export default TeamWorkspaceService;

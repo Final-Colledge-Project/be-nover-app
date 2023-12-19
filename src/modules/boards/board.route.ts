@@ -1,7 +1,7 @@
 import { Route } from "@core/interfaces";
 import BoardController from "./board.controller";
 import { Router } from "express";
-import { authMiddleware, validationMiddleware } from "@core/middleware";
+import { authMiddleware, uploadSingleImage, validationMiddleware } from "@core/middleware";
 import CreateBoardDto from "./dtos/createBoardDto";
 import UpdateBoardDto from "./dtos/updateBoardDto";
 import AddMemsToBoardDto from "./dtos/addMemsToBoard";
@@ -62,5 +62,11 @@ export default class BoardRoute implements Route {
       authMiddleware,
       this.boardController.revokeBoardAdmin
     )
+    this.router.patch(
+      this.path + "/:id/upload-cover",
+      authMiddleware,
+      uploadSingleImage("cover"),
+      this.boardController.uploadCoverBoard
+    );
   }
 }

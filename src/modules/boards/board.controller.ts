@@ -1,6 +1,6 @@
-import { catchAsync } from "@core/utils";
+import { catchAsync, getImageUrl } from "@core/utils";
 import BoardService from "./board.service";
-import { NextFunction, Request, Response } from "express";
+import { Request, Response } from "express";
 import CreateBoardDto from "./dtos/createBoardDto";
 import { StatusCodes } from "http-status-codes";
 import AddMemsToBoardDto from "./dtos/addMemsToBoard";
@@ -99,4 +99,11 @@ export default class BoardController {
       .status(StatusCodes.OK)
       .json({ message: "Revoke board admin successfully" });
   });
+  public uploadCoverBoard = catchAsync( async (req: Request, res: Response) => {
+    const userId = req.user.id;
+    const boardId = req.params.id;
+    const imageUrl = await getImageUrl(req)
+    const boardCover = await this.boardService.uploadCoverBoard(userId, boardId, imageUrl)
+    res.status(200).json({data: boardCover, message: "Upload board cover successfully"})
+  })
 }

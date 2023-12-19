@@ -515,4 +515,18 @@ export default class BoardService {
       await board.save();
     }
   }
+  public async uploadCoverBoard(userId : string, boardId: string, cover: string) : Promise<String> {
+    const existBoard = await this.boardSchema.findById(boardId).exec();
+    const checkPermissionBoard = await permissionBoard(boardId, userId);
+    if(!existBoard) {
+      throw new HttpException(StatusCodes.BAD_REQUEST, "Worskapce not found");
+    }
+    if(!checkPermissionBoard) {
+      throw new HttpException(StatusCodes.FORBIDDEN, "You have not permission to upload cover workspace");
+    }
+    existBoard.cover = cover;
+    await existBoard.save();
+    return existBoard.cover;
+  }
+ 
 }
