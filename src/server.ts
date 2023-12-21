@@ -13,6 +13,7 @@ import { CardRoute } from "@modules/cards";
 import { LabelRoute } from "@modules/labels";
 import { InvitationRoute } from "@modules/invitations";
 import { SubCardRoute } from "@modules/sub_cards";
+import { NotificationRoute } from "@modules/notifications";
 validateEnv();
 const routes = [
   new IndexRoute(),
@@ -26,7 +27,8 @@ const routes = [
   new CardRoute(),
   new LabelRoute(),
   new InvitationRoute(),
-  new SubCardRoute()
+  new SubCardRoute(),
+  new NotificationRoute()
 ];
 const app = new App(routes);
 app.listen();

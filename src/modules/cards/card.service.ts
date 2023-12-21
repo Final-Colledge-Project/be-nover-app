@@ -1,4 +1,5 @@
 import {
+  MODEL_NAME,
   OBJECT_ID,
   isBoardMember,
   isCardNumber,
@@ -17,8 +18,12 @@ import UpdateCardDto from "./dtos/updateCardDto";
 import { StatusCodes } from "http-status-codes";
 import assignUserDto from "./dtos/assignUserDto";
 import { UserSchema } from "@modules/users";
+import PushNotificationDto from "@modules/notifications/dtos/pushNotificationDto";
+import { NotificationService } from "@modules/notifications";
 export default class CardService {
   private cardSchema = CardSchema;
+  private notificationService = new NotificationService();
+  private userSchema = UserSchema;
   public async createCard(
     model: CreateCardDto,
     userId: string
@@ -240,6 +245,22 @@ export default class CardService {
       },
       { new: true }
     );
+    const senderId = await this.userSchema.findById(userId).exec();
+    const sender = {
+      id: senderId?._id,
+      avatar: senderId?.avatar || null,
+      name: `${senderId?.firstName} ${senderId?.lastName}`,
+    };
+    const message = 'have assigned you to the task'
+    const model: PushNotificationDto = {
+      sender: sender,
+      type: MODEL_NAME.board,
+      message,
+      targetType: card?.title,
+      contextUrl: "",
+      receiverId: assigneeId,
+    };
+    await this.notificationService.pushNotification(model);
   }
   public async getMemberInCard(
     cardId: string,
@@ -319,14 +340,21 @@ export default class CardService {
     }
     return card[0];
   }
-  public async uploadCoverCard(userId : string, cardId: string, cover: string) : Promise<String> {
+  public async uploadCoverCard(
+    userId: string,
+    cardId: string,
+    cover: string
+  ): Promise<String> {
     const existCard = await this.cardSchema.findById(cardId).exec();
     if (!existCard) {
       throw new HttpException(StatusCodes.CONFLICT, "Card not found");
     }
     const checkPermissionCard = await permissionCard(existCard.boardId, userId);
-    if(!checkPermissionCard) {
-      throw new HttpException(StatusCodes.FORBIDDEN, "You have not permission to upload cover card");
+    if (!checkPermissionCard) {
+      throw new HttpException(
+        StatusCodes.FORBIDDEN,
+        "You have not permission to upload cover card"
+      );
     }
     existCard.cover = cover;
     await existCard.save();

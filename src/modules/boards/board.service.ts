@@ -1,4 +1,5 @@
 import {
+  MODEL_NAME,
   OBJECT_ID,
   ROLE,
   isBoardAdmin,
@@ -25,9 +26,18 @@ import { TeamWorkspaceSchema } from "@modules/teamWorkspace";
 import UpdateBoardDto from "./dtos/updateBoardDto";
 import AddMemsToBoardDto from "./dtos/addMemsToBoard";
 import { StatusCodes } from "http-status-codes";
+import { UserSchema } from "@modules/users";
+import {
+  NotificationSchema,
+  NotificationService,
+} from "@modules/notifications";
+import PushNotificationDto from "@modules/notifications/dtos/pushNotificationDto";
 export default class BoardService {
   private boardSchema = BoardSchema;
   private workspaceSchema = TeamWorkspaceSchema;
+  private userSchema = UserSchema;
+  private notificationSchema = NotificationSchema;
+  private notificationService = new NotificationService();
   public async createBoard(
     model: CreateBoardDto,
     ownerId: string
@@ -85,6 +95,25 @@ export default class BoardService {
     const memberList = [...new Set([...board.memberIds, ...members])];
     board.memberIds = memberList;
     await board.save();
+    //Send notification
+    const senderId = await this.userSchema.findById(userId).exec();
+    const sender = {
+      id: senderId?._id,
+      avatar: senderId?.avatar || null,
+      name: `${senderId?.firstName} ${senderId?.lastName}`,
+    };
+    const message = `have added you to the board`;
+    const model : PushNotificationDto[] =  members.map((memberId: string) => {
+      return {
+        sender: sender,
+        type: MODEL_NAME.board,
+        message,
+        targetType: board?.title,
+        contextUrl: '',
+        receiverId: memberId,
+      };
+    })
+    await this.notificationService.pushMultiNotification(model);
     return board;
   }
   public async getAllBoardByWorkspaceId(
@@ -510,23 +539,31 @@ export default class BoardService {
     }
     const checkBoardMember = await isBoardMember(boardId, boardAdminId);
     if (!checkBoardMember) {
-      board.ownerIds = board.ownerIds.filter((admin: any) => admin.user.toString() !== boardAdminId);
+      board.ownerIds = board.ownerIds.filter(
+        (admin: any) => admin.user.toString() !== boardAdminId
+      );
       board.memberIds.push(boardAdminId);
       await board.save();
     }
   }
-  public async uploadCoverBoard(userId : string, boardId: string, cover: string) : Promise<String> {
+  public async uploadCoverBoard(
+    userId: string,
+    boardId: string,
+    cover: string
+  ): Promise<String> {
     const existBoard = await this.boardSchema.findById(boardId).exec();
     const checkPermissionBoard = await permissionBoard(boardId, userId);
-    if(!existBoard) {
+    if (!existBoard) {
       throw new HttpException(StatusCodes.BAD_REQUEST, "Worskapce not found");
     }
-    if(!checkPermissionBoard) {
-      throw new HttpException(StatusCodes.FORBIDDEN, "You have not permission to upload cover workspace");
+    if (!checkPermissionBoard) {
+      throw new HttpException(
+        StatusCodes.FORBIDDEN,
+        "You have not permission to upload cover workspace"
+      );
     }
     existBoard.cover = cover;
     await existBoard.save();
     return existBoard.cover;
   }
- 
 }
