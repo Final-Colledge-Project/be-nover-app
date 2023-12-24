@@ -19,6 +19,11 @@ export default class CardRoute implements Route {
       this.cardController.createCard
     ),
     this.router.get(
+      this.path + '/assigned-me',
+      authMiddleware,
+      this.cardController.assignedToMe
+    ),
+    this.router.get(
       this.path + '/:id',
       authMiddleware,
       this.cardController.getDetailCardById
@@ -28,6 +33,7 @@ export default class CardRoute implements Route {
       authMiddleware,
       this.cardController.assignMemberToCard
     )
+    
     this.router.get(
       this.path + '/:id/members',
       authMiddleware,
@@ -55,5 +61,6 @@ export default class CardRoute implements Route {
       authMiddleware,
       this.cardController.deleteCard
     )
+   
   }
 }

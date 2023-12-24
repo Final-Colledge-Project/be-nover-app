@@ -431,4 +431,90 @@ export default class CardService {
       { new: true }
     ).exec();
   }
+public async cardAssignedToMe(userId: string) : Promise<Object[]>  { 
+    console.log("🚀 ~ file: card.service.ts:435 ~ CardService ~ cardAssignedToMe ~ userId:", userId)
+    const assignedToMe = await this.cardSchema.aggregate([
+      {
+        $lookup: {
+        from: 'boards',
+        localField: 'boardId',
+        foreignField: '_id',
+        as: 'boards',
+        pipeline: [
+          {
+            $project: {
+              _id: 1,
+              title: 1
+            }
+          }
+        ]
+        }
+      },
+      {
+        $lookup: {
+          from: 'labels',
+          localField: 'labelId',
+          foreignField: '_id',
+          as: 'labels',
+          pipeline: [
+            {
+              $project: {
+                _id: 1,
+                name: 1,
+                color: 1
+              }
+            }
+          ]
+        }
+      },
+      {
+        $lookup: {
+          from: 'columns',
+          localField: 'columnId',
+          foreignField: '_id',
+          as: 'columns',
+          pipeline: [
+            {
+              $project: {
+                _id: 1,
+                title: 1
+              }
+            }
+          ]
+        }
+      },
+      {
+        $match: {
+          memberIds: {
+            $in: [new OBJECT_ID(userId)]
+          },
+          isActive: {$eq: true}
+        }
+      },
+      {
+        $project: {
+          _id: 1,
+          board: {
+            $arrayElemAt: [
+              '$boards', 0
+            ],
+          },
+          column: {
+            $arrayElemAt: [
+              '$columns', 0
+            ]
+          },
+          cardId: 1,
+          title: 1, 
+          description: 1,
+          startDate: 1,
+          dueDate: 1,
+          priority: 1,
+          labels: 1
+        }
+      }
+    ]).exec()
+    return assignedToMe;
+  }
+  
 }

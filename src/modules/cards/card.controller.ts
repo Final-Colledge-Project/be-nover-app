@@ -81,5 +81,14 @@ export default class CardController {
     const cardId = req.params.id;
     await this.cardService.deleteCard(cardId, userId);
     res.status(StatusCodes.OK).json({ message: "Delete card successfully" });
-  })
+  });
+  public assignedToMe = catchAsync(async (req: Request, res: Response) => {
+    const assignedToMe = await this.cardService.cardAssignedToMe(req.user.id);
+    res
+      .status(StatusCodes.OK)
+      .json({
+        data: assignedToMe,
+        message: "Get task assigned to me successfully",
+      });
+  });
 }
