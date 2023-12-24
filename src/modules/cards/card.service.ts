@@ -24,6 +24,7 @@ export default class CardService {
   private cardSchema = CardSchema;
   private notificationService = new NotificationService();
   private userSchema = UserSchema;
+  private boardSchema = BoardSchema;
   public async createCard(
     model: CreateCardDto,
     userId: string
@@ -203,7 +204,7 @@ export default class CardService {
     cardId: string,
     assigneeId: string
   ): Promise<void> {
-    const member = await UserSchema.findById(assigneeId).exec();
+    const member = await this.userSchema.findById(assigneeId).exec();
     if (!member) {
       throw new HttpException(StatusCodes.CONFLICT, "User not found");
     }
@@ -245,18 +246,16 @@ export default class CardService {
       },
       { new: true }
     );
-    const senderId = await this.userSchema.findById(userId).exec();
-    const sender = {
-      id: senderId?._id,
-      avatar: senderId?.avatar || null,
-      name: `${senderId?.firstName} ${senderId?.lastName}`,
-    };
-    const message = 'have assigned you to the task'
+    const board = await this.boardSchema.findById(card.boardId).exec();
+    const message = "have assigned you to the task";
     const model: PushNotificationDto = {
-      sender: sender,
-      type: MODEL_NAME.board,
+      senderId: userId,
+      targetType: card.title,
       message,
-      targetType: card?.title,
+      type: {
+        name: board?.title || null,
+        category: MODEL_NAME.board,
+      },
       contextUrl: "",
       receiverId: assigneeId,
     };
@@ -359,5 +358,77 @@ export default class CardService {
     existCard.cover = cover;
     await existCard.save();
     return existCard.cover;
+  }
+  public async unAssignMemberFromCard(
+    userId: string,
+    cardId: string,
+    assigneeId: string
+  ): Promise<void> {
+    const member = await this.userSchema.findById(assigneeId).exec();
+    if (!member) {
+      throw new HttpException(StatusCodes.CONFLICT, "User not found");
+    }
+    const card = await this.cardSchema.findById(cardId).exec();
+    if (!card) {
+      throw new HttpException(StatusCodes.CONFLICT, "Card not found");
+    }
+    const checkPermissionCard = await permissionCard(card.boardId, userId);
+    if (!checkPermissionCard) {
+      throw new HttpException(
+        StatusCodes.FORBIDDEN,
+        "You have not permission to unassign member from card"
+      );
+    }
+    const checkCardMember = await isCardNumber(cardId, member.id);
+    if (!checkCardMember) {
+      throw new HttpException(
+        StatusCodes.CONFLICT,
+        "User is not member of this card"
+      );
+    }
+    await this.cardSchema.findByIdAndUpdate(
+      {
+        _id: cardId,
+      },
+      {
+        $pull: { memberIds: member.id },
+        $set: { updatedAt: Date.now() },
+      },
+      { new: true }
+    );
+  }
+  public async deleteCard(cardId: string, userId: string): Promise<void> {
+    const card = await this.cardSchema.findById(cardId).exec();
+    if (!card) {
+      throw new HttpException(StatusCodes.CONFLICT, "Card not found");
+    }
+    const checkPermissionCard = await permissionCard(card.boardId, userId);
+    if (!checkPermissionCard) {
+      throw new HttpException(
+        StatusCodes.FORBIDDEN,
+        "You have not permission to delete card"
+      );
+    }
+    const deletedCard = await this.cardSchema
+      .findByIdAndUpdate(
+        cardId,
+        {
+          isActive: false,
+          updatedAt: Date.now(),
+        },
+        { new: true }
+      )
+      .exec();
+    if (!deletedCard) {
+      throw new HttpException(StatusCodes.CONFLICT, "Card not deleted");
+    }
+    await ColumnSchema.findByIdAndUpdate(
+      { _id: new OBJECT_ID(deletedCard.columnId) },
+      {
+        $pull: { cardOrderIds: deletedCard._id },
+        $set: { updatedAt: Date.now() },
+      },
+      { new: true }
+    ).exec();
   }
 }

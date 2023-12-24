@@ -3,21 +3,11 @@ import { MODEL_NAME } from "@core/utils";
 import INotification from "./notification.interface";
 
 const NotificationSchema = new mongoose.Schema({
-  sender: {
-    id: {
-      type: mongoose.Schema.ObjectId,
-      ref: MODEL_NAME.user,
-    },
-    avatar: {
-      type: String,
-      default: null,
-    },
-    name: {
-      type: String,
-      default: null,
-    },
+  senderId: {
+    type: mongoose.Schema.ObjectId,
+    ref: MODEL_NAME.user,
   },
-  type: {
+  targetType: {
     type: String,
     default: null,
   },
@@ -25,9 +15,9 @@ const NotificationSchema = new mongoose.Schema({
     type: String,
     default: null,
   },
-  targetType : {
-    type: String,
-    default: null,
+  type: {
+    category: { type: String, default: null },
+    name: { type: String, default: null },
   },
   contextUrl: {
     type: String,
@@ -56,8 +46,8 @@ const NotificationSchema = new mongoose.Schema({
   },
   updatedAt: {
     type: Date,
-    default: Date.now
-  }
+    default: Date.now,
+  },
 });
 
 NotificationSchema.pre(/^find/, async function (next) {

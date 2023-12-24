@@ -1,6 +1,6 @@
 export default interface INotification {
-  sender: ISender;
-  type: string;
+  senderId: string;
+  type: IType;
   message: string;
   targetType: string;
   contextUrl: string;
@@ -16,4 +16,9 @@ export interface ISender {
   id: string;
   avatar: string | null;
   name: string;
+}
+
+export interface IType {
+  name: string | null;
+  category: string;
 }

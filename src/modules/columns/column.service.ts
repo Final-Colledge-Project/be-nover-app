@@ -104,4 +104,27 @@ export default class ColumnService {
     }
     return updatedColumn;
   }
+  public async deleteColumn(columnId: string, userId: string) : Promise<IColumn> {
+    const column = await this.columnSchema.findById(columnId).exec();
+    if(!column){
+      throw new HttpException(StatusCodes.CONFLICT, "Column not found");
+    }
+    const checkPermissionCol = await permissionColumn(column.boardId, userId);
+    if(!checkPermissionCol){
+      throw new HttpException(StatusCodes.FORBIDDEN, "You have not permission to delete column");
+    }
+    if(column.cardOrderIds.length > 0){
+      throw new HttpException(StatusCodes.CONFLICT, "Column not empty");
+    }
+    const deletedColumn = await this.columnSchema.findByIdAndDelete(columnId).exec();
+    if(!deletedColumn){
+      throw new HttpException(StatusCodes.CONFLICT, "Column not deleted");
+    }
+    await BoardSchema.findByIdAndUpdate(
+      { _id: new OBJECT_ID(deletedColumn.boardId) },
+      { $pull: { columnOrderIds: deletedColumn._id } },
+      { new: true }
+    ).exec();
+    return deletedColumn;
+  }
 }

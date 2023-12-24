@@ -23,6 +23,9 @@ export default class BoardController {
       boardId,
       memberId
     );
+    const io = req.app.get("socketio");
+    console.log("🚀 ~ file: board.controller.ts:28 ~ BoardController ~ addMemberToBoard=catchAsync ~ users:", io.clients)
+    io.emit("add_boardMems", memberId);
     res
       .status(StatusCodes.OK)
       .json({ data: board, message: "Add member to board successfully" });
@@ -99,11 +102,24 @@ export default class BoardController {
       .status(StatusCodes.OK)
       .json({ message: "Revoke board admin successfully" });
   });
-  public uploadCoverBoard = catchAsync( async (req: Request, res: Response) => {
+  public uploadCoverBoard = catchAsync(async (req: Request, res: Response) => {
     const userId = req.user.id;
     const boardId = req.params.id;
-    const imageUrl = await getImageUrl(req)
-    const boardCover = await this.boardService.uploadCoverBoard(userId, boardId, imageUrl)
-    res.status(200).json({data: boardCover, message: "Upload board cover successfully"})
+    const imageUrl = await getImageUrl(req);
+    const boardCover = await this.boardService.uploadCoverBoard(
+      userId,
+      boardId,
+      imageUrl
+    );
+    res
+      .status(200)
+      .json({ data: boardCover, message: "Upload board cover successfully" });
+  });
+  public deleteMemberFromBoard = catchAsync(async(req: Request, res: Response) => {
+    const userId = req.user.id;
+    const boardId = req.params.id;
+    const memberId = req.params.memberId;
+    await this.boardService.deleteMemberFromBoard(userId, boardId, memberId);
+    res.status(StatusCodes.OK).json({ message: "Delete member from board successfully" });
   })
 }

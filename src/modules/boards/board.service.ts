@@ -32,6 +32,8 @@ import {
   NotificationService,
 } from "@modules/notifications";
 import PushNotificationDto from "@modules/notifications/dtos/pushNotificationDto";
+import { CardSchema } from "@modules/cards";
+import { SubCardSchema } from "@modules/sub_cards";
 export default class BoardService {
   private boardSchema = BoardSchema;
   private workspaceSchema = TeamWorkspaceSchema;
@@ -96,20 +98,17 @@ export default class BoardService {
     board.memberIds = memberList;
     await board.save();
     //Send notification
-    const senderId = await this.userSchema.findById(userId).exec();
-    const sender = {
-      id: senderId?._id,
-      avatar: senderId?.avatar || null,
-      name: `${senderId?.firstName} ${senderId?.lastName}`,
-    };
     const message = `have added you to the board`;
     const model : PushNotificationDto[] =  members.map((memberId: string) => {
       return {
-        sender: sender,
-        type: MODEL_NAME.board,
+        senderId: userId,
+        targetType: board.title,
         message,
-        targetType: board?.title,
-        contextUrl: '',
+        type: {
+          category: MODEL_NAME.board,
+          name: board.title,
+        },
+        contextUrl: `${process.env.URL_CLIENT}/u/boards/${boardId}`,
         receiverId: memberId,
       };
     })
@@ -565,5 +564,41 @@ export default class BoardService {
     existBoard.cover = cover;
     await existBoard.save();
     return existBoard.cover;
+  }
+  public async deleteMemberFromBoard(userId: string, boardId: string, memberId: string): Promise<void> {
+    const board = await this.boardSchema.findById(boardId).exec();
+    if (!board) {
+      throw new HttpException(StatusCodes.CONFLICT, "Board not found");
+    }
+    const checkPermissionBoard = await permissionBoard(boardId, userId);
+    if (!checkPermissionBoard) {
+      throw new HttpException(
+        StatusCodes.FORBIDDEN,
+        "You have not permission to delete member from board"
+      );
+    }
+    const checkBoardMember = await isBoardMember(boardId, memberId);
+    if (!checkBoardMember) {
+      throw new HttpException(
+        StatusCodes.CONFLICT,
+        "This member is not member of this board"
+      );
+    }
+    board.memberIds = board.memberIds.filter((mem: any) => mem.toString() !== memberId);
+    await board.save();
+    const assignedCard = await CardSchema.find({boardId: boardId, memberIds: memberId}).exec();
+    if (assignedCard.length > 0) {
+      assignedCard.forEach(async (card) => {
+        card.memberIds = card.memberIds.filter((mem: any) => mem.toString() !== memberId);
+        await card.save();
+      })
+    }
+    const assignedSubCard = await SubCardSchema.find({boardId: boardId, assignedTo: memberId}).exec();
+    if (assignedSubCard.length > 0) {
+      assignedSubCard.forEach(async (card) => {
+        card.assignedTo = null;
+        await card.save();
+      })
+    }
   }
 }

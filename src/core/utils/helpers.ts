@@ -32,3 +32,13 @@ export const generateSubCardId = (
 export const formatDate = (date: string | Date) => {
   return date ? dayjs(date).format("YYYY-MM-DD HH:mm:ss") : null;
 };
+
+export const sendMessageToUser = (users :Map<any, any>, userId: string, message: string, io: any) => {
+  const socketId = users.get(userId);
+  if (socketId) {
+    io.to(socketId).emit('directMessage', { message });
+    console.log(`Sent a direct message to user ${userId}`);
+  } else {
+    console.log(`User ${userId} not currently connected`);
+  }
+}

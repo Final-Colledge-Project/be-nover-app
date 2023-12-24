@@ -69,7 +69,10 @@ export default class SubCardService {
     if (!existedCard) {
       throw new HttpException(StatusCodes.CONFLICT, "Card not found");
     }
-    const checkPermissionCard = await permissionCard(existedCard.boardId, userId);
+    const checkPermissionCard = await permissionCard(
+      existedCard.boardId,
+      userId
+    );
     if (!checkPermissionCard) {
       throw new HttpException(
         StatusCodes.FORBIDDEN,
@@ -171,10 +174,25 @@ export default class SubCardService {
         "You have not permission to delete subcard"
       );
     }
-    await this.subCardSchema.findByIdAndUpdate(subCardId, {
-      assignedTo: null,
-      isActive: false,
-      updatedAt: Date.now(),
-    });
+    await this.subCardSchema
+      .findByIdAndUpdate(
+        subCardId,
+        {
+          isDeleted: true,
+          updatedAt: Date.now(),
+        },
+        { new: true }
+      )
+      .exec();
+    await this.cardSchema
+      .findByIdAndUpdate(
+        { _id: new OBJECT_ID(existSubCard.cardId) },
+        {
+          $pull: { subCards: existSubCard._id },
+          $set: { updatedAt: Date.now() },
+        },
+        { new: true }
+      )
+      .exec();
   }
 }

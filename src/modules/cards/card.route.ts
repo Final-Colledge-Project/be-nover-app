@@ -45,5 +45,15 @@ export default class CardRoute implements Route {
       uploadSingleImage("cover"),
       this.cardController.uploadCoverCard
     );
+    this.router.patch(
+      this.path + '/:id/unassign-member/:assigneeId',
+      authMiddleware,
+      this.cardController.unAssignMemberFromCard
+    )
+    this.router.delete(
+      this.path + '/:id',
+      authMiddleware,
+      this.cardController.deleteCard
+    )
   }
 }

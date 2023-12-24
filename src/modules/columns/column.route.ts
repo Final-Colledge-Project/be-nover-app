@@ -34,5 +34,10 @@ export default class ColumnRoute implements Route {
       authMiddleware,
       this.columnController.updateColumn
     )
+    this.router.delete(
+      this.path + '/:id',
+      authMiddleware,
+      this.columnController.deleteColumn
+    )
   }
 }
