@@ -16,14 +16,15 @@ export default class NotificationRoute implements Route {
       this.notificationController.getNotificationByUserId
     );
     this.router.patch(
+      this.path + "/mark-all",
+      authMiddleware,
+      this.notificationController.markReadAllNotification
+    );
+    this.router.patch(
       this.path + "/:id",
       authMiddleware,
       this.notificationController.markReadNotification
     )
-    this.router.patch(
-      this.path + "/mark-all",
-      authMiddleware,
-      this.notificationController.markReadAllNotification
-    )
+   
   }
 }

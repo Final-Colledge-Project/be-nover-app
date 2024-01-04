@@ -85,11 +85,11 @@ export default class NotificationService {
       throw new HttpException(StatusCodes.CONFLICT, "Notification not created");
     }
   }
-  public async markReadNotification(notificationId: string) : Promise<void> {
+  public async markReadNotification(notificationId: string, userId: string) : Promise<void> {
     if (!notificationId) {
       throw new HttpException(StatusCodes.BAD_REQUEST, "Notification id is empty");
     }
-    const notification = await this.notificationSchema.findById(notificationId);
+    const notification = await this.notificationSchema.findOne({_id: notificationId, receiverId: userId, isActive: true});
     if (!notification) {
       throw new HttpException(StatusCodes.NOT_FOUND, "Notification not found");
     }

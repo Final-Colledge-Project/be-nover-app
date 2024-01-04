@@ -12,7 +12,7 @@ export default class NotificationController {
   })
   public markReadNotification = catchAsync(async (req: Request, res: Response) => {
     const notificationId = req.params.id;
-    await this.notificationService.markReadNotification(notificationId);
+    await this.notificationService.markReadNotification(notificationId, req.user.id);
     res.status(StatusCodes.OK).json({message: "Mark read notification successfully" });
   })
   public markReadAllNotification = catchAsync(async (req: Request, res: Response) => {
