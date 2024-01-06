@@ -95,7 +95,7 @@ export default class ColumnService {
     if (!existColumn) {
       throw new HttpException(StatusCodes.CONFLICT, "Column not found");
     }
-    if (!model.cardOrderIds) {
+    if (model.title) {
       const checkPermissionCol = await permissionColumn(
         existColumn.boardId,
         userId
