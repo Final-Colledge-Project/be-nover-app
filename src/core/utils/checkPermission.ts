@@ -86,7 +86,10 @@ export const isBoardMember = async (
   const checkMember = teamWorkspace?.memberIds.find((member: string) => {
     return member.toString() === memberId;
   });
-  return checkMember ? true : false;
+  const checkOwner = teamWorkspace?.ownerIds.find((owner) => {
+    return owner.user.toString() === memberId;
+  })
+  return checkMember || checkOwner ? true : false;
 };
 
 export const isCardNumber = async (
@@ -97,7 +100,6 @@ export const isCardNumber = async (
   const checkMember = card?.memberIds.find((member: string) => {
     return member.toString() === userId;
   });
-
   if (!!checkMember === false) {
     return false;
   }
