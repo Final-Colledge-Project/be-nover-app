@@ -122,4 +122,10 @@ export default class BoardController {
     await this.boardService.deleteMemberFromBoard(userId, boardId, memberId);
     res.status(StatusCodes.OK).json({ message: "Delete member from board successfully" });
   })
+  public deleteBoard = catchAsync(async (req: Request, res: Response) => { 
+    const userId = req.user.id;
+    const boardId = req.params.id;
+    await this.boardService.deleteBoard(boardId, userId);
+    res.status(StatusCodes.OK).json({ message: "Delete board successfully" });
+  })
 }

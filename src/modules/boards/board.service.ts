@@ -99,7 +99,7 @@ export default class BoardService {
     await board.save();
     //Send notification
     const message = `have added you to the board`;
-    const model : PushNotificationDto[] =  members.map((memberId: string) => {
+    const model: PushNotificationDto[] = members.map((memberId: string) => {
       return {
         senderId: userId,
         targetType: board.title,
@@ -111,7 +111,7 @@ export default class BoardService {
         contextUrl: `${process.env.URL_CLIENT}/u/boards/${boardId}`,
         receiverId: memberId,
       };
-    })
+    });
     await this.notificationService.pushMultiNotification(model);
     return board;
   }
@@ -565,7 +565,11 @@ export default class BoardService {
     await existBoard.save();
     return existBoard.cover;
   }
-  public async deleteMemberFromBoard(userId: string, boardId: string, memberId: string): Promise<void> {
+  public async deleteMemberFromBoard(
+    userId: string,
+    boardId: string,
+    memberId: string
+  ): Promise<void> {
     const board = await this.boardSchema.findById(boardId).exec();
     if (!board) {
       throw new HttpException(StatusCodes.CONFLICT, "Board not found");
@@ -584,21 +588,59 @@ export default class BoardService {
         "This member is not member of this board"
       );
     }
-    board.memberIds = board.memberIds.filter((mem: any) => mem.toString() !== memberId);
+    board.memberIds = board.memberIds.filter(
+      (mem: any) => mem.toString() !== memberId
+    );
     await board.save();
-    const assignedCard = await CardSchema.find({boardId: boardId, memberIds: memberId}).exec();
+    const assignedCard = await CardSchema.find({
+      boardId: boardId,
+      memberIds: memberId,
+    }).exec();
     if (assignedCard.length > 0) {
       assignedCard.forEach(async (card) => {
-        card.memberIds = card.memberIds.filter((mem: any) => mem.toString() !== memberId);
+        card.memberIds = card.memberIds.filter(
+          (mem: any) => mem.toString() !== memberId
+        );
         await card.save();
-      })
+      });
     }
-    const assignedSubCard = await SubCardSchema.find({boardId: boardId, assignedTo: memberId}).exec();
+    const assignedSubCard = await SubCardSchema.find({
+      boardId: boardId,
+      assignedTo: memberId,
+    }).exec();
     if (assignedSubCard.length > 0) {
       assignedSubCard.forEach(async (card) => {
         card.assignedTo = null;
         await card.save();
-      })
+      });
     }
+  }
+  public async deleteBoard(boardId: string, userId: string): Promise<void> {
+    const board = await this.boardSchema.findById(boardId).exec();
+    if (!board) {
+      throw new HttpException(StatusCodes.CONFLICT, "Board not found");
+    }
+    const checkSuperAdmin = await isSuperAdmin(board.teamWorkspaceId, userId);
+    const checkBoardLead = await isBoardLead(boardId, userId);
+    if (!checkBoardLead && !checkSuperAdmin) {
+      throw new HttpException(
+        StatusCodes.FORBIDDEN,
+        "You are not permission to delete this board"
+      );
+    }
+    board.isActive = false;
+    board.updatedAt = new Date();
+    await board.save();
+    const filter = {
+      boardId: boardId,
+      isActive: true,
+    };
+    const updateOperation = {
+      $set: {
+        isActive: false,
+        updatedAt: Date.now(),
+      },
+    };
+    await CardSchema.updateMany(filter, updateOperation).exec();
   }
 }
