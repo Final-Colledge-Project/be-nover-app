@@ -1,0 +1,19 @@
+extends baseEmail
+
+block content
+  p Hi 
+    b #{name},
+  p Welcome to NoverTask, we're glad to have you 🎉🎉
+  p The platform is all you need, from team to yourself. Let's start to manage your work!
+  table.btn.btn-primary(role='presentation', border='0', cellpadding='0', cellspacing='0')
+    tbody
+      tr
+        td(align='left')
+          table(role='presentation', border='0', cellpadding='0', cellspacing='0')
+            tbody
+              tr
+                td
+                  a(href=`${url}`, target='_blank') Explore the platform
+  p If you need any help, please don't hesitate to contact us!
+
+
