@@ -1,6 +1,12 @@
 import EmailVerificationController from "./emailVerify.controller";
 import EmailVerificationRoute from "./emailVerify.route";
 import EmailVerificationService from "./emailVerify.service";
-
-
-export {EmailVerificationService, EmailVerificationController, EmailVerificationRoute}
+import EmailVerifySchema from "./emailVerify.model";
+import IEmailVerify from "./emailVerify.interface";
+export {
+  EmailVerificationService,
+  EmailVerificationController,
+  EmailVerificationRoute,
+  EmailVerifySchema,
+  IEmailVerify,
+};

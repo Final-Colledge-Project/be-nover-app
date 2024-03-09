@@ -35,8 +35,8 @@ const UserSchema = new mongoose.Schema({
   phone: {
     type: String,
     default: null,
-    unique: true,
     trim: true,
+    unique: true,
     length: [10, "Phone must be at least 10 characters long"],
   },
   birthDate: {
@@ -68,11 +68,6 @@ const UserSchema = new mongoose.Schema({
     default: "user",
     select: false,
   },
-  verify: {
-    type: Boolean,
-    default: false,
-    select: false,
-  },
   refreshToken: {
     type: [String],
     select: false,
@@ -92,7 +87,7 @@ const UserSchema = new mongoose.Schema({
       type: String,
       default: null,
       select: false,
-    }
+    },
   },
   active: {
     type: Boolean,
@@ -100,7 +95,7 @@ const UserSchema = new mongoose.Schema({
     select: false,
   },
 });
-
+UserSchema.index({ email: 1 });
 UserSchema.pre(/^find/, async function (next) {
   if (this instanceof Query) {
     const user = this;
