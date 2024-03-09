@@ -9,6 +9,8 @@ import UpdateUserDto from "./dtos/updateUser.dto";
 import ChangePasswordDto from "./dtos/changePasswordDto";
 import { Request, Response } from "express";
 import { StatusCodes } from "http-status-codes";
+import { EmailVerifySchema } from "@modules/email_verification";
+
 class UserService {
   private userSchema = UserSchema;
 
@@ -22,42 +24,36 @@ class UserService {
       .select("+verify +password")
       .exec();
 
-    if (user) {
-      if (user.verify === true && !!user.password) {
+    //Verify user
+    const existedEmailVerify = await EmailVerifySchema.findOne({
+      email: model.email,
+    }).exec();
+
+    if (!existedEmailVerify) {
+      throw new HttpException(StatusCodes.BAD_REQUEST, "Email is not verified");
+    } else {
+      if (existedEmailVerify.isVerified === true) {
         throw new HttpException(
-          409,
-          `User with email ${model.email} already exists`
-        );
-      } else if (!user.verify) {
-        throw new HttpException(
-          409,
-          `User with email ${model.email} is not verified`
+          StatusCodes.BAD_REQUEST,
+          "Email is existed and verified"
         );
       }
-    }
-
-    if (!user) {
-      throw new HttpException(
-        409,
-        `User with email ${model.email} is not verified`
-      );
     }
 
     const salt = await bcrypt.genSalt(10);
 
     const hashedPassword = await bcrypt.hash(model.password!, salt);
 
-    const createdUser = await this.userSchema.findByIdAndUpdate(
-      user._id,
-      {
-        ...model,
-        password: hashedPassword,
-      },
-      { new: true, runValidators: true }
-    );
+    const createdUser = await this.userSchema.create({
+      ...model,
+      password: hashedPassword,
+    });
 
     if (!createdUser) {
       throw new HttpException(409, "You are not an user");
+    } else {
+      existedEmailVerify.isVerified = true;
+      await existedEmailVerify.save();
     }
 
     const url = "http://localhost:5173/";
