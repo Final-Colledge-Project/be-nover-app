@@ -15,6 +15,7 @@ export default class BoardController {
       .json({ data: board, message: "Create board successfully" });
   });
   public addMemberToBoard = catchAsync(async (req: Request, res: Response) => {
+    console.log('~~~>Test')
     const userId = req.user.id;
     const boardId = req.params.id;
     const memberId: AddMemsToBoardDto = req.body;
