@@ -15,6 +15,10 @@ import JoinGroupDto from "./dtos/joinGroup.dto";
 import { UserSchema } from "@modules/users";
 import ITeamWorkspace, { IWorkspaceAdmin } from "./teamWorkspace.interface";
 import { StatusCodes } from "http-status-codes";
+import { BoardSchema } from "@modules/boards";
+import { ColumnSchema } from "@modules/columns";
+import { CardSchema } from "@modules/cards";
+import { LabelSchema } from "@modules/labels";
 class TeamWorkspaceService {
   public teamWorkspaceSchema = TeamWorkspaceSchema;
   public async createTeamWorkspace(
@@ -43,7 +47,10 @@ class TeamWorkspaceService {
       workspaceAdmins: [{ user: superAdminId, role: "superAdmin" }],
     });
     if (!newWorskspace) {
-      throw new HttpException(StatusCodes.CONFLICT, "Create team workspace failed");
+      throw new HttpException(
+        StatusCodes.CONFLICT,
+        "Create team workspace failed"
+      );
     }
 
     return {
@@ -83,12 +90,17 @@ class TeamWorkspaceService {
       user: member?.id,
       role: "admin",
     } as IWorkspaceAdmin);
-    teamWorkspace.workspaceMembers = teamWorkspace.workspaceMembers.filter((mem : any) => mem.user.toString() !== member?.id.toString())
+    teamWorkspace.workspaceMembers = teamWorkspace.workspaceMembers.filter(
+      (mem: any) => mem.user.toString() !== member?.id.toString()
+    );
     await teamWorkspace.save();
   }
   public async getTeamWorkspaceById(userId: string, workspaceId: string) {
-    if (await viewWorkspacePermission(workspaceId, userId) === false) {
-      throw new HttpException(StatusCodes.CONFLICT, "You are not permission to view this workspace");
+    if ((await viewWorkspacePermission(workspaceId, userId)) === false) {
+      throw new HttpException(
+        StatusCodes.CONFLICT,
+        "You are not permission to view this workspace"
+      );
     }
     const workspace = await this.teamWorkspaceSchema
       .findById(workspaceId)
@@ -102,8 +114,11 @@ class TeamWorkspaceService {
     userId: string,
     workspaceId: string
   ): Promise<Object> {
-    if (await viewWorkspacePermission(workspaceId, userId) === false) {
-      throw new HttpException(StatusCodes.CONFLICT, "You are not permission to view this workspace");
+    if ((await viewWorkspacePermission(workspaceId, userId)) === false) {
+      throw new HttpException(
+        StatusCodes.CONFLICT,
+        "You are not permission to view this workspace"
+      );
     }
     const workspaceAdmins = await this.teamWorkspaceSchema.aggregate([
       {
@@ -231,7 +246,46 @@ class TeamWorkspaceService {
       ...workspaceMember[0],
     };
   }
-  
+  public async deleteWorkspace(
+    workspaceId: string,
+    userId: string
+  ): Promise<void> {
+    const workspace = await this.teamWorkspaceSchema
+      .findById(workspaceId)
+      .exec();
+    if (!workspace) {
+      throw new HttpException(StatusCodes.CONFLICT, "Workspace not found");
+    }
+    const checkSuperAdmin = await isSuperAdmin(workspaceId, userId);
+    if (!checkSuperAdmin) {
+      throw new HttpException(
+        StatusCodes.CONFLICT,
+        "You are not permission to delete this workspace"
+      );
+    }
+
+    const deletedBoard = await BoardSchema.find({
+      teamWorkspaceId: workspaceId,
+      isActive: true,
+    }).exec();
+    const filterDeleteBoard = { teamWorkspaceId: workspaceId, isActive: true };
+    const updateBoard = {
+      $set: { isActive: false, updatedAt: Date.now() },
+    };
+    await BoardSchema.updateMany(filterDeleteBoard, updateBoard);
+
+    deletedBoard.forEach(async (board) => {
+      const filterDelete = { boardId: board.id };
+      const updateOperation = {
+        $set: { isActive: false, updatedAt: Date.now() },
+      };
+      await ColumnSchema.updateMany(filterDelete, updateOperation);
+      await CardSchema.updateMany(filterDelete, updateOperation);
+      await LabelSchema.updateMany(filterDelete, updateOperation);
+    });
+    workspace.isActive = false;
+    await workspace.save();
+  }
 }
 
 export default TeamWorkspaceService;

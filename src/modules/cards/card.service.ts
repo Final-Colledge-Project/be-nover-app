@@ -432,10 +432,6 @@ export default class CardService {
     ).exec();
   }
   public async cardAssignedToMe(userId: string): Promise<Object[]> {
-    console.log(
-      "🚀 ~ file: card.service.ts:435 ~ CardService ~ cardAssignedToMe ~ userId:",
-      userId
-    );
     const assignedToMe = await this.cardSchema
       .aggregate([
         {

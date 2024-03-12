@@ -34,6 +34,7 @@ import {
 import PushNotificationDto from "@modules/notifications/dtos/pushNotificationDto";
 import { CardSchema } from "@modules/cards";
 import { SubCardSchema } from "@modules/sub_cards";
+import { LabelSchema } from "@modules/labels";
 export default class BoardService {
   private boardSchema = BoardSchema;
   private workspaceSchema = TeamWorkspaceSchema;
@@ -642,5 +643,6 @@ export default class BoardService {
       },
     };
     await CardSchema.updateMany(filter, updateOperation).exec();
+    await LabelSchema.updateMany(filter, updateOperation).exec();
   }
 }
