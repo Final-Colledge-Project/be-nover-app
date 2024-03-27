@@ -29,7 +29,7 @@ class TeamWorkspaceService {
     }
     const superAdminId = model.superAdminWorkspaceId;
     const teamWorkspace = await this.teamWorkspaceSchema
-      .findOne({ name: model.name })
+      .findOne({ name: model.name, isActive: true })
       .exec();
     if (
       teamWorkspace &&

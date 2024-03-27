@@ -59,7 +59,11 @@ export default class BoardService {
       );
     }
     const existedBoard = await this.boardSchema
-      .findOne({ title: model.title, teamWorkspaceId: model.teamWorkspaceId })
+      .findOne({
+        title: model.title,
+        teamWorkspaceId: model.teamWorkspaceId,
+        isActive: true,
+      })
       .exec();
     if (existedBoard) {
       throw new HttpException(StatusCodes.CONFLICT, "Board already exists");
@@ -514,6 +518,7 @@ export default class BoardService {
     }
     const checkSuperAdmin = await isSuperAdmin(board.teamWorkspaceId, userId);
     const checkBoardLead = await isBoardLead(boardId, userId);
+
     if (!checkBoardLead && !checkSuperAdmin) {
       throw new HttpException(
         StatusCodes.FORBIDDEN,
