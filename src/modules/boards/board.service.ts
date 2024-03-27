@@ -598,22 +598,22 @@ export default class BoardService {
       memberIds: memberId,
     }).exec();
     if (assignedCard.length > 0) {
-      assignedCard.forEach(async (card) => {
+      for (const card of assignedCard) {
         card.memberIds = card.memberIds.filter(
           (mem: any) => mem.toString() !== memberId
         );
         await card.save();
-      });
+      }
     }
     const assignedSubCard = await SubCardSchema.find({
       boardId: boardId,
       assignedTo: memberId,
     }).exec();
     if (assignedSubCard.length > 0) {
-      assignedSubCard.forEach(async (card) => {
+      for (const card of assignedSubCard) {
         card.assignedTo = null;
         await card.save();
-      });
+      }
     }
   }
   public async deleteBoard(boardId: string, userId: string): Promise<void> {
