@@ -59,7 +59,11 @@ export default class BoardService {
       );
     }
     const existedBoard = await this.boardSchema
-      .findOne({ title: model.title, teamWorkspaceId: model.teamWorkspaceId })
+      .findOne({
+        title: model.title,
+        teamWorkspaceId: model.teamWorkspaceId,
+        isActive: true,
+      })
       .exec();
     if (existedBoard) {
       throw new HttpException(StatusCodes.CONFLICT, "Board already exists");
@@ -514,6 +518,7 @@ export default class BoardService {
     }
     const checkSuperAdmin = await isSuperAdmin(board.teamWorkspaceId, userId);
     const checkBoardLead = await isBoardLead(boardId, userId);
+
     if (!checkBoardLead && !checkSuperAdmin) {
       throw new HttpException(
         StatusCodes.FORBIDDEN,
@@ -598,22 +603,22 @@ export default class BoardService {
       memberIds: memberId,
     }).exec();
     if (assignedCard.length > 0) {
-      assignedCard.forEach(async (card) => {
+      for (const card of assignedCard) {
         card.memberIds = card.memberIds.filter(
           (mem: any) => mem.toString() !== memberId
         );
         await card.save();
-      });
+      }
     }
     const assignedSubCard = await SubCardSchema.find({
       boardId: boardId,
       assignedTo: memberId,
     }).exec();
     if (assignedSubCard.length > 0) {
-      assignedSubCard.forEach(async (card) => {
+      for (const card of assignedSubCard) {
         card.assignedTo = null;
         await card.save();
-      });
+      }
     }
   }
   public async deleteBoard(boardId: string, userId: string): Promise<void> {
