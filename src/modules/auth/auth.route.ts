@@ -7,6 +7,7 @@ import AuthDto from "./auth.dto";
 import ResetDto from "./dtos/reset.dto";
 import passport, { Profile } from "passport";
 import { UserSchema } from "@modules/users";
+import { google } from "googleapis";
 
 export default class AuthRoute implements Route {
   public path = "/api/v1/auth";
@@ -17,6 +18,12 @@ export default class AuthRoute implements Route {
   constructor() {
     this.initializeRoute();
   }
+
+  oauth2Client = new google.auth.OAuth2(
+    process.env.GOOGLE_CLIENT_ID,
+    process.env.GOOGLE_CLIENT_SECRET,
+    process.env.GOOGLE_REDIRECT_URI
+  );
 
   private initializeRoute() {
     this.router.post(
@@ -53,7 +60,7 @@ export default class AuthRoute implements Route {
     this.router.get(
       this.path + "/google",
       passport.authenticate("google", {
-        scope: ["profile", "email"],
+        scope: ["profile", "email", "https://www.googleapis.com/auth/calendar"],
         session: false,
       })
     );
@@ -74,13 +81,15 @@ export default class AuthRoute implements Route {
         })(req, res, next);
       },
       (req, res) => {
-        res.redirect(`${process.env.URL_CLIENT}/login-success/${req.user?.id}/${req.user?.tokenLogin}`);
+        res.redirect(
+          `${process.env.URL_CLIENT}/login-success/${req.user?.id}/${req.user?.tokenLogin}`
+        );
       }
     );
     this.router.post(
       this.path + "/login-success",
       this.authController.handleLoginSuccess
-    )
-  };
-  
+    );
+    
+  }
 }
