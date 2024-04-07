@@ -36,7 +36,6 @@ const UserSchema = new mongoose.Schema({
     type: String,
     default: null,
     trim: true,
-    unique: true,
     length: [10, "Phone must be at least 10 characters long"],
   },
   birthDate: {

@@ -14,10 +14,11 @@ import { LabelRoute } from "@modules/labels";
 import { InvitationRoute } from "@modules/invitations";
 import { SubCardRoute } from "@modules/sub_cards";
 import { NotificationRoute } from "@modules/notifications";
+import { ScheduleRoute } from "@modules/schedule";
 validateEnv();
 const routes = [
   new IndexRoute(),
-  new UsersRoute(), 
+  new UsersRoute(),
   new AuthRoute(),
   new OTPRoute(),
   new EmailVerificationRoute(),
@@ -28,7 +29,8 @@ const routes = [
   new LabelRoute(),
   new InvitationRoute(),
   new SubCardRoute(),
-  new NotificationRoute()
+  new NotificationRoute(),
+  new ScheduleRoute(),
 ];
 const app = new App(routes);
 app.listen();
