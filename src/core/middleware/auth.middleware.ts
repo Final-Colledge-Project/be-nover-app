@@ -18,12 +18,12 @@ const authMiddleware = async (
   next: NextFunction
 ) => {
   let token;
-    if (
-      req.headers.authorization &&
-      req.headers.authorization?.startsWith("Bearer")
-    ) {
-      token = req.headers.authorization.split(" ")[1];
-    }
+  if (
+    req.headers.authorization &&
+    req.headers.authorization?.startsWith("Bearer")
+  ) {
+    token = req.headers.authorization.split(" ")[1];
+  }
   try {
     if (!token) {
       return next(
@@ -35,10 +35,10 @@ const authMiddleware = async (
     }
 
     //2. Verification token
-    
+
     const decoded: Decoded = (await jwtVerifyPromisified(
       token,
-      process.env.JWT_TOKEN_SECRET ?? ''
+      process.env.JWT_TOKEN_SECRET ?? ""
     )) as Decoded;
 
     //3. Check if user still exists
@@ -68,15 +68,27 @@ const authMiddleware = async (
     }
     req.user.id = currentUser.id;
     next();
-  }
-  catch (error : any) {
+  } catch (error: any) {
     Logger.error(`[ERROR] Msg: ${token}`);
-    if (error.name == 'TokenExpiredError') {
-      res.status(401).json({ message: 'Token is expired' });
+    if (error.name == "TokenExpiredError") {
+      res.status(401).json({ message: "Token is expired" });
     } else {
-      res.status(401).json({ message: 'Token is not valid' });
+      res.status(401).json({ message: "Token is not valid" });
     }
   }
+};
+
+export const setSameSite = (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  // Check if the request is from Google OAuth callback
+  if (req.headers.origin === " https://accounts.google.com") {
+    // Set "SameSite" attribute to "None" and mark as "Secure"
+    res.cookie("key", "value", { sameSite: "none", secure: true });
+  }
+  next();
 };
 
 export const jwtVerifyPromisified = (token: string, secret: string) => {
@@ -90,8 +102,5 @@ export const jwtVerifyPromisified = (token: string, secret: string) => {
     });
   });
 };
-
-
-
 
 export default authMiddleware;

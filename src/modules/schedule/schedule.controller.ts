@@ -6,18 +6,20 @@ import { google } from "googleapis";
 export default class ScheduleController {
   private scheduleService = new ScheduleService();
   public getGoogleCalendar = catchAsync(async (req: Request, res: Response) => {
-    const tokenLogin = req.user.tokenLogin;
-    console.log("~~~~~~~>req.user", req.user);
+    const userId = req.user.id;
     console.log(
-      "🚀 ~ ScheduleController ~ getGoogleCalendar=catchAsync ~ tokenLogin:",
-      tokenLogin
+      "🚀 ~ ScheduleController ~ getGoogleCalendar=catchAsync ~ userId:",
+      userId
     );
-    const googleCalendar = await this.scheduleService.getGoogleCalendar(
-      tokenLogin
-    );
+    const googleCalendar = await this.scheduleService.getGoogleCalendar(userId);
     res.status(StatusCodes.OK).json({
       data: googleCalendar,
       message: "Get google calendar successfully",
     });
+  });
+  public verifyGoogleToken = catchAsync(async (req: Request, res: Response) => {
+    const currentUserId = req.user.id;
+    const isValid = await this.scheduleService.verifyGoogleToken(currentUserId);
+    res.status(StatusCodes.OK).json(isValid);
   });
 }

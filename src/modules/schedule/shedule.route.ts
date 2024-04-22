@@ -4,11 +4,16 @@ import { Router } from "express";
 import ScheduleController from "./schedule.controller";
 import { google } from "googleapis";
 import axios from "axios";
+import ScheduleService from "./schedule.service";
+import { UserSchema } from "@modules/users";
+import { HttpException } from "@core/exceptions";
+import { StatusCodes } from "http-status-codes";
 
 export default class ScheduleRoute implements Route {
   public path = "/api/v1/schedule";
   public router = Router();
   public scheduleController = new ScheduleController();
+  public scheduleService = new ScheduleService();
   private auth2Client = new google.auth.OAuth2(
     process.env.CLIENT_ID,
     process.env.CLIENT_SECRET,
@@ -24,47 +29,48 @@ export default class ScheduleRoute implements Route {
   });
 
   private initializeRoute() {
-    this.router.get(this.path + "/google/calendar", (req, res) => {
-      const url = this.auth2Client.generateAuthUrl({
-        access_type: "offline",
-        scope: this.scope,
-      });
-      res.redirect(url);
-    });
-    this.router.get(this.path + "/google/redirect", async (req, res) => {
-      const code = req.query.code;
-      const { tokens } = await this.auth2Client.getToken(code as string);
-      this.auth2Client.setCredentials(tokens);
-      console.log(
-        "🚀 ~ ScheduleRoute ~ this.router.get ~ touser_info:"
-        // user_info.data
-      );
-      res.send("It works!");
-    });
-    this.router.get(this.path + "/google/calendar/events", async (req, res) => {
-      console.log( 
-        "~~~~~~~~>access_token:",
-        this.auth2Client.credentials.access_token
-      );
-      const result = await this.calendar.events.list({
-        calendarId: "primary",
-        timeMin: new Date().toISOString(),
-        maxResults: 10,
-        singleEvents: true,
-        orderBy: "startTime",
-        auth: this.auth2Client,
-      });
-      const events = result.data.items;
-      if (!events || events.length === 0) {
-        console.log("No upcoming events found.");
-        return;
+    this.router.get(this.path + "/google/calendar/:id", async (req, res) => {
+      try {
+        const id = req.params.id;
+        const state = JSON.stringify({ userId: id });
+        const url = this.auth2Client.generateAuthUrl({
+          access_type: "offline",
+          scope: this.scope,
+          state: state,
+        });
+        res.redirect(url);
+      } catch (err) {
+        console.log(err);
       }
-      console.log("Upcoming 10 events:");
-      events.map((event, i) => {
-        const start = event?.start?.dateTime || event?.start?.date;
-        console.log(`${start} - ${event.summary}`);
-      });
-      res.send("Done");
     });
+    this.router.get(
+      this.path + "/google/redirect",
+      async (req, res) => {
+        const code = req.query.code;
+        const state = req.query.state;
+        const { userId } = JSON.parse(state as string);
+        const { tokens } = await this.auth2Client.getToken(code as string);
+        this.auth2Client.setCredentials(tokens);
+        const user = await UserSchema.findById(userId)
+          .select("tokenSyncGoogle")
+          .exec();
+        if (!user) {
+          throw new HttpException(StatusCodes.BAD_REQUEST, `User is not exits`);
+        }
+        user.tokenSyncGoogle.token = JSON.stringify(tokens);
+        await user.save();
+        res.send("<script>window.close();</script >");
+      },
+      this.scheduleController.getGoogleCalendar
+    );
+    this.router.get(
+      this.path + "/google/calendar/events",
+      this.scheduleController.getGoogleCalendar
+    );
+    this.router.get(
+      this.path + "/google/verify-token",
+      authMiddleware,
+      this.scheduleController.verifyGoogleToken
+    );
   }
 }

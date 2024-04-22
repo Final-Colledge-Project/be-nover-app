@@ -88,6 +88,18 @@ const UserSchema = new mongoose.Schema({
       select: false,
     },
   },
+  tokenSyncGoogle: {
+    token: {
+      type: String,
+      default: null,
+      select: false,
+    },
+    refreshToken: {
+      type: String,
+      default: null,
+      select: false,
+    },
+  },
   active: {
     type: Boolean,
     default: true,

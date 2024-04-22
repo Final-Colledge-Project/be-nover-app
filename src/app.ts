@@ -14,6 +14,7 @@ import "./core/config/passportConfig";
 import passport from "passport";
 import http from "http";
 import socketIo from "socket.io";
+import { setSameSite } from "@core/middleware/auth.middleware";
 export default class App {
   public app: express.Application;
   public port: string | number;
@@ -65,10 +66,10 @@ export default class App {
         });
       });
 
-      socket.on('assignMemberToCard', (data) => {
+      socket.on("assignMemberToCard", (data) => {
         console.log("~~~~~~~~~~~~~~>assignMemberToCard", data);
         this.sendMessageToUser(users, data.userId, "fetchNotification");
-      })
+      });
 
       socket.on("disconnect", function () {
         // remove saved socket from users object
@@ -127,6 +128,7 @@ export default class App {
         })
       );
       this.app.use(cookieParser());
+      // this.app.use(setSameSite);
     }
 
     this.app.use(express.json());
