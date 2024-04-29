@@ -69,6 +69,10 @@ export default class UsersRoute implements Route {
       uploadSingleImage("avatar"),
       this.userController.uploadAvatar
     );
-    
+    this.router.put(
+      this.path + "/provider-token",
+      authMiddleware,
+      this.userController.updateProviderToken
+    );
   }
 }

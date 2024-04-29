@@ -13,7 +13,7 @@ export default interface IUser {
   role: string;
   refreshToken: string[];
   profileLogin: IProfileLogin;
-  tokenSyncGoogle: IGoogleToken;
+  providerToken: IGoogleToken;
   active: boolean;
 }
 
@@ -24,6 +24,6 @@ interface IProfileLogin {
 }
 
 interface IGoogleToken {
-  token: string;
+  accessToken: string;
   refreshToken: string;
 }

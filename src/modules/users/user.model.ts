@@ -88,8 +88,8 @@ const UserSchema = new mongoose.Schema({
       select: false,
     },
   },
-  tokenSyncGoogle: {
-    token: {
+  providerToken: {
+    accessToken: {
       type: String,
       default: null,
       select: false,
