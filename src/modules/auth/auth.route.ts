@@ -6,8 +6,7 @@ import ForgotDto from "./dtos/forgot.dto";
 import AuthDto from "./auth.dto";
 import ResetDto from "./dtos/reset.dto";
 import passport, { Profile } from "passport";
-import { UserSchema } from "@modules/users";
-import { google } from "googleapis";
+import { UserSchema } from "@modules/users"; "googleapis";
 
 export default class AuthRoute implements Route {
   public path = "/api/v1/auth";
@@ -18,12 +17,6 @@ export default class AuthRoute implements Route {
   constructor() {
     this.initializeRoute();
   }
-
-  oauth2Client = new google.auth.OAuth2(
-    process.env.GOOGLE_CLIENT_ID,
-    process.env.GOOGLE_CLIENT_SECRET,
-    process.env.GOOGLE_REDIRECT_URI
-  );
 
   private initializeRoute() {
     this.router.post(
