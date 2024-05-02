@@ -10,6 +10,7 @@ import ChangePasswordDto from "./dtos/changePasswordDto";
 import { Request, Response } from "express";
 import { StatusCodes } from "http-status-codes";
 import { EmailVerifySchema } from "@modules/email_verification";
+import UpdateTokenDto from "./dtos/updateTokenDto";
 
 class UserService {
   private userSchema = UserSchema;
@@ -230,6 +231,30 @@ class UserService {
       })
       .exec();
     return users;
+  }
+  public async updateProviderToken(
+    userId: string,
+    model: UpdateTokenDto
+  ): Promise<void> {
+    const user = await this.userSchema.findById(userId).exec();
+    if (!user) {
+      throw new HttpException(StatusCodes.BAD_REQUEST, `User is not exits`);
+    }
+    const updatedUser = await this.userSchema
+      .findByIdAndUpdate(
+        userId,
+        {
+          providerToken: {
+            accessToken: model.providerToken,
+            refreshToken: model.providerRefreshToken,
+          },
+        },
+        { new: true }
+      )
+      .exec();
+    if (!updatedUser) {
+      throw new HttpException(StatusCodes.CONFLICT, "You are not an user");
+    }
   }
 }
 

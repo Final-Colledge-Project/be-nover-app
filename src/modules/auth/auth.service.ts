@@ -1,5 +1,11 @@
 import { DataStoredInToken, TokenData } from "@modules/auth";
-import { Logger, OBJECT_ID, hashData, isEmptyObject, signToken } from "@core/utils";
+import {
+  Logger,
+  OBJECT_ID,
+  hashData,
+  isEmptyObject,
+  signToken,
+} from "@core/utils";
 import { HttpException } from "@core/exceptions";
 import bcrypt from "bcrypt";
 import jwt, { VerifyErrors, VerifyOptions } from "jsonwebtoken";
@@ -14,7 +20,7 @@ import {
 import { Http } from "winston/lib/winston/transports";
 import { Response, Request } from "express";
 import { StatusCodes } from "http-status-codes";
-import {uuid} from "uuidv4"
+import { uuid } from "uuidv4";
 class AuthService {
   public userSchema = UserSchema;
   public otpService = new OTPService();
@@ -110,7 +116,7 @@ class AuthService {
   public async getCurrentLoginUser(userId: string): Promise<IUser> {
     const currentUser = await this.userSchema
       .findById(userId)
-      .select("-__v")
+      .select("-__v +providerToken.accessToken +providerToken.refreshToken")
       .exec();
     if (!currentUser) {
       throw new HttpException(400, "User not found");

@@ -36,7 +36,6 @@ const UserSchema = new mongoose.Schema({
     type: String,
     default: null,
     trim: true,
-    unique: true,
     length: [10, "Phone must be at least 10 characters long"],
   },
   birthDate: {
@@ -84,6 +83,18 @@ const UserSchema = new mongoose.Schema({
       default: "local",
     },
     tokenLogin: {
+      type: String,
+      default: null,
+      select: false,
+    },
+  },
+  providerToken: {
+    accessToken: {
+      type: String,
+      default: null,
+      select: false,
+    },
+    refreshToken: {
       type: String,
       default: null,
       select: false,

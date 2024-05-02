@@ -31,6 +31,7 @@ export const MODEL_NAME = {
   otp: "Otp",
   subCard: "SubCard",
   notification: "Notification",
+  schedule: "Schedule",
 };
 export const SUBTASK_STATUS = {
   todo: "todo",
@@ -44,4 +45,9 @@ export const ROLE = {
   boardLead: "boardLead",
   boardAdmin: "boardAdmin",
   member: "member",
+};
+
+export const SCHEDULE_TYPE = {
+  assignedTask: "assignedTask",
+  googleEvent: "googleEvent",
 };
