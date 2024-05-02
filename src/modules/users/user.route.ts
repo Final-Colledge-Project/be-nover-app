@@ -34,10 +34,8 @@ export default class UsersRoute implements Route {
     this.router.get(
       this.path,
       authMiddleware,
-      // permissionMiddleware(["admin"]),
-      this.userController.getAllUsers
+      this.userController.getUserByQuery
     );
-
     this.router.patch(
       this.path,
       validationMiddleware(UpdateUserDto, true),

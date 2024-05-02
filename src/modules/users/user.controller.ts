@@ -90,4 +90,10 @@ export default class UserController {
       res.status(200).json({ message: "Update provider token successfully" });
     }
   );
+  public getUserByQuery = catchAsync(
+    async (req: Request, res: Response, next: NextFunction) => {
+      const data = await this.userService.getUserByQuery(req);
+      res.status(200).json(data);
+    }
+  );
 }

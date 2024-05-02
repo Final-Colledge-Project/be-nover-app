@@ -1,8 +1,10 @@
 import { Route } from "@core/interfaces";
-import { authMiddleware } from "@core/middleware";
+import { authMiddleware, validationMiddleware } from "@core/middleware";
 import { Router } from "express";
 import ScheduleController from "./schedule.controller";
 import ScheduleService from "./schedule.service";
+import AddScheduleDto from "./dtos/addScheduleDto";
+import UpdateScheduleDto from "./dtos/updateScheduleDto";
 
 export default class ScheduleRoute implements Route {
   public path = "/api/v1/schedules";
@@ -15,6 +17,7 @@ export default class ScheduleRoute implements Route {
   public initializeRoute() {
     this.router.post(
       this.path,
+      validationMiddleware(AddScheduleDto, true),
       authMiddleware,
       this.scheduleController.addSchedule
     );
@@ -25,6 +28,7 @@ export default class ScheduleRoute implements Route {
     );
     this.router.put(
       this.path + "/:id",
+      validationMiddleware(UpdateScheduleDto, true),
       authMiddleware,
       this.scheduleController.updateSchedule
     );
