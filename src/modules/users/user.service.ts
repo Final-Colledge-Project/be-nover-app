@@ -256,6 +256,39 @@ class UserService {
       throw new HttpException(StatusCodes.CONFLICT, "You are not an user");
     }
   }
+  public async getUserByQuery(req: Request): Promise<Object> {
+    const { name, email, startAt, maxResult } = req.query;
+    let query: any = {}; // Update the type of query to any
+
+    if (name) {
+      const nameRegex = new RegExp(name as string, "i");
+      query.$or = [{ firstName: nameRegex }, { lastName: nameRegex }];
+    }
+    if (email) {
+      query.email = email;
+    }
+    const totalCountQuery = this.userSchema.countDocuments(query);
+    let usersQuery = this.userSchema.find(query);
+    if (startAt) {
+      usersQuery = usersQuery.skip(parseInt(startAt as string));
+    } else {
+      usersQuery = usersQuery.skip(0);
+    }
+    if (maxResult) {
+      usersQuery = usersQuery.limit(parseInt(maxResult as string));
+    } else {
+      usersQuery = usersQuery.limit(100);
+    }
+    const [users, totalCount] = await Promise.all([
+      usersQuery.exec(),
+      totalCountQuery.exec(),
+    ]);
+
+    return {
+      total: totalCount,
+      data: users,
+    };
+  }
 }
 
 export default UserService;
