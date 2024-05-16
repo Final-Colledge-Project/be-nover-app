@@ -24,7 +24,6 @@ export default class AddScheduleDto {
   public name: string;
   @IsEnum([SCHEDULE_TYPE.assignedTask, SCHEDULE_TYPE.googleEvent])
   public type: string;
-  @IsNotEmpty()
   @IsString()
   @IsHexColor()
   public color: string;

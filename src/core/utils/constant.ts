@@ -32,6 +32,7 @@ export const MODEL_NAME = {
   subCard: "SubCard",
   notification: "Notification",
   schedule: "Schedule",
+  permissionGroup: "PermissionGroup",
 };
 export const SUBTASK_STATUS = {
   todo: "todo",

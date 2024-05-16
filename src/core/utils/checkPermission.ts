@@ -62,9 +62,9 @@ export const isBoardLead = async (
 ): Promise<Boolean> => {
   const existBoard = await BoardSchema.findById(boardId).exec();
   const isLead = existBoard?.ownerIds.find((lead) => {
-    return lead.user.toString() === leadId;
+    return lead === leadId;
   });
-  return isLead?.role === ROLE.boardLead;
+  return !!isLead;
 };
 
 export const isBoardAdmin = async (
@@ -72,10 +72,9 @@ export const isBoardAdmin = async (
   adminId: string
 ): Promise<Boolean> => {
   const existBoard = await BoardSchema.findById(boardId).exec();
-  const isAdmin = existBoard?.ownerIds.find((admin) => {
-    return admin.user.toString() === adminId;
-  });
-  return isAdmin?.role === ROLE.boardAdmin;
+  if (!existBoard) return false;
+  const isAdmin = existBoard?.ownerIds.includes(adminId);
+  return isAdmin;
 };
 
 export const isBoardMember = async (
@@ -87,9 +86,9 @@ export const isBoardMember = async (
     return member.toString() === memberId;
   });
   const checkOwner = teamWorkspace?.ownerIds.find((owner) => {
-    return owner.user.toString() === memberId;
-  })
-  return checkMember || checkOwner ? true : false;
+    return owner === memberId;
+  });
+  return !!checkOwner;
 };
 
 export const isCardNumber = async (
@@ -100,10 +99,7 @@ export const isCardNumber = async (
   const checkMember = card?.memberIds.find((member: string) => {
     return member.toString() === userId;
   });
-  if (!!checkMember === false) {
-    return false;
-  }
-  return true;
+  return !!checkMember;
 };
 
 export const viewedBoardPermission = async (

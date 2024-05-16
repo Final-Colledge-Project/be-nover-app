@@ -15,6 +15,7 @@ import { InvitationRoute } from "@modules/invitations";
 import { SubCardRoute } from "@modules/sub_cards";
 import { NotificationRoute } from "@modules/notifications";
 import { ScheduleRoute } from "@modules/schedule";
+import { PermissionGroupRoute } from "@modules/permissionGroup";
 validateEnv();
 const routes = [
   new IndexRoute(),
@@ -31,6 +32,7 @@ const routes = [
   new SubCardRoute(),
   new NotificationRoute(),
   new ScheduleRoute(),
+  new PermissionGroupRoute(),
 ];
 const app = new App(routes);
 app.listen();

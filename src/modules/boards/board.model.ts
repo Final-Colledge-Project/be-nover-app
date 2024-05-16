@@ -38,15 +38,8 @@ const BoardSchema = new mongoose.Schema({
   },
   ownerIds: [
     {
-      user: {
-        type: SCHEMA_TYPE,
-        ref: MODEL_NAME.user,
-      },
-      role: {
-        type: String,
-        enum: ["boardLead", "boardAdmin"],
-        default: "boardAdmin",
-      },
+      type: SCHEMA_TYPE,
+      ref: MODEL_NAME.user,
     },
   ],
   memberIds: [

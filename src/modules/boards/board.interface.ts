@@ -6,7 +6,7 @@ export default interface IBoard {
   columnOrderIds: string[];
   type: string;
   teamWorkspaceId: string;
-  ownerIds: IBoardAdmin[];
+  ownerIds: string[];
   memberIds: string[];
   createdAt: Date;
   updatedAt: Date;

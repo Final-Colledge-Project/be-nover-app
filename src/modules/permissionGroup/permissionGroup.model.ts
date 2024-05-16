@@ -11,7 +11,6 @@ const PermissionGroupSchema = new mongoose.Schema({
   },
   description: {
     type: String,
-    required: [true, "Description is required"],
     minlength: [2, "Description must be at least 2 characters long"],
     maxlength: [255, "Description must be at most 255 characters long"],
   },
@@ -123,12 +122,12 @@ const PermissionGroupSchema = new mongoose.Schema({
 
 PermissionGroupSchema.pre(/^find/, async function (next) {
   if (this instanceof Query) {
-    const label = this;
-    label.find({ isActive: { $ne: false } }).select("-__v");
+    const permissionGroup = this;
+    permissionGroup.find({ isActive: { $ne: false } }).select("-__v");
   }
   next();
 });
 export default mongoose.model<IPermissionGroup & mongoose.Document>(
-  MODEL_NAME.schedule,
+  MODEL_NAME.permissionGroup,
   PermissionGroupSchema
 );

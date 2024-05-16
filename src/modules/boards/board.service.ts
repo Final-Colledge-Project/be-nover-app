@@ -27,10 +27,7 @@ import UpdateBoardDto from "./dtos/updateBoardDto";
 import AddMemsToBoardDto from "./dtos/addMemsToBoard";
 import { StatusCodes } from "http-status-codes";
 import { UserSchema } from "@modules/users";
-import {
-  NotificationSchema,
-  NotificationService,
-} from "@modules/notifications";
+import { NotificationService } from "@modules/notifications";
 import PushNotificationDto from "@modules/notifications/dtos/pushNotificationDto";
 import { CardSchema } from "@modules/cards";
 import { SubCardSchema } from "@modules/sub_cards";
@@ -38,8 +35,6 @@ import { LabelSchema } from "@modules/labels";
 export default class BoardService {
   private boardSchema = BoardSchema;
   private workspaceSchema = TeamWorkspaceSchema;
-  private userSchema = UserSchema;
-  private notificationSchema = NotificationSchema;
   private notificationService = new NotificationService();
   public async createBoard(
     model: CreateBoardDto,
@@ -497,10 +492,7 @@ export default class BoardService {
         "This member is not member of this board"
       );
     }
-    board.ownerIds.push({
-      user: memberId,
-      role: ROLE.boardAdmin,
-    });
+    board.ownerIds.push(memberId);
     const memBoard = cloneDeep(board.memberIds);
     board.memberIds = memBoard.filter(
       (mem: any) => mem.toString() !== memberId
