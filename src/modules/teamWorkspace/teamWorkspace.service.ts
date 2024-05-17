@@ -1,11 +1,9 @@
 import {
-  Email,
   OBJECT_ID,
   isEmptyObject,
   isSuperAdmin,
   isWorkspaceAdmin,
   isWorkspaceMember,
-  permissionWorkspace,
   viewWorkspacePermission,
 } from "@core/utils";
 import CreateTeamWorkspaceDto from "./dtos/createTeamWorkspace.dto";
