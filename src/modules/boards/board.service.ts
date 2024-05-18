@@ -7,6 +7,7 @@ import {
   isBoardMember,
   isEmptyObject,
   isSuperAdmin,
+  isWorkspaceAdmin,
   isWorkspaceMember,
   permissionBoard,
   permissionWorkspace,
@@ -43,7 +44,7 @@ export default class BoardService {
     if (isEmptyObject(model)) {
       throw new HttpException(StatusCodes.BAD_REQUEST, "Model is empty");
     }
-    const checkPermissionBoard = await permissionWorkspace(
+    const checkPermissionBoard = await isWorkspaceAdmin(
       model.teamWorkspaceId,
       ownerId
     );
@@ -65,7 +66,7 @@ export default class BoardService {
     }
     const createdBoard = await this.boardSchema.create({
       ...model,
-      ownerIds: [{ user: ownerId, role: "boardLead" }],
+      ownerIds: [ownerId],
     });
     if (!createdBoard) {
       throw new HttpException(StatusCodes.CONFLICT, "Board not created");

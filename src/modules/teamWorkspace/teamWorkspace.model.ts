@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 import { Query } from "mongoose";
 import ITeamWorkspace from "./teamWorkspace.interface";
-import { MODEL_NAME, SCHEMA_TYPE } from "@core/utils";
+import { MODEL_NAME, ROLE, SCHEMA_TYPE } from "@core/utils";
 const TeamWorkspaceSchema = new mongoose.Schema({
   name: {
     type: String,
@@ -18,7 +18,7 @@ const TeamWorkspaceSchema = new mongoose.Schema({
       },
       role: {
         type: String,
-        enum: ["superAdmin", "admin"],
+        enum: [ROLE.superAdmin, ROLE.admin],
         default: "admin",
       },
     },

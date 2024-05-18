@@ -15,17 +15,17 @@ export const isWorkspaceAdmin = async (
     teamWorkspaceId
   ).exec();
 
-  const isAdmin = teamWorkspace?.workspaceAdmins.find(
+  const wsAdmin = teamWorkspace?.workspaceAdmins.find(
     (admin: IWorkspaceAdmin) => {
       return admin.user.toString() === adminId;
     }
   );
 
-  if (isAdmin === undefined) {
+  if (!wsAdmin) {
     return false;
   }
 
-  return isAdmin?.role === ROLE.admin;
+  return wsAdmin?.role === ROLE.admin || wsAdmin?.role === ROLE.superAdmin;
 };
 
 export const isWorkspaceMember = async (
@@ -40,7 +40,7 @@ export const isWorkspaceMember = async (
       return member.user.toString() === memberId;
     }
   );
-  return checkMember ? true : false;
+  return !!checkMember;
 };
 
 export const isSuperAdmin = async (
