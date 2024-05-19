@@ -4,6 +4,7 @@ export default interface ITeamWorkspace {
   workspaceAdmins: IWorkspaceAdmin[];
   workspaceMembers: IMember[];
   createdAt: Date;
+  updatedAt: Date;
   isActive: boolean;
 }
 export interface IWorkspaceAdmin {

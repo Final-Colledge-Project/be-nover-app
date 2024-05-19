@@ -68,6 +68,7 @@ export class Email {
   }
 
   async sendInvitationMember() {
+    console.log("~~~~~~>Send");
     await this.send(
       "confirmJoinTeam",
       `👋 ${this.subName} invited you to join them in NoverTask`

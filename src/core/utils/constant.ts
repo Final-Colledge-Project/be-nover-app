@@ -53,3 +53,8 @@ export const SCHEDULE_TYPE = {
   assignedTask: "assignedTask",
   googleEvent: "googleEvent",
 };
+
+export const PERM_TYPE = {
+  board: "board",
+  workspace: "workspace",
+};

@@ -1,29 +1,31 @@
-import  mongoose  from "mongoose"
-import validator from 'validator'
-import IOtp from "./otp.interface"
-import { MODEL_NAME } from "@core/utils"
+import mongoose from "mongoose";
+import validator from "validator";
+import IOtp from "./otp.interface";
+import { MODEL_NAME } from "@core/utils";
 
-const OTPSchema = new mongoose.Schema({
-  email: {
-    type: String,
-    required: [true, 'Email is required'],
-    unique: true,
-    trim: true,
-    validate: [validator.isEmail, 'Email is invalid']
+const OTPSchema = new mongoose.Schema(
+  {
+    email: {
+      type: String,
+      required: [true, "Email is required"],
+      unique: true,
+      trim: true,
+      validate: [validator.isEmail, "Email is invalid"],
+    },
+    otp: {
+      type: String,
+      required: [true, "OTP is required"],
+      trim: true,
+    },
+    expireAt: {
+      type: Date,
+      default: Date.now,
+    },
   },
-  otp: {
-    type: String,
-    required: [true, 'OTP is required'],
-    trim: true
-  },
-  createdAt: {
-    type: Date,
-    default: Date.now
-  },
-  expireAt: {
-    type: Date,
-    default: Date.now
-  }
-})
+  { timestamps: true }
+);
 
-export default mongoose.model<IOtp & mongoose.Document>(MODEL_NAME.otp, OTPSchema)
+export default mongoose.model<IOtp & mongoose.Document>(
+  MODEL_NAME.otp,
+  OTPSchema
+);

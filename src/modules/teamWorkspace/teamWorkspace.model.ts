@@ -2,48 +2,47 @@ import mongoose from "mongoose";
 import { Query } from "mongoose";
 import ITeamWorkspace from "./teamWorkspace.interface";
 import { MODEL_NAME, ROLE, SCHEMA_TYPE } from "@core/utils";
-const TeamWorkspaceSchema = new mongoose.Schema({
-  name: {
-    type: String,
-    required: [true, "Name is required"],
-    minlength: [2, "Name must be at least 2 characters long"],
-    maxlength: [30, "Name must be at most 30 characters long"],
-    trim: true,
-  },
-  workspaceAdmins: [
-    {
-      user: {
-        type: SCHEMA_TYPE,
-        ref: MODEL_NAME.user,
-      },
-      role: {
-        type: String,
-        enum: [ROLE.superAdmin, ROLE.admin],
-        default: "admin",
-      },
+const TeamWorkspaceSchema = new mongoose.Schema(
+  {
+    name: {
+      type: String,
+      required: [true, "Name is required"],
+      minlength: [2, "Name must be at least 2 characters long"],
+      maxlength: [30, "Name must be at most 30 characters long"],
+      trim: true,
     },
-  ],
-  workspaceMembers: [
-    {
-      user: {
-        type: SCHEMA_TYPE,
-        ref: MODEL_NAME.user,
+    workspaceAdmins: [
+      {
+        user: {
+          type: SCHEMA_TYPE,
+          ref: MODEL_NAME.user,
+        },
+        role: {
+          type: String,
+          enum: [ROLE.superAdmin, ROLE.admin],
+          default: "admin",
+        },
       },
-      joinDate: {
-        type: Date,
-        default: Date.now,
+    ],
+    workspaceMembers: [
+      {
+        user: {
+          type: SCHEMA_TYPE,
+          ref: MODEL_NAME.user,
+        },
+        joinDate: {
+          type: Date,
+          default: Date.now,
+        },
       },
+    ],
+    isActive: {
+      type: Boolean,
+      default: true,
     },
-  ],
-  createdAt: {
-    type: Date,
-    default: Date.now,
   },
-  isActive: {
-    type: Boolean,
-    default: true,
-  },
-});
+  { timestamps: true }
+);
 
 TeamWorkspaceSchema.pre(/^find/, async function (next) {
   if (this instanceof Query) {

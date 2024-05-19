@@ -53,7 +53,7 @@ export default class WorkspacePermissionController {
       const userId = req.user.id;
       const boardId = req.params.id;
       const groupPermission =
-        await this.boardPermissionService.getWSPermissionByBoardUser(
+        await this.boardPermissionService.getWSPermissionByUser( 
           userId,
           boardId
         );

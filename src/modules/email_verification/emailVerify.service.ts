@@ -8,19 +8,12 @@ import { StatusCodes } from "http-status-codes";
 class EmailVerificationService {
   public userSchema = UserSchema;
   public otpService = new OTPService();
-
+  private emailVerifySchema = EmailVerifySchema;
   public async sendEmailOTP(model: SendEmailDto): Promise<IOtp> {
     const { email } = model;
-    const existingEmailVerify = await EmailVerifySchema.findOne({ email });
+    const existingEmailVerify = await this.emailVerifySchema.findOne({ email });
 
-    if (!existingEmailVerify) {
-      throw new HttpException(
-        StatusCodes.BAD_REQUEST,
-        "There are no account for the provided email"
-      );
-    }
-
-    if (existingEmailVerify.isVerified === true) {
+    if (existingEmailVerify?.isVerified) {
       throw new HttpException(
         StatusCodes.BAD_REQUEST,
         "Email is already verified. Please login"

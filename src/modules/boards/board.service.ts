@@ -1,16 +1,13 @@
 import {
   MODEL_NAME,
   OBJECT_ID,
-  ROLE,
   isBoardAdmin,
   isBoardLead,
   isBoardMember,
   isEmptyObject,
   isSuperAdmin,
-  isWorkspaceAdmin,
   isWorkspaceMember,
   permissionBoard,
-  permissionWorkspace,
   viewWorkspacePermission,
   viewedBoardPermission,
 } from "@core/utils";
@@ -20,58 +17,104 @@ import CreateBoardDto from "./dtos/createBoardDto";
 import { HttpException } from "@core/exceptions";
 import { Request } from "express";
 import APIFeatures from "@core/utils/apiFeature";
-import { cloneDeep } from "lodash";
+import { cloneDeep, create } from "lodash";
 import ICard from "@modules/cards/card.interface";
 import { IResColumn } from "@modules/columns";
 import { TeamWorkspaceSchema } from "@modules/teamWorkspace";
 import UpdateBoardDto from "./dtos/updateBoardDto";
 import AddMemsToBoardDto from "./dtos/addMemsToBoard";
 import { StatusCodes } from "http-status-codes";
-import { UserSchema } from "@modules/users";
 import { NotificationService } from "@modules/notifications";
 import PushNotificationDto from "@modules/notifications/dtos/pushNotificationDto";
 import { CardSchema } from "@modules/cards";
 import { SubCardSchema } from "@modules/sub_cards";
 import { LabelSchema } from "@modules/labels";
+import { BoardPermissionSchema } from "@modules/boardPermission";
+import { UserSchema } from "@modules/users";
+import mongoose from "mongoose";
 export default class BoardService {
   private boardSchema = BoardSchema;
   private workspaceSchema = TeamWorkspaceSchema;
+  private boardPermissionSchema = BoardPermissionSchema;
+  private userSchema = UserSchema;
   private notificationService = new NotificationService();
   public async createBoard(
     model: CreateBoardDto,
-    ownerId: string
+    ownerId: string,
+    wsId: string,
+    session: any
   ): Promise<IBoard> {
     if (isEmptyObject(model)) {
       throw new HttpException(StatusCodes.BAD_REQUEST, "Model is empty");
     }
-    const checkPermissionBoard = await isWorkspaceAdmin(
-      model.teamWorkspaceId,
-      ownerId
-    );
-    if (!checkPermissionBoard) {
-      throw new HttpException(
-        StatusCodes.FORBIDDEN,
-        "You are not permission to create board in this workspace"
-      );
-    }
     const existedBoard = await this.boardSchema
       .findOne({
         title: model.title,
-        teamWorkspaceId: model.teamWorkspaceId,
+        teamWorkspaceId: wsId,
         isActive: true,
       })
       .exec();
     if (existedBoard) {
       throw new HttpException(StatusCodes.CONFLICT, "Board already exists");
     }
-    const createdBoard = await this.boardSchema.create({
-      ...model,
-      ownerIds: [ownerId],
-    });
+    const createdBoard = await this.boardSchema.create(
+      [
+        {
+          ...model,
+          teamWorkspaceId: wsId,
+          ownerIds: [ownerId],
+        },
+      ],
+      { session }
+    );
+
     if (!createdBoard) {
       throw new HttpException(StatusCodes.CONFLICT, "Board not created");
     }
-    return createdBoard;
+    await this.boardPermissionSchema.create(
+      [
+        {
+          name: "Project Admin",
+          description: "This permission can manage all board",
+          boardId: createdBoard[0]._id,
+          memberIds: [ownerId],
+          column: {
+            create: true,
+            update: true,
+            delete: true,
+          },
+          member: {
+            invite: true,
+          },
+          issueType: {
+            create: true,
+            update: true,
+            delete: true,
+          },
+          priority: {
+            create: true,
+            update: true,
+            delete: true,
+          },
+          label: {
+            create: true,
+            update: true,
+            delete: true,
+          },
+          isAdmin: true,
+        },
+        {
+          name: "Project Viewer",
+          description:
+            "This permission can modify cards, and view other information on project",
+          boardId: createdBoard[0]._id,
+        },
+      ],
+      { session }
+    );
+    await session.commitTransaction();
+    session.endSession();
+    return createdBoard[0];
   }
   public async addMemberToBoard(
     userId: string,
@@ -83,18 +126,35 @@ export default class BoardService {
       throw new HttpException(StatusCodes.CONFLICT, "Board not found");
     }
     const workspaceId = board.teamWorkspaceId;
-    const workspace = this.workspaceSchema.findById(workspaceId).exec();
+    const workspace = await this.workspaceSchema.findById(workspaceId).exec();
     if (!workspace) {
       throw new HttpException(StatusCodes.CONFLICT, "Workspace not found");
     }
-    const checkPermissionBoard = await permissionBoard(boardId, userId);
-    if (!checkPermissionBoard) {
+    const members = memberIds.memberIds;
+    const objectIdArray = members.map((id) => new mongoose.Types.ObjectId(id));
+    const users = await this.userSchema.find({
+      _id: {
+        $in: objectIdArray,
+      },
+    });
+    if (memberIds.memberIds.length !== users.length || !users) {
+      throw new HttpException(StatusCodes.BAD_REQUEST, "User not found");
+    }
+    const isExistWSMember = workspace.workspaceMembers.some((mem) => {
+      return members.includes(mem.user.toString());
+    });
+    if (!isExistWSMember) {
       throw new HttpException(
-        StatusCodes.CONFLICT,
-        "You has not permission to add member to board"
+        StatusCodes.BAD_REQUEST,
+        "User is not member of workspace"
       );
     }
-    const members = memberIds.memberIds;
+    const isExistMember = board.memberIds.some((mem) => {
+      return members.includes(mem.toString());
+    });
+    if (isExistMember) {
+      throw new HttpException(StatusCodes.BAD_REQUEST, "User already in board");
+    }
     const memberList = [...new Set([...board.memberIds, ...members])];
     board.memberIds = memberList;
     await board.save();
@@ -165,12 +225,12 @@ export default class BoardService {
     boardId: string,
     userId: string
   ): Promise<object> {
-    if ((await viewedBoardPermission(boardId, userId)) === false) {
-      throw new HttpException(
-        StatusCodes.FORBIDDEN,
-        "You has not permission to get detail this board"
-      );
-    }
+    // if ((await viewedBoardPermission(boardId, userId)) === false) {
+    //   throw new HttpException(
+    //     StatusCodes.FORBIDDEN,
+    //     "You has not permission to get detail this board"
+    //   );
+    // }
     const boardDetail = await this.boardSchema
       .aggregate([
         {

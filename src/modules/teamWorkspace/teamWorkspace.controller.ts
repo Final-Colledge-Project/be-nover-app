@@ -4,28 +4,57 @@ import TeamWorkspaceService from "./teamWorkspace.service";
 import CreateTeamWorkspaceDto from "./dtos/createTeamWorkspace.dto";
 import JoinGroupDto from "./dtos/joinGroup.dto";
 import { StatusCodes } from "http-status-codes";
+import { startSession } from "mongoose";
 
 export default class TeamWorkspaceController {
   private teamWorkspaceService = new TeamWorkspaceService();
 
-  public createTeamWorkspace = catchAsync(
-    async (req: Request, res: Response, next: NextFunction) => {
+  // public createTeamWorkspace = catchAsync(
+  //   async (req: Request, res: Response, next: NextFunction) => {
+  //     let model: CreateTeamWorkspaceDto = {
+  //       name: "",
+  //       superAdminWorkspaceId: "",
+  //     };
+  //     model.name = req.body.name;
+  //     model.superAdminWorkspaceId = req.user.id;
+
+  //     const teamWorkspace = await this.teamWorkspaceService.createTeamWorkspace(
+  //       model
+  //     );
+  //     res.status(StatusCodes.CREATED).json({
+  //       data: teamWorkspace,
+  //       message: "Create team workspace successfully",
+  //     });
+  //   }
+  // );
+  public createTeamWorkspace = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    const session = await startSession();
+    try {
       let model: CreateTeamWorkspaceDto = {
         name: "",
         superAdminWorkspaceId: "",
       };
       model.name = req.body.name;
       model.superAdminWorkspaceId = req.user.id;
-
+      session.startTransaction();
       const teamWorkspace = await this.teamWorkspaceService.createTeamWorkspace(
-        model
+        model,
+        session
       );
       res.status(StatusCodes.CREATED).json({
         data: teamWorkspace,
         message: "Create team workspace successfully",
       });
+    } catch (err) {
+      await session.abortTransaction();
+      session.endSession();
+      next(err);
     }
-  );
+  };
   public assignMemberToAdmin = catchAsync(
     async (req: Request, res: Response, next: NextFunction) => {
       const adminId = req.user.id;
@@ -59,7 +88,7 @@ export default class TeamWorkspaceController {
   public getMemberTeamWorkspace = catchAsync(
     async (req: Request, res: Response, next: NextFunction) => {
       const userId = req.user.id;
-      const workspaceId = req.params.id;
+      const workspaceId = req.params.wsId;
       const teamWorkspace =
         await this.teamWorkspaceService.getMemberTeamWorkspace(
           userId,

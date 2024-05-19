@@ -6,13 +6,16 @@ export default interface IWorkspacePermission {
   workspaceId: string;
   memberIds: string[];
   board: {
+    viewAll: boolean;
     create: boolean;
   };
   member: {
+    viewAll: boolean;
     invite: boolean;
   };
   createdAt: Date;
   updatedAt: Date;
   isActive: boolean;
   isAdmin: boolean;
+  isWSViewer: boolean;
 }

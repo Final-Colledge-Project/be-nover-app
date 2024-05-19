@@ -5,7 +5,7 @@ import AddWSPermissionDto from "./dtos/addWSPermissionDto";
 import UpdateWSPermissionDto from "./dtos/updateWSPermissionDto";
 import WorkspacePermissionController from "./wsPermission.controller";
 export default class WorkspacePermissionRoute implements Route {
-  public path = "/api/v1/board-permissions";
+  public path = "/api/v1/ws-permissions";
   public router = Router();
   public wsPermissionController = new WorkspacePermissionController();
   constructor() {
@@ -18,7 +18,7 @@ export default class WorkspacePermissionRoute implements Route {
       authMiddleware,
       this.wsPermissionController.createWSPermission
     );
-    this.router.put(
+    this.router.patch(
       this.path + "/:id",
       validationMiddleware(UpdateWSPermissionDto, true),
       authMiddleware,

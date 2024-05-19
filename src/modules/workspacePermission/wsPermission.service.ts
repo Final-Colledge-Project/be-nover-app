@@ -10,8 +10,12 @@ import WorkspacePermissionSchema from "./wsPermission.model";
 import AddWSPermissionDto from "./dtos/addWSPermissionDto";
 import UpdateWSPermissionDto from "./dtos/updateWSPermissionDto";
 import IWorkspacePermission from "./wsPermission.interface";
+import { TeamWorkspaceSchema } from "@modules/teamWorkspace";
+import { UserSchema } from "@modules/users";
 export default class WorkspacePermissionService {
   private wsPermissionSchema = WorkspacePermissionSchema;
+  private teamWorkspaceSchema = TeamWorkspaceSchema;
+  private userSchema = UserSchema;
   public async createWorkspacePermission(
     userId: string,
     wsId: string,
@@ -25,15 +29,47 @@ export default class WorkspacePermissionService {
     }
     const wsSuperAdmin = await isSuperAdmin(wsId, userId);
     if (!wsSuperAdmin) {
+      throw new HttpException(StatusCodes.FORBIDDEN, "Permission denied");
+    }
+    const workspace = await this.teamWorkspaceSchema.findById(wsId);
+    if (!workspace) {
+      throw new HttpException(StatusCodes.BAD_REQUEST, "Workspace not found");
+    }
+    const existUser = await this.userSchema.find({
+      _id: { $in: model.memberIds },
+    });
+    if (!existUser || existUser.length !== model.memberIds.length) {
+      throw new HttpException(StatusCodes.BAD_REQUEST, "User not found");
+    }
+    const existedMember = workspace.workspaceMembers.some((item) =>
+      (model.memberIds || []).includes(item.user.toString())
+    );
+    if (!existedMember && (model.memberIds || []).length > 0) {
       throw new HttpException(
-        StatusCodes.FORBIDDEN,
-        "You are not allowed to perform this action"
+        StatusCodes.BAD_REQUEST,
+        "Member not found in workspace"
       );
     }
-    await this.wsPermissionSchema.create({
+    const exitMemInPerm = await this.wsPermissionSchema.find({
+      workspaceId: wsId,
+      memberIds: { $in: model.memberIds },
+    });
+    if (exitMemInPerm.length > 0 && (model.memberIds || []).length > 0) {
+      throw new HttpException(
+        StatusCodes.CONFLICT,
+        "Member already in workspace permission"
+      );
+    }
+    const workspacePerm = await this.wsPermissionSchema.create({
       ...model,
       workspaceId: wsId,
     });
+    if (!workspacePerm) {
+      throw new HttpException(
+        StatusCodes.CONFLICT,
+        "Create workspace permission failed"
+      );
+    }
   }
   public async updateWSPermission(
     userId: string,
@@ -53,14 +89,46 @@ export default class WorkspacePermissionService {
         "Permission group not found"
       );
     }
-    const checkWSAdmin = await isWorkspaceAdmin(
-      wsPermission.workspaceId,
-      userId
+
+    const wsSuperAdmin = await isSuperAdmin(wsPermission.workspaceId, userId);
+    if (!wsSuperAdmin) {
+      throw new HttpException(StatusCodes.FORBIDDEN, "Permission denied");
+    }
+    const workspace = await this.teamWorkspaceSchema.findById(
+      wsPermission.workspaceId
     );
-    if (!checkWSAdmin) {
+    if (!workspace) {
+      throw new HttpException(StatusCodes.BAD_REQUEST, "Workspace not found");
+    }
+    const existUser = await this.userSchema.find({
+      _id: { $in: model.memberIds },
+    });
+    if (
+      !existUser ||
+      (existUser || []).length !== (model.memberIds || []).length
+    ) {
+      throw new HttpException(StatusCodes.BAD_REQUEST, "User not found");
+    }
+    const existedMember = workspace.workspaceMembers.some((item) =>
+      (model.memberIds || []).includes(item.user.toString())
+    );
+    if (!existedMember && (model.memberIds || []).length > 0) {
       throw new HttpException(
-        StatusCodes.FORBIDDEN,
-        "You are not allowed to perform this action"
+        StatusCodes.BAD_REQUEST,
+        "Member not found in workspace"
+      );
+    }
+    const exitMemInPerm = await this.wsPermissionSchema.find({
+      workspaceId: wsPermission.workspaceId,
+      memberIds: { $in: model.memberIds },
+    });
+    if (
+      (exitMemInPerm || []).length > 0 &&
+      (model.memberIds || []).length > 0
+    ) {
+      throw new HttpException(
+        StatusCodes.CONFLICT,
+        "Member already in workspace permission"
       );
     }
     await this.wsPermissionSchema.findByIdAndUpdate(permissionId, model);
@@ -72,12 +140,9 @@ export default class WorkspacePermissionService {
     if (!userId) {
       throw new HttpException(StatusCodes.BAD_REQUEST, "UserId is required");
     }
-    const checkBoardAdmin = await isBoardAdmin(wsId, userId);
-    if (!checkBoardAdmin) {
-      throw new HttpException(
-        StatusCodes.FORBIDDEN,
-        "You are not allowed to perform this action"
-      );
+    const wsSuperAdmin = await isSuperAdmin(wsId, userId);
+    if (!wsSuperAdmin) {
+      throw new HttpException(StatusCodes.FORBIDDEN, "Permission denied");
     }
     const groupPermission = await this.wsPermissionSchema.find({
       workspaceId: wsId,
@@ -90,19 +155,22 @@ export default class WorkspacePermissionService {
     }
     return groupPermission;
   }
-  public async getWSPermissionByBoardUser(
+  public async getWSPermissionByUser(
     userId: string,
     wsId: string
   ): Promise<IWorkspacePermission> {
     if (!userId) {
       throw new HttpException(StatusCodes.BAD_REQUEST, "UserId is required");
     }
-    const groupPermission = await this.wsPermissionSchema.findOne({
-      wsId,
-      memberIds: {
-        $in: userId,
-      },
-    });
+    const groupPermission = await this.wsPermissionSchema
+      .findOne({
+        workspaceId: wsId,
+        memberIds: {
+          $in: [userId],
+        },
+      })
+      .select("-memberIds")
+      .exec();
     if (!groupPermission) {
       throw new HttpException(
         StatusCodes.NOT_FOUND,

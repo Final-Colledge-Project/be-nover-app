@@ -15,7 +15,7 @@ export default class AddWSPermissionDto {
     color: string,
     memberIds: string[],
     board: { create: boolean },
-    member: { invite: boolean }
+    member: { view: boolean; invite: boolean }
   ) {
     this.name = name;
     this.description = description;
@@ -48,5 +48,5 @@ export default class AddWSPermissionDto {
   @IsOptional()
   public board: { create: boolean };
   @IsOptional()
-  public member: { invite: boolean };
+  public member: { view: boolean; invite: boolean };
 }

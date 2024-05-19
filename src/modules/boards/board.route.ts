@@ -3,12 +3,14 @@ import BoardController from "./board.controller";
 import { Router } from "express";
 import {
   authMiddleware,
+  authorizePermission,
   uploadSingleImage,
   validationMiddleware,
 } from "@core/middleware";
 import CreateBoardDto from "./dtos/createBoardDto";
 import UpdateBoardDto from "./dtos/updateBoardDto";
 import AddMemsToBoardDto from "./dtos/addMemsToBoard";
+import { PERM_TYPE } from "@core/utils";
 
 export default class BoardRoute implements Route {
   public path = "/api/v1/boards";
@@ -19,24 +21,27 @@ export default class BoardRoute implements Route {
   }
   private initializeRoute() {
     this.router.post(
-      this.path,
+      this.path + "/workspace/:wsId",
       validationMiddleware(CreateBoardDto, true),
       authMiddleware,
+      authorizePermission("board:create", PERM_TYPE.workspace),
       this.boardController.createBoard
     );
     this.router.patch(
-      this.path + "/:id/members",
+      this.path + "/:boardId/members",
       validationMiddleware(AddMemsToBoardDto, true),
       authMiddleware,
+      authorizePermission("member:invite", PERM_TYPE.board),
       this.boardController.addMemberToBoard
     );
     this.router.get(
-      this.path + "/workspace/:id",
+      this.path + "/workspace/:wsId",
       authMiddleware,
+      
       this.boardController.getAllBoardByWorkspaceId
     );
     this.router.get(
-      this.path + "/:id",
+      this.path + "/:boardId",
       authMiddleware,
       this.boardController.getBoardDetail
     );
@@ -46,12 +51,12 @@ export default class BoardRoute implements Route {
       this.boardController.getAllUserBoard
     );
     this.router.get(
-      this.path + "/:id/members",
+      this.path + "/:boardId/members",
       authMiddleware,
       this.boardController.getMemberByBoardId
     );
     this.router.patch(
-      this.path + "/:id",
+      this.path + "/:boardId",
       validationMiddleware(UpdateBoardDto, true),
       authMiddleware,
       this.boardController.updateBoard

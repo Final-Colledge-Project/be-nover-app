@@ -17,10 +17,14 @@ import { BoardSchema } from "@modules/boards";
 import { ColumnSchema } from "@modules/columns";
 import { CardSchema } from "@modules/cards";
 import { LabelSchema } from "@modules/labels";
+import AddWSPermissionDto from "@modules/workspacePermission/dtos/addWSPermissionDto";
+import { WorkspacePermissionSchema } from "@modules/workspacePermission";
 class TeamWorkspaceService {
   public teamWorkspaceSchema = TeamWorkspaceSchema;
+  private wsPermissionSchema = WorkspacePermissionSchema;
   public async createTeamWorkspace(
-    model: CreateTeamWorkspaceDto
+    model: CreateTeamWorkspaceDto,
+    session: any
   ): Promise<Object> {
     if (isEmptyObject(model)) {
       throw new HttpException(StatusCodes.BAD_REQUEST, "Model is empty");
@@ -40,20 +44,52 @@ class TeamWorkspaceService {
         `Team workspace with name ${model.name} already exists`
       );
     }
-    const newWorskspace = await this.teamWorkspaceSchema.create({
-      name: model.name,
-      workspaceAdmins: [{ user: superAdminId, role: "superAdmin" }],
-    });
-    if (!newWorskspace) {
+    const newWorkspace = await this.teamWorkspaceSchema.create(
+      [
+        {
+          name: model.name,
+          workspaceAdmins: [{ user: superAdminId, role: "superAdmin" }],
+        },
+      ],
+      { session }
+    );
+    if (!newWorkspace) {
       throw new HttpException(
         StatusCodes.CONFLICT,
         "Create team workspace failed"
       );
     }
 
+    await this.wsPermissionSchema.create(
+      [
+        {
+          name: "Admin Group",
+          description: "This group can manage all data in workspace",
+          workspaceId: newWorkspace[0].id,
+          memberIds: [superAdminId],
+          board: {
+            viewAll: true,
+            create: true,
+          },
+          member: {
+            viewAll: true,
+            invite: true,
+          },
+          isWSAdmin: true,
+        },
+        {
+          name: "Viewer Group",
+          description: "This group can view boards, members in workspace",
+          workspaceId: newWorkspace[0].id,
+        },
+      ],
+      { session }
+    );
+    await session.commitTransaction();
+    session.endSession();
     return {
-      id: newWorskspace.id,
-      name: newWorskspace.name,
+      id: newWorkspace[0].id,
+      name: newWorkspace[0].name,
       workspaceSuperAdmins: superAdminId,
     };
   }
