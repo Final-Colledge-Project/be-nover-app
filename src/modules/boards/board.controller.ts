@@ -38,14 +38,17 @@ export default class BoardController {
     res: Response,
     next: NextFunction
   ) => {
+    const session = await startSession();
     try {
       const userId = req.user.id;
       const boardId = req.params.boardId;
       const memberId: AddMemsToBoardDto = req.body;
+      session.startTransaction();
       const board = await this.boardService.addMemberToBoard(
         userId,
         boardId,
-        memberId
+        memberId,
+        session
       );
       const io = req.app.get("socketio");
       io.emit("add_boardMems", memberId);
@@ -53,6 +56,8 @@ export default class BoardController {
         .status(StatusCodes.OK)
         .json({ data: board, message: "Add member to board successfully" });
     } catch (error) {
+      await session.abortTransaction();
+      session.endSession();
       next(error);
     }
   };

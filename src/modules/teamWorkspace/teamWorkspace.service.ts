@@ -149,10 +149,7 @@ class TeamWorkspaceService {
     workspaceId: string
   ): Promise<Object> {
     if ((await viewWorkspacePermission(workspaceId, userId)) === false) {
-      throw new HttpException(
-        StatusCodes.CONFLICT,
-        "You are not permission to view this workspace"
-      );
+      throw new HttpException(StatusCodes.FORBIDDEN, "Permission denied");
     }
     const workspaceAdmins = await this.teamWorkspaceSchema.aggregate([
       {
@@ -292,10 +289,7 @@ class TeamWorkspaceService {
     }
     const checkSuperAdmin = await isSuperAdmin(workspaceId, userId);
     if (!checkSuperAdmin) {
-      throw new HttpException(
-        StatusCodes.CONFLICT,
-        "You are not permission to delete this workspace"
-      );
+      throw new HttpException(StatusCodes.FORBIDDEN, "Permission denied");
     }
 
     const deletedBoard = await BoardSchema.find({

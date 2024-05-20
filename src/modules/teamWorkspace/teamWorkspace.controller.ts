@@ -73,7 +73,7 @@ export default class TeamWorkspaceController {
   public getTeamWorkspaceById = catchAsync(
     async (req: Request, res: Response, next: NextFunction) => {
       const userId = req.user.id;
-      const workspaceId = req.params.id;
+      const workspaceId = req.params.wsId;
       const teamWorkspace =
         await this.teamWorkspaceService.getTeamWorkspaceById(
           userId,

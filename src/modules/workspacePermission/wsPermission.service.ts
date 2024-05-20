@@ -122,9 +122,11 @@ export default class WorkspacePermissionService {
       workspaceId: wsPermission.workspaceId,
       memberIds: { $in: model.memberIds },
     });
+    const exitMemInPermId = exitMemInPerm.map((item) => item._id);
     if (
       (exitMemInPerm || []).length > 0 &&
-      (model.memberIds || []).length > 0
+      (model.memberIds || []).length > 0 &&
+      !exitMemInPermId.includes(permissionId)
     ) {
       throw new HttpException(
         StatusCodes.CONFLICT,

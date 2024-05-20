@@ -37,7 +37,7 @@ export default class BoardRoute implements Route {
     this.router.get(
       this.path + "/workspace/:wsId",
       authMiddleware,
-      
+      authorizePermission("board:viewAll", PERM_TYPE.workspace),
       this.boardController.getAllBoardByWorkspaceId
     );
     this.router.get(

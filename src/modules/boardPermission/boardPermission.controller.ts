@@ -9,7 +9,7 @@ export default class BoardPermissionController {
   public createBoardPermission = catchAsync(
     async (req: Request, res: Response) => {
       const userId = req.user.id;
-      const boardId = req.params.id;
+      const boardId = req.params.boardId;
       const model: AddBoardPermissionDto = req.body;
       await this.boardPermissionService.createBoardPermission(
         userId,

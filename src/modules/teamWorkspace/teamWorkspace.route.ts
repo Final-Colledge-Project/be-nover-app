@@ -1,7 +1,11 @@
 import { Router } from "express";
 import TeamWorkspaceController from "./teamWorkspace.controller";
 import { Route } from "@core/interfaces";
-import { authMiddleware, authorizePermission, validationMiddleware } from "@core/middleware";
+import {
+  authMiddleware,
+  authorizePermission,
+  validationMiddleware,
+} from "@core/middleware";
 import CreateTeamWorkspaceDto from "./dtos/createTeamWorkspace.dto";
 import JoinGroupDto from "./dtos/joinGroup.dto";
 import { PERM_TYPE } from "@core/utils";
@@ -34,7 +38,6 @@ export default class TeamWorkspaceRoute implements Route {
     this.router.get(
       this.path + "/:wsId/members",
       authMiddleware,
-      authorizePermission("member:view", PERM_TYPE.workspace),
       this.teamWorkspaceController.getMemberTeamWorkspace
     );
     this.router.delete(
