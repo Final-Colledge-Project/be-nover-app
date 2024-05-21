@@ -1,9 +1,14 @@
 import { Route } from "@core/interfaces";
 import { Router } from "express";
 import SubCardController from "./subCard.controller";
-import { authMiddleware, validationMiddleware } from "@core/middleware";
+import {
+  authMiddleware,
+  authorizePermission,
+  validationMiddleware,
+} from "@core/middleware";
 import AddSubTaskDto from "./dtos/addSubTaskDto";
 import UpdateSubTaskDto from "./dtos/updateSubTaskDto";
+import { PERM_TYPE } from "@core/utils";
 export default class SubCardRoute implements Route {
   public path = "/api/v1/subcards";
   public router = Router();
@@ -16,11 +21,13 @@ export default class SubCardRoute implements Route {
       this.path,
       validationMiddleware(AddSubTaskDto, true),
       authMiddleware,
+      authorizePermission("card:update", PERM_TYPE.board),
       this.subCardController.createSubCard
     );
     this.router.patch(
       this.path + "/:id/assign-member/:assigneeId",
       authMiddleware,
+      authorizePermission("card:update", PERM_TYPE.board),
       this.subCardController.assignMemberToSubCard
     );
     this.router.get(
@@ -32,7 +39,8 @@ export default class SubCardRoute implements Route {
       this.path + "/:id",
       validationMiddleware(UpdateSubTaskDto, true),
       authMiddleware,
+      authorizePermission("card:update", PERM_TYPE.board),
       this.subCardController.updateSubCard
-    )
+    );
   }
 }

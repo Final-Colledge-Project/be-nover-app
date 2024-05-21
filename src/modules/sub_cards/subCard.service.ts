@@ -26,13 +26,6 @@ export default class SubCardService {
     if (!existCard) {
       throw new HttpException(StatusCodes.CONFLICT, "Card not found");
     }
-    const checkPermissionCard = await permissionCard(existCard.boardId, userId);
-    if (!checkPermissionCard) {
-      throw new HttpException(
-        StatusCodes.FORBIDDEN,
-        "You have not permission to create subcard"
-      );
-    }
     const lengthSubCardInCard = await this.subCardSchema
       .find({ cardId: existCard._id })
       .count();
@@ -68,16 +61,6 @@ export default class SubCardService {
       .exec();
     if (!existedCard) {
       throw new HttpException(StatusCodes.CONFLICT, "Card not found");
-    }
-    const checkPermissionCard = await permissionCard(
-      existedCard.boardId,
-      userId
-    );
-    if (!checkPermissionCard) {
-      throw new HttpException(
-        StatusCodes.FORBIDDEN,
-        "You have not permission to assign member to subcard"
-      );
     }
     const isMemberInCard = existedCard.memberIds.includes(assigneeId);
     if (!isMemberInCard) {
@@ -137,13 +120,6 @@ export default class SubCardService {
     if (!existCard) {
       throw new HttpException(StatusCodes.CONFLICT, "Card not found");
     }
-    const checkPermissionCard = await permissionCard(existCard.boardId, userId);
-    if (!checkPermissionCard) {
-      throw new HttpException(
-        StatusCodes.FORBIDDEN,
-        "You have not permission to update subcard"
-      );
-    }
     const updatedSubCard = await this.subCardSchema
       .findByIdAndUpdate(
         subCardId,
@@ -166,13 +142,6 @@ export default class SubCardService {
       .exec();
     if (!existCard) {
       throw new HttpException(StatusCodes.CONFLICT, "Card not found");
-    }
-    const checkPermissionCard = await permissionCard(existCard.boardId, userId);
-    if (!checkPermissionCard) {
-      throw new HttpException(
-        StatusCodes.FORBIDDEN,
-        "You have not permission to delete subcard"
-      );
     }
     await this.subCardSchema
       .findByIdAndUpdate(

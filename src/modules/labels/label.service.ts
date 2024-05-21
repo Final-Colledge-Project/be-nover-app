@@ -22,11 +22,6 @@ export default class LabelService {
     if (!existBoard) {
       throw new HttpException(404, "Board not found");
     }
-    const boardAdmin = await isBoardAdmin(model.boardId, userId);
-    if (boardAdmin === false) {
-      throw new HttpException(403, "You are not admin of this board");
-    }
-
     const newLabel = await this.labelSchema.create({ ...model });
     if (!newLabel) {
       throw new HttpException(409, "Label not created");
@@ -66,10 +61,6 @@ export default class LabelService {
     if (!existLabel) {
       throw new HttpException(404, "Label not found");
     }
-    const boardAdmin = await isBoardAdmin(existLabel.boardId, userId);
-    if (boardAdmin === false) {
-      throw new HttpException(403, "You are not admin of this board");
-    }
     const label = await this.labelSchema
       .findByIdAndUpdate(labelId, model, { new: true })
       .exec();
@@ -85,10 +76,6 @@ export default class LabelService {
       .exec();
     if (!existLabel) {
       throw new HttpException(404, "Label not found");
-    }
-    const boardAdmin = await isBoardAdmin(existLabel.boardId, userId);
-    if (boardAdmin === false) {
-      throw new HttpException(403, "You are not admin of this board");
     }
     await this.labelSchema
       .findByIdAndUpdate(labelId, { isActive: false }, { new: true })
