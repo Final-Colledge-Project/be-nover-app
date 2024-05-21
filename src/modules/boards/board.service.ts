@@ -82,7 +82,7 @@ export default class BoardService {
     await this.boardPermissionSchema.create(
       [
         {
-          name: "Project Admin",
+          name: "Admin",
           description: "This permission can manage all board",
           boardId: createdBoard[0]._id,
           memberIds: [superAdmin?.user, ownerId],
@@ -112,7 +112,7 @@ export default class BoardService {
           isAdmin: true,
         },
         {
-          name: "Project Viewer",
+          name: "Viewer",
           description:
             "This permission can modify cards, and view other information on project",
           boardId: createdBoard[0]._id,

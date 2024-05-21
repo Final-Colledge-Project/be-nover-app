@@ -31,7 +31,6 @@ export default class UpdateBoardPermissionDto {
     this.priority = priority;
     this.label = label;
   }
-  @IsNotEmpty()
   @IsString()
   @MinLength(2, {
     message: "Title must be at least 2 characters long",

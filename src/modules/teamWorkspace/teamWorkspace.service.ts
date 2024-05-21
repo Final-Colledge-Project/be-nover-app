@@ -63,7 +63,7 @@ class TeamWorkspaceService {
     await this.wsPermissionSchema.create(
       [
         {
-          name: "Admin Group",
+          name: "Admin",
           description: "This group can manage all data in workspace",
           workspaceId: newWorkspace[0].id,
           memberIds: [superAdminId],
@@ -78,7 +78,7 @@ class TeamWorkspaceService {
           isWSAdmin: true,
         },
         {
-          name: "Viewer Group",
+          name: "Viewer",
           description: "This group can view boards, members in workspace",
           workspaceId: newWorkspace[0].id,
         },
