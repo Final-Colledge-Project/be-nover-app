@@ -60,8 +60,11 @@ export const isBoardAdmin = async (
   boardId: string,
   adminId: string
 ): Promise<Boolean> => {
+  console.log("🚀 ~ boardId:", boardId);
   const existBoard = await BoardSchema.findById(boardId).exec();
+  console.log("🚀 ~ existBoard:", existBoard);
   if (!existBoard) return false;
+  console.log("~~~~~~>ownerIds", existBoard?.ownerIds, "adminId", adminId);
   const isAdmin = existBoard?.ownerIds.includes(adminId);
   return isAdmin;
 };

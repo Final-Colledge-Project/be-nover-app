@@ -51,12 +51,9 @@ export default class WorkspacePermissionController {
   public getWSPermissionByUser = catchAsync(
     async (req: Request, res: Response) => {
       const userId = req.user.id;
-      const boardId = req.params.id;
+      const wsId = req.params.id;
       const groupPermission =
-        await this.boardPermissionService.getWSPermissionByUser( 
-          userId,
-          boardId
-        );
+        await this.boardPermissionService.getWSPermissionByUser(userId, wsId);
       res.status(StatusCodes.OK).json({
         data: groupPermission,
         message: "Get group permission successfully",

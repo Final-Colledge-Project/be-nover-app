@@ -118,15 +118,18 @@ export default class WorkspacePermissionService {
         "Member not found in workspace"
       );
     }
-    const exitMemInPerm = await this.wsPermissionSchema.find({
+    const exitMemInPerm = await this.wsPermissionSchema.findOne({
       workspaceId: wsPermission.workspaceId,
       memberIds: { $in: model.memberIds },
     });
-    const exitMemInPermId = exitMemInPerm.map((item) => item._id);
+    console.log(
+      "🚀 ~ WorkspacePermissionService ~ exitMemInPerm:",
+      exitMemInPerm
+    );
     if (
-      (exitMemInPerm || []).length > 0 &&
+      exitMemInPerm &&
       (model.memberIds || []).length > 0 &&
-      !exitMemInPermId.includes(permissionId)
+      exitMemInPerm._id.toString() !== permissionId
     ) {
       throw new HttpException(
         StatusCodes.CONFLICT,
@@ -161,6 +164,8 @@ export default class WorkspacePermissionService {
     userId: string,
     wsId: string
   ): Promise<IWorkspacePermission> {
+    console.log("🚀 ~ WorkspacePermissionService ~ wsId:", wsId);
+    console.log("🚀 ~ WorkspacePermissionService ~ userId:", userId);
     if (!userId) {
       throw new HttpException(StatusCodes.BAD_REQUEST, "UserId is required");
     }

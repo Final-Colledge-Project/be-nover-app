@@ -18,7 +18,7 @@ export default class BoardPermissionRoute implements Route {
       authMiddleware,
       this.boardPermissionController.createBoardPermission
     );
-    this.router.put(
+    this.router.patch(
       this.path + "/:id",
       validationMiddleware(UpdateBoardPermissionDto, true),
       authMiddleware,

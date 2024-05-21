@@ -129,7 +129,6 @@ export const authorizePermission = (roles: string, permType: string) => {
             new HttpException(StatusCodes.FORBIDDEN, "Permission denied")
           );
         }
-        console.log("~~~~~>nextttttttt");
         next();
         break;
       }

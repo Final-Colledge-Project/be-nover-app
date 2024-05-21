@@ -1,7 +1,6 @@
 import {
   OBJECT_ID,
   isBoardAdmin,
-  isBoardLead,
   isBoardMember,
   isEmptyObject,
   permissionColumn,
