@@ -3,5 +3,6 @@ export default interface IOtp {
   email: string;
   otp: string;
   createdAt: Date;
-  expireAt: Date 
+  updatedAt: Date;
+  expireAt: Date;
 }

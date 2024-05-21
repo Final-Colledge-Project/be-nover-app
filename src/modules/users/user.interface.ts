@@ -15,6 +15,7 @@ export default interface IUser {
   profileLogin: IProfileLogin;
   providerToken: IGoogleToken;
   active: boolean;
+  updatedAt: Date;
 }
 
 interface IProfileLogin {

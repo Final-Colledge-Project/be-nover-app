@@ -15,6 +15,8 @@ import { InvitationRoute } from "@modules/invitations";
 import { SubCardRoute } from "@modules/sub_cards";
 import { NotificationRoute } from "@modules/notifications";
 import { ScheduleRoute } from "@modules/schedule";
+import { BoardPermissionRoute } from "@modules/boardPermission";
+import { WorkspacePermissionRoute } from "@modules/workspacePermission";
 validateEnv();
 const routes = [
   new IndexRoute(),
@@ -31,6 +33,8 @@ const routes = [
   new SubCardRoute(),
   new NotificationRoute(),
   new ScheduleRoute(),
+  new BoardPermissionRoute(),
+  new WorkspacePermissionRoute(),
 ];
 const app = new App(routes);
 app.listen();

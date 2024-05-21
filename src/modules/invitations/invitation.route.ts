@@ -1,7 +1,12 @@
 import { Router } from "express";
 import InvitationController from "./invitation.controller";
-import { authMiddleware, validationMiddleware } from "@core/middleware";
+import {
+  authMiddleware,
+  authorizePermission,
+  validationMiddleware,
+} from "@core/middleware";
 import JoinGroupDto from "./dtos/joinGroupDto";
+import { PERM_TYPE } from "@core/utils";
 
 export default class InvitationRoute {
   public path = "/api/v1/invitations";
@@ -12,20 +17,21 @@ export default class InvitationRoute {
   }
   private initializeRoute() {
     this.router.post(
-      this.path + "/workspace/:id",
+      this.path + "/workspace/:wsId",
       validationMiddleware(JoinGroupDto, true),
       authMiddleware,
+      authorizePermission("member:invite", PERM_TYPE.workspace),
       this.invitationController.sendInvitation
     );
     this.router.patch(
-      this.path + "/workspace/:id",
+      this.path + "/workspace/:wsId",
       authMiddleware,
       this.invitationController.responseInvitation
     ),
-    this.router.get(
-      this.path + "/:id",
-      authMiddleware,
-      this.invitationController.getInvitationDetail
-    );
+      this.router.get(
+        this.path + "/:id",
+        authMiddleware,
+        this.invitationController.getInvitationDetail
+      );
   }
 }

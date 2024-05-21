@@ -1,7 +1,6 @@
 import {
   OBJECT_ID,
   isBoardAdmin,
-  isBoardLead,
   isBoardMember,
   isEmptyObject,
   permissionColumn,
@@ -27,13 +26,6 @@ export default class ColumnService {
     const board = await this.boardSchema.findById(model.boardId).exec();
     if (!board) {
       throw new HttpException(StatusCodes.CONFLICT, "Board not found");
-    }
-    const checkPermissionCol = await permissionColumn(board.id, userId);
-    if (!checkPermissionCol) {
-      throw new HttpException(
-        StatusCodes.FORBIDDEN,
-        "You have not permission to create column"
-      );
     }
     const existColumn = await this.columnSchema.findOne({
       title: model.title,
@@ -95,18 +87,6 @@ export default class ColumnService {
     if (!existColumn) {
       throw new HttpException(StatusCodes.CONFLICT, "Column not found");
     }
-    if (model.title) {
-      const checkPermissionCol = await permissionColumn(
-        existColumn.boardId,
-        userId
-      );
-      if (!checkPermissionCol) {
-        throw new HttpException(
-          StatusCodes.FORBIDDEN,
-          "You have not permission to update column"
-        );
-      }
-    }
 
     if (model.title) {
       const existTitle = await this.columnSchema
@@ -141,13 +121,6 @@ export default class ColumnService {
     const column = await this.columnSchema.findById(columnId).exec();
     if (!column) {
       throw new HttpException(StatusCodes.CONFLICT, "Column not found");
-    }
-    const checkPermissionCol = await permissionColumn(column.boardId, userId);
-    if (!checkPermissionCol) {
-      throw new HttpException(
-        StatusCodes.FORBIDDEN,
-        "You have not permission to delete column"
-      );
     }
     if (column.cardOrderIds.length > 0) {
       throw new HttpException(StatusCodes.CONFLICT, "Column not empty");

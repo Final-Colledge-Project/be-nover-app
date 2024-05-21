@@ -40,13 +40,6 @@ export default class CardService {
     if (!existBoard) {
       throw new HttpException(StatusCodes.CONFLICT, "Board not found");
     }
-    const checkPermissionCard = await permissionCard(existBoard.id, userId);
-    if (!checkPermissionCard) {
-      throw new HttpException(
-        StatusCodes.FORBIDDEN,
-        "You have not permission to create card"
-      );
-    }
     const lengthCardInBoard = await this.cardSchema
       .find({ boardId: existColumn.boardId })
       .count();
@@ -180,13 +173,6 @@ export default class CardService {
     if (!card) {
       throw new HttpException(StatusCodes.CONFLICT, "Card not found");
     }
-    const checkPermissionCard = await permissionCard(card.boardId, userId);
-    if (!checkPermissionCard) {
-      throw new HttpException(
-        StatusCodes.FORBIDDEN,
-        "You have not permission to update card"
-      );
-    }
     const updateCard = await this.cardSchema
       .findByIdAndUpdate(
         { _id: cardId },
@@ -211,13 +197,6 @@ export default class CardService {
     const card = await this.cardSchema.findById(cardId).exec();
     if (!card) {
       throw new HttpException(StatusCodes.CONFLICT, "Card not found");
-    }
-    const checkPermissionCard = await permissionCard(card.boardId, userId);
-    if (!checkPermissionCard) {
-      throw new HttpException(
-        StatusCodes.FORBIDDEN,
-        "You have not permission to assign member to card"
-      );
     }
     const checkBoarMemberByAssignee = await isBoardMember(
       card.boardId,
@@ -348,13 +327,6 @@ export default class CardService {
     if (!existCard) {
       throw new HttpException(StatusCodes.CONFLICT, "Card not found");
     }
-    const checkPermissionCard = await permissionCard(existCard.boardId, userId);
-    if (!checkPermissionCard) {
-      throw new HttpException(
-        StatusCodes.FORBIDDEN,
-        "You have not permission to upload cover card"
-      );
-    }
     existCard.cover = cover;
     await existCard.save();
     return existCard.cover;
@@ -371,13 +343,6 @@ export default class CardService {
     const card = await this.cardSchema.findById(cardId).exec();
     if (!card) {
       throw new HttpException(StatusCodes.CONFLICT, "Card not found");
-    }
-    const checkPermissionCard = await permissionCard(card.boardId, userId);
-    if (!checkPermissionCard) {
-      throw new HttpException(
-        StatusCodes.FORBIDDEN,
-        "You have not permission to unassign member from card"
-      );
     }
     const checkCardMember = await isCardNumber(cardId, member.id);
     if (!checkCardMember) {
@@ -401,13 +366,6 @@ export default class CardService {
     const card = await this.cardSchema.findById(cardId).exec();
     if (!card) {
       throw new HttpException(StatusCodes.CONFLICT, "Card not found");
-    }
-    const checkPermissionCard = await permissionCard(card.boardId, userId);
-    if (!checkPermissionCard) {
-      throw new HttpException(
-        StatusCodes.FORBIDDEN,
-        "You have not permission to delete card"
-      );
     }
     const deletedCard = await this.cardSchema
       .findByIdAndUpdate(

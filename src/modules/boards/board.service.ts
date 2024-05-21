@@ -3,14 +3,11 @@ import {
   OBJECT_ID,
   ROLE,
   isBoardAdmin,
-  isBoardLead,
   isBoardMember,
   isEmptyObject,
   isSuperAdmin,
   isWorkspaceMember,
   permissionBoard,
-  permissionWorkspace,
-  viewWorkspacePermission,
   viewedBoardPermission,
 } from "@core/utils";
 import IBoard from "./board.interface";
@@ -19,89 +16,170 @@ import CreateBoardDto from "./dtos/createBoardDto";
 import { HttpException } from "@core/exceptions";
 import { Request } from "express";
 import APIFeatures from "@core/utils/apiFeature";
-import { cloneDeep } from "lodash";
+import { cloneDeep, create } from "lodash";
 import ICard from "@modules/cards/card.interface";
 import { IResColumn } from "@modules/columns";
 import { TeamWorkspaceSchema } from "@modules/teamWorkspace";
 import UpdateBoardDto from "./dtos/updateBoardDto";
 import AddMemsToBoardDto from "./dtos/addMemsToBoard";
 import { StatusCodes } from "http-status-codes";
-import { UserSchema } from "@modules/users";
-import {
-  NotificationSchema,
-  NotificationService,
-} from "@modules/notifications";
+import { NotificationService } from "@modules/notifications";
 import PushNotificationDto from "@modules/notifications/dtos/pushNotificationDto";
 import { CardSchema } from "@modules/cards";
 import { SubCardSchema } from "@modules/sub_cards";
 import { LabelSchema } from "@modules/labels";
+import { BoardPermissionSchema } from "@modules/boardPermission";
+import { UserSchema } from "@modules/users";
+import mongoose from "mongoose";
+import { WorkspacePermissionSchema } from "@modules/workspacePermission";
 export default class BoardService {
   private boardSchema = BoardSchema;
   private workspaceSchema = TeamWorkspaceSchema;
+  private boardPermissionSchema = BoardPermissionSchema;
+  private wsPermissionSchema = WorkspacePermissionSchema;
   private userSchema = UserSchema;
-  private notificationSchema = NotificationSchema;
   private notificationService = new NotificationService();
   public async createBoard(
     model: CreateBoardDto,
-    ownerId: string
+    ownerId: string,
+    wsId: string,
+    session: any
   ): Promise<IBoard> {
     if (isEmptyObject(model)) {
       throw new HttpException(StatusCodes.BAD_REQUEST, "Model is empty");
     }
-    const checkPermissionBoard = await permissionWorkspace(
-      model.teamWorkspaceId,
-      ownerId
-    );
-    if (!checkPermissionBoard) {
-      throw new HttpException(
-        StatusCodes.FORBIDDEN,
-        "You are not permission to create board in this workspace"
-      );
-    }
     const existedBoard = await this.boardSchema
       .findOne({
         title: model.title,
-        teamWorkspaceId: model.teamWorkspaceId,
+        teamWorkspaceId: wsId,
         isActive: true,
       })
       .exec();
     if (existedBoard) {
       throw new HttpException(StatusCodes.CONFLICT, "Board already exists");
     }
-    const createdBoard = await this.boardSchema.create({
-      ...model,
-      ownerIds: [{ user: ownerId, role: "boardLead" }],
-    });
+    const createdBoard = await this.boardSchema.create(
+      [
+        {
+          ...model,
+          teamWorkspaceId: wsId,
+          ownerIds: [ownerId],
+        },
+      ],
+      { session }
+    );
+
     if (!createdBoard) {
       throw new HttpException(StatusCodes.CONFLICT, "Board not created");
     }
-    return createdBoard;
+    const workspace = await this.workspaceSchema.findById(wsId).exec();
+    if (!workspace) {
+      throw new HttpException(StatusCodes.CONFLICT, "Workspace not found");
+    }
+    const superAdmin = workspace.workspaceAdmins.find(
+      (mem) => mem.role === ROLE.superAdmin
+    );
+    await this.boardPermissionSchema.create(
+      [
+        {
+          name: "Project Admin",
+          description: "This permission can manage all board",
+          boardId: createdBoard[0]._id,
+          memberIds: [superAdmin?.user, ownerId],
+          column: {
+            create: true,
+            update: true,
+            delete: true,
+          },
+          member: {
+            invite: true,
+          },
+          issueType: {
+            create: true,
+            update: true,
+            delete: true,
+          },
+          priority: {
+            create: true,
+            update: true,
+            delete: true,
+          },
+          label: {
+            create: true,
+            update: true,
+            delete: true,
+          },
+          isAdmin: true,
+        },
+        {
+          name: "Project Viewer",
+          description:
+            "This permission can modify cards, and view other information on project",
+          boardId: createdBoard[0]._id,
+          isViewer: true,
+        },
+      ],
+      { session }
+    );
+    await session.commitTransaction();
+    session.endSession();
+    return createdBoard[0];
   }
   public async addMemberToBoard(
     userId: string,
     boardId: string,
-    memberIds: AddMemsToBoardDto
+    memberIds: AddMemsToBoardDto,
+    session: any
   ): Promise<IBoard> {
     const board = await this.boardSchema.findById(boardId).exec();
     if (!board) {
       throw new HttpException(StatusCodes.CONFLICT, "Board not found");
     }
     const workspaceId = board.teamWorkspaceId;
-    const workspace = this.workspaceSchema.findById(workspaceId).exec();
+    const workspace = await this.workspaceSchema.findById(workspaceId).exec();
     if (!workspace) {
       throw new HttpException(StatusCodes.CONFLICT, "Workspace not found");
     }
-    const checkPermissionBoard = await permissionBoard(boardId, userId);
-    if (!checkPermissionBoard) {
+    const members = memberIds.memberIds;
+    const objectIdArray = members.map((id) => new mongoose.Types.ObjectId(id));
+    const users = await this.userSchema.find({
+      _id: {
+        $in: objectIdArray,
+      },
+    });
+    if (memberIds.memberIds.length !== users.length || !users) {
+      throw new HttpException(StatusCodes.BAD_REQUEST, "User not found");
+    }
+    const isExistWSMember = workspace.workspaceMembers.some((mem) => {
+      return members.includes(mem.user.toString());
+    });
+    if (!isExistWSMember) {
       throw new HttpException(
-        StatusCodes.CONFLICT,
-        "You has not permission to add member to board"
+        StatusCodes.BAD_REQUEST,
+        "User is not member of workspace"
       );
     }
-    const members = memberIds.memberIds;
+    const isExistMember = board.memberIds.some((mem) => {
+      return members.includes(mem.toString());
+    });
+    if (isExistMember) {
+      throw new HttpException(StatusCodes.BAD_REQUEST, "User already in board");
+    }
     const memberList = [...new Set([...board.memberIds, ...members])];
     board.memberIds = memberList;
-    await board.save();
+    await board.save({ session });
+    await this.boardPermissionSchema.findOneAndUpdate(
+      {
+        boardId: boardId,
+        isViewer: true,
+      },
+      {
+        memberIds: memberList,
+      },
+      { session }
+    );
+    await session.commitTransaction();
+    session.endSession();
     //Send notification
     const message = `have added you to the board`;
     const model: PushNotificationDto[] = members.map((memberId: string) => {
@@ -125,44 +203,52 @@ export default class BoardService {
     req: Request,
     userId: string
   ): Promise<IBoard[]> {
-    if ((await viewWorkspacePermission(workspaceId, userId)) === false) {
-      throw new HttpException(
-        StatusCodes.FORBIDDEN,
-        "You are not permission to view this workspace"
-      );
-    }
+    const permGroup = await this.wsPermissionSchema
+      .findOne({
+        memberIds: userId,
+        workspaceId: workspaceId,
+      })
+      .exec();
+    const isViewAll = permGroup?.board?.viewAll;
     let nameBoard = "";
     if (!!req.query.search) {
       nameBoard = req.query.search.toString();
     }
     let boards: IBoard[] = [];
-    if (nameBoard === "") {
-      const feature = new APIFeatures(
-        this.boardSchema.find({
-          teamWorkspaceId: workspaceId,
-        }),
-        req.query
-      )
-        .filter()
-        .sort()
-        .limit()
-        .paginate();
-      boards = await feature.query;
-    } else {
-      const feature = new APIFeatures(
-        this.boardSchema.find({
-          teamWorkspaceId: workspaceId,
+    const getExtendCondition = () => {
+      let result = {};
+      if (!isViewAll) {
+        result = {
+          $or: [
+            {
+              memberIds: { $in: [userId] },
+            },
+            {
+              ownerIds: { $in: [userId] },
+            },
+          ],
+        };
+      }
+      if (nameBoard) {
+        result = {
+          ...result,
           $text: { $search: nameBoard },
-        }),
-        req.query
-      )
-        .filter()
-        .sort()
-        .limit()
-        .paginate();
-      boards = await feature.query;
-    }
-
+        };
+      }
+      return result;
+    };
+    const feature = new APIFeatures(
+      this.boardSchema.find({
+        teamWorkspaceId: workspaceId,
+        ...getExtendCondition(),
+      }),
+      req.query
+    )
+      .filter()
+      .sort()
+      .limit()
+      .paginate();
+    boards = await feature.query;
     return boards;
   }
   public async getBoardDetail(
@@ -425,9 +511,9 @@ export default class BoardService {
 
     const oweners = await this.boardSchema
       .findById(boardId)
-      .select("ownerIds.user ownerIds.role")
+      .select("ownerIds")
       .populate({
-        path: "ownerIds.user",
+        path: "ownerIds",
         select: "firstName lastName avatar email",
       })
       .exec();
@@ -452,10 +538,7 @@ export default class BoardService {
     }
     const checkPermissionBoard = await permissionBoard(boardId, userId);
     if (!checkPermissionBoard) {
-      throw new HttpException(
-        StatusCodes.FORBIDDEN,
-        "You are not permission to update this board"
-      );
+      throw new HttpException(StatusCodes.FORBIDDEN, "Permission Denied");
     }
     const updatedBoard = await this.boardSchema
       .findByIdAndUpdate(
@@ -483,8 +566,7 @@ export default class BoardService {
       throw new HttpException(StatusCodes.CONFLICT, "Board not found");
     }
     const checkSuperAdmin = await isSuperAdmin(board.teamWorkspaceId, userId);
-    const checkBoardLead = await isBoardLead(boardId, userId);
-    if (!checkBoardLead && !checkSuperAdmin) {
+    if (!checkSuperAdmin) {
       throw new HttpException(
         StatusCodes.FORBIDDEN,
         "You are not permission to grand admin permission"
@@ -497,10 +579,7 @@ export default class BoardService {
         "This member is not member of this board"
       );
     }
-    board.ownerIds.push({
-      user: memberId,
-      role: ROLE.boardAdmin,
-    });
+    board.ownerIds.push(memberId);
     const memBoard = cloneDeep(board.memberIds);
     board.memberIds = memBoard.filter(
       (mem: any) => mem.toString() !== memberId
@@ -517,9 +596,8 @@ export default class BoardService {
       throw new HttpException(StatusCodes.CONFLICT, "Board not found");
     }
     const checkSuperAdmin = await isSuperAdmin(board.teamWorkspaceId, userId);
-    const checkBoardLead = await isBoardLead(boardId, userId);
 
-    if (!checkBoardLead && !checkSuperAdmin) {
+    if (!checkSuperAdmin) {
       throw new HttpException(
         StatusCodes.FORBIDDEN,
         "You are not permission to grand admin permission"
@@ -627,8 +705,7 @@ export default class BoardService {
       throw new HttpException(StatusCodes.CONFLICT, "Board not found");
     }
     const checkSuperAdmin = await isSuperAdmin(board.teamWorkspaceId, userId);
-    const checkBoardLead = await isBoardLead(boardId, userId);
-    if (!checkBoardLead && !checkSuperAdmin) {
+    if (!checkSuperAdmin) {
       throw new HttpException(
         StatusCodes.FORBIDDEN,
         "You are not permission to delete this board"

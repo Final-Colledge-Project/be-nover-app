@@ -16,9 +16,11 @@ import { TeamWorkspaceSchema } from "@modules/teamWorkspace";
 import IInvitationWorkspace from "./invitation.interface";
 import JoinGroupDto from "./dtos/joinGroupDto";
 import { StatusCodes } from "http-status-codes";
+import { WorkspacePermissionSchema } from "@modules/workspacePermission";
 export default class InvitationService {
   private invitationSchema = InvitationSchema;
   private teamWorkspaceSchema = TeamWorkspaceSchema;
+  private wsPermissionSchema = WorkspacePermissionSchema;
   public async sendInvitation(
     model: JoinGroupDto,
     adminId: string,
@@ -31,16 +33,6 @@ export default class InvitationService {
     const invitedUser = await UserSchema.findOne({
       email: model.emailUser,
     }).exec();
-    const checkPermissionWorkspace = await permissionWorkspace(
-      workspaceId,
-      adminId
-    );
-    if (!checkPermissionWorkspace) {
-      throw new HttpException(
-        StatusCodes.FORBIDDEN,
-        "You have not permission to invite member"
-      );
-    }
     if (!adminUser) {
       throw new HttpException(StatusCodes.CONFLICT, "You are not an user");
     }
@@ -99,7 +91,8 @@ export default class InvitationService {
   public async responseInvitation(
     userId: string,
     workspaceId: string,
-    status: string
+    status: string,
+    session: any
   ): Promise<void> {
     const teamWorkspace = await this.teamWorkspaceSchema
       .findById(workspaceId)
@@ -128,7 +121,8 @@ export default class InvitationService {
         },
         {
           status: status,
-        }
+        },
+        { session }
       )
       .exec();
     if (status === INVITE_STATUS.accepted) {
@@ -143,10 +137,39 @@ export default class InvitationService {
                 user: userId,
               },
             },
-          }
+          },
+          { session }
+        )
+        .exec();
+      const viewerPermGroup = await this.wsPermissionSchema
+        .findOne({
+          workspaceId: workspaceId,
+          isWSViewer: true,
+        })
+        .session(session)
+        .exec();
+      if (!viewerPermGroup) {
+        throw new HttpException(
+          StatusCodes.CONFLICT,
+          "Viewer permission group not found"
+        );
+      }
+      await this.wsPermissionSchema
+        .findOneAndUpdate(
+          {
+            _id: viewerPermGroup.id,
+          },
+          {
+            $push: {
+              memberIds: userId,
+            },
+          },
+          { session }
         )
         .exec();
     }
+    await session.commitTransaction();
+    session.endSession();
   }
   public async getInvitationDetail(
     invitationId: string

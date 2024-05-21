@@ -32,6 +32,8 @@ export const MODEL_NAME = {
   subCard: "SubCard",
   notification: "Notification",
   schedule: "Schedule",
+  boardPermission: "BoardPermission",
+  workspacePermission: "WorkspacePermission",
 };
 export const SUBTASK_STATUS = {
   todo: "todo",
@@ -50,4 +52,9 @@ export const ROLE = {
 export const SCHEDULE_TYPE = {
   assignedTask: "assignedTask",
   googleEvent: "googleEvent",
+};
+
+export const PERM_TYPE = {
+  board: "board",
+  workspace: "workspace",
 };
