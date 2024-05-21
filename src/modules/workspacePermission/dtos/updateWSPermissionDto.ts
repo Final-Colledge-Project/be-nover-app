@@ -25,7 +25,6 @@ export default class UpdateWSPermissionDto {
     this.member = member;
     this.board = board;
   }
-  @IsNotEmpty()
   @IsString()
   @MinLength(2, {
     message: "Title must be at least 2 characters long",
