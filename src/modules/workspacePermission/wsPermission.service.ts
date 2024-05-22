@@ -38,10 +38,10 @@ export default class WorkspacePermissionService {
     const existUser = await this.userSchema.find({
       _id: { $in: model.memberIds },
     });
-    if (!existUser || existUser.length !== model.memberIds.length) {
+    if (!existUser || existUser.length !== (model.memberIds || []).length) {
       throw new HttpException(StatusCodes.BAD_REQUEST, "User not found");
     }
-    const existedMember = workspace.workspaceMembers.some((item) =>
+    const existedMember = (workspace.workspaceMembers || []).some((item) =>
       (model.memberIds || []).includes(item.user.toString())
     );
     if (!existedMember && (model.memberIds || []).length > 0) {
@@ -50,15 +50,20 @@ export default class WorkspacePermissionService {
         "Member not found in workspace"
       );
     }
-    const exitMemInPerm = await this.wsPermissionSchema.find({
+    const exitMemInPerm = await this.wsPermissionSchema.findOne({
       workspaceId: wsId,
       memberIds: { $in: model.memberIds },
     });
-    if (exitMemInPerm.length > 0 && (model.memberIds || []).length > 0) {
-      throw new HttpException(
-        StatusCodes.CONFLICT,
-        "Member already in workspace permission"
-      );
+    if (exitMemInPerm && (model.memberIds || []).length > 0) {
+      const listPromise = (model.memberIds || []).map((item) => {
+        if ((exitMemInPerm.memberIds || []).includes(item)) {
+          exitMemInPerm.memberIds = (exitMemInPerm.memberIds || []).filter(
+            (i: string) => i.toString() !== item
+          );
+          return exitMemInPerm.save();
+        }
+      });
+      await Promise.all(listPromise);
     }
     const workspacePerm = await this.wsPermissionSchema.create({
       ...model,
@@ -109,7 +114,7 @@ export default class WorkspacePermissionService {
     ) {
       throw new HttpException(StatusCodes.BAD_REQUEST, "User not found");
     }
-    const existedMember = workspace.workspaceMembers.some((item) =>
+    const existedMember = (workspace.workspaceMembers || []).some((item) =>
       (model.memberIds || []).includes(item.user.toString())
     );
     if (!existedMember && (model.memberIds || []).length > 0) {
@@ -122,21 +127,53 @@ export default class WorkspacePermissionService {
       workspaceId: wsPermission.workspaceId,
       memberIds: { $in: model.memberIds },
     });
-    console.log(
-      "🚀 ~ WorkspacePermissionService ~ exitMemInPerm:",
-      exitMemInPerm
-    );
     if (
       exitMemInPerm &&
       (model.memberIds || []).length > 0 &&
       exitMemInPerm._id.toString() !== permissionId
     ) {
-      throw new HttpException(
-        StatusCodes.CONFLICT,
-        "Member already in workspace permission"
-      );
+      const listPromise = (model.memberIds || []).map((item) => {
+        if ((exitMemInPerm.memberIds || []).includes(item)) {
+          exitMemInPerm.memberIds = (exitMemInPerm.memberIds || []).filter(
+            (i: string) => i.toString() !== item
+          );
+          return exitMemInPerm.save();
+        }
+      });
+      await Promise.all(listPromise);
     }
-    await this.wsPermissionSchema.findByIdAndUpdate(permissionId, model);
+    const removeIds: string[] = [];
+    (wsPermission.memberIds || []).forEach((item) => {
+      if (!(model.memberIds || []).includes(item))
+        removeIds.push(item.toString());
+    });
+    const viewerPerm = await this.wsPermissionSchema
+      .findOne({
+        workspaceId: wsPermission.workspaceId,
+        isWSViewer: true,
+      })
+      .exec();
+    let updateMemberIds: string[] = [];
+    if (viewerPerm && removeIds.length > 0) {
+      updateMemberIds = [
+        ...new Set([
+          ...viewerPerm.memberIds.map((item) => item.toString()),
+          ...removeIds,
+        ]),
+      ];
+      if (viewerPerm._id.toString() !== permissionId) {
+        viewerPerm.memberIds = updateMemberIds;
+        await viewerPerm.save();
+      }
+    }
+    let updateModel = model;
+    if (wsPermission.isWSViewer && removeIds.length > 0) {
+      updateModel = {
+        ...model,
+        memberIds: updateMemberIds,
+      };
+    }
+    await this.wsPermissionSchema.findByIdAndUpdate(permissionId, updateModel);
   }
   public async getWSPermissionByWSId(
     userId: string,
@@ -164,8 +201,6 @@ export default class WorkspacePermissionService {
     userId: string,
     wsId: string
   ): Promise<IWorkspacePermission> {
-    console.log("🚀 ~ WorkspacePermissionService ~ wsId:", wsId);
-    console.log("🚀 ~ WorkspacePermissionService ~ userId:", userId);
     if (!userId) {
       throw new HttpException(StatusCodes.BAD_REQUEST, "UserId is required");
     }
