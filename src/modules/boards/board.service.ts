@@ -1,4 +1,5 @@
 import {
+  BOARD_TEMPLATE,
   MODEL_NAME,
   OBJECT_ID,
   ROLE,
@@ -66,7 +67,7 @@ export default class BoardService {
           ownerIds: [ownerId],
         },
       ],
-      { session }
+      { new: true, session }
     );
 
     if (!createdBoard) {
@@ -79,6 +80,17 @@ export default class BoardService {
     const superAdmin = workspace.workspaceAdmins.find(
       (mem) => mem.role === ROLE.superAdmin
     );
+    const extendPerm =
+      createdBoard[0].template === BOARD_TEMPLATE.scrum
+        ? {
+            sprint: {
+              create: true,
+              update: true,
+              delete: true,
+            },
+          }
+        : {};
+
     await this.boardPermissionSchema.create(
       [
         {
@@ -110,6 +122,7 @@ export default class BoardService {
             delete: true,
           },
           isAdmin: true,
+          ...extendPerm,
         },
         {
           name: "Viewer",

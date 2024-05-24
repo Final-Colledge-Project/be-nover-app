@@ -1,6 +1,11 @@
 import mongoose, { Query } from "mongoose";
 import IBoard from "./board.interface";
-import { MODEL_NAME, MODE_ACCESS, SCHEMA_TYPE } from "@core/utils";
+import {
+  MODEL_NAME,
+  MODE_ACCESS,
+  SCHEMA_TYPE,
+  BOARD_TEMPLATE,
+} from "@core/utils";
 
 const BoardSchema = new mongoose.Schema(
   {
@@ -10,6 +15,19 @@ const BoardSchema = new mongoose.Schema(
       minlength: [3, "Title must be at least 3 characters long"],
       maxlength: [30, "Title must be at most 30 characters long"],
       trim: true,
+    },
+    key: {
+      type: String,
+      required: [true, "Key is required"],
+      unique: true,
+      minlength: [3, "Key must be at least 3 characters long"],
+      maxlength: [10, "Key must be at most 10 characters long"],
+      trim: true,
+    },
+    template: {
+      type: String,
+      enum: [BOARD_TEMPLATE.kanban, BOARD_TEMPLATE.scrum],
+      required: [true, "Template is required"],
     },
     description: {
       type: String,

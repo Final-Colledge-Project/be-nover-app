@@ -1,6 +1,8 @@
 export default interface IBoard {
   _id: string;
   title: string;
+  key: string;
+  template: string;
   description: string;
   cover: string;
   columnOrderIds: string[];

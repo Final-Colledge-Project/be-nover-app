@@ -34,6 +34,7 @@ export const MODEL_NAME = {
   schedule: "Schedule",
   boardPermission: "BoardPermission",
   workspacePermission: "WorkspacePermission",
+  sprint: "Sprint",
 };
 export const SUBTASK_STATUS = {
   todo: "todo",
@@ -57,4 +58,23 @@ export const SCHEDULE_TYPE = {
 export const PERM_TYPE = {
   board: "board",
   workspace: "workspace",
+};
+
+export const BOARD_TEMPLATE = {
+  kanban: "kanban",
+  scrum: "scrum",
+};
+
+export const SPRINT_STATUS = {
+  pending: "pending",
+  active: "active",
+  completed: "completed",
+};
+
+export const SPRINT_DURATION = {
+  oneWeek: "1 week",
+  twoWeeks: "2 weeks",
+  threeWeeks: "3 weeks",
+  fourWeeks: "4 weeks",
+  custom: "custom",
 };

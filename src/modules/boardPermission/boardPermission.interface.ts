@@ -37,6 +37,11 @@ export default interface IBoardPermission {
     update: boolean;
     delete: boolean;
   };
+  sprint: {
+    create: boolean;
+    update: boolean;
+    delete: boolean;
+  };
   createdAt: Date;
   updatedAt: Date;
   isActive: boolean;

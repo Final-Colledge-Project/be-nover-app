@@ -8,25 +8,7 @@ import { startSession } from "mongoose";
 
 export default class TeamWorkspaceController {
   private teamWorkspaceService = new TeamWorkspaceService();
-
-  // public createTeamWorkspace = catchAsync(
-  //   async (req: Request, res: Response, next: NextFunction) => {
-  //     let model: CreateTeamWorkspaceDto = {
-  //       name: "",
-  //       superAdminWorkspaceId: "",
-  //     };
-  //     model.name = req.body.name;
-  //     model.superAdminWorkspaceId = req.user.id;
-
-  //     const teamWorkspace = await this.teamWorkspaceService.createTeamWorkspace(
-  //       model
-  //     );
-  //     res.status(StatusCodes.CREATED).json({
-  //       data: teamWorkspace,
-  //       message: "Create team workspace successfully",
-  //     });
-  //   }
-  // );
+  
   public createTeamWorkspace = async (
     req: Request,
     res: Response,

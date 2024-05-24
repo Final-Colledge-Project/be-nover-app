@@ -2,6 +2,7 @@ import {
   IsArray,
   IsHexColor,
   IsNotEmpty,
+  IsObject,
   IsString,
   MaxLength,
   MinLength,
@@ -18,7 +19,8 @@ export default class AddBoardPermissionDto {
     member: { invite: boolean },
     issueType: { create: boolean; update: boolean; delete: boolean },
     priority: { create: boolean; update: boolean; delete: boolean },
-    label: { create: boolean; update: boolean; delete: boolean }
+    label: { create: boolean; update: boolean; delete: boolean },
+    sprint: { create: boolean; update: boolean; delete: boolean }
   ) {
     this.name = name;
     this.description = description;
@@ -30,6 +32,7 @@ export default class AddBoardPermissionDto {
     this.issueType = issueType;
     this.priority = priority;
     this.label = label;
+    this.sprint = sprint;
   }
   @IsNotEmpty()
   @IsString()
@@ -52,10 +55,18 @@ export default class AddBoardPermissionDto {
   public color: string;
   @IsArray()
   public memberIds: string[];
+  @IsObject()
   public column: { create: boolean; update: boolean; delete: boolean };
+  @IsObject()
   public card: { all: boolean };
+  @IsObject()
   public member: { invite: boolean };
+  @IsObject()
   public issueType: { create: boolean; update: boolean; delete: boolean };
+  @IsObject()
   public priority: { create: boolean; update: boolean; delete: boolean };
+  @IsObject()
   public label: { create: boolean; update: boolean; delete: boolean };
+  @IsObject()
+  public sprint: { create: boolean; update: boolean; delete: boolean };
 }

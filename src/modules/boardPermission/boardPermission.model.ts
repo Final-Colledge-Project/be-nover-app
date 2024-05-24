@@ -1,6 +1,7 @@
 import { MODEL_NAME, SCHEMA_TYPE } from "@core/utils";
 import mongoose, { Query } from "mongoose";
 import IBoardPermission from "./boardPermission.interface";
+import { BoardSchema } from "@modules/boards";
 
 const BoardPermissionSchema = new mongoose.Schema(
   {
@@ -127,6 +128,20 @@ const BoardPermissionSchema = new mongoose.Schema(
     isActive: {
       type: Boolean,
       default: true,
+    },
+    sprint: {
+      create: {
+        type: Boolean,
+        default: false,
+      },
+      update: {
+        type: Boolean,
+        default: false,
+      },
+      delete: {
+        type: Boolean,
+        default: false,
+      },
     },
     isAdmin: {
       type: Boolean,

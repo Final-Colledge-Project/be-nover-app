@@ -17,6 +17,7 @@ import { NotificationRoute } from "@modules/notifications";
 import { ScheduleRoute } from "@modules/schedule";
 import { BoardPermissionRoute } from "@modules/boardPermission";
 import { WorkspacePermissionRoute } from "@modules/workspacePermission";
+import { SprintRoute } from "@modules/sprint";
 validateEnv();
 const routes = [
   new IndexRoute(),
@@ -35,6 +36,7 @@ const routes = [
   new ScheduleRoute(),
   new BoardPermissionRoute(),
   new WorkspacePermissionRoute(),
+  new SprintRoute(),
 ];
 const app = new App(routes);
 app.listen();
