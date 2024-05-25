@@ -31,8 +31,9 @@ export default class LabelRoute implements Route {
         this.labelController.getLabelsByBoardId
       ),
       this.router.get(
-        this.path + "/:id",
+        this.path + "/:id/board/:boardId",
         authMiddleware,
+        authorizePermission("label:viewAll", PERM_TYPE.board),
         this.labelController.getLabelById
       );
     this.router.patch(

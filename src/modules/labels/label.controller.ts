@@ -8,8 +8,8 @@ export default class LabelController {
   private labelService = new LabelService();
   public createLabel = catchAsync(async (req: Request, res: Response) => {
     const model: CreateLabelDto = req.body;
-    const userId = req.user.id;
-    const label = await this.labelService.createLabel(model, userId);
+    const boardId = req.params.boardId;
+    const label = await this.labelService.createLabel(model, boardId);
     res
       .status(StatusCodes.CREATED)
       .json({ data: label, message: "Create label successfully" });

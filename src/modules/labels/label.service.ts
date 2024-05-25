@@ -13,16 +13,16 @@ export default class LabelService {
   private labelSchema = LabelSchema;
   public async createLabel(
     model: CreateLabelDto,
-    userId: string
+    boardId: string
   ): Promise<ILabel> {
     if (isEmptyObject(model)) {
       throw new HttpException(400, "Model is empty");
     }
-    const existBoard = await BoardSchema.findById(model.boardId).exec();
+    const existBoard = await BoardSchema.findById(boardId).exec();
     if (!existBoard) {
       throw new HttpException(404, "Board not found");
     }
-    const newLabel = await this.labelSchema.create({ ...model });
+    const newLabel = await this.labelSchema.create({ ...model, boardId });
     if (!newLabel) {
       throw new HttpException(409, "Label not created");
     }
