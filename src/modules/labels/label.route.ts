@@ -18,31 +18,32 @@ export default class LabelRoute implements Route {
   }
   private initializeRoute() {
     this.router.post(
-      this.path,
+      this.path + "/board/:boardId",
       validationMiddleware(CreateLabelDto, true),
       authMiddleware,
       authorizePermission("label:create", PERM_TYPE.board),
       this.labelController.createLabel
     ),
       this.router.get(
-        this.path + "/board/:id",
+        this.path + "/board/:boardId",
         authMiddleware,
         authorizePermission("label:viewAll", PERM_TYPE.board),
         this.labelController.getLabelsByBoardId
       ),
       this.router.get(
-        this.path + "/:id",
+        this.path + "/:id/board/:boardId",
         authMiddleware,
+        authorizePermission("label:viewAll", PERM_TYPE.board),
         this.labelController.getLabelById
       );
     this.router.patch(
-      this.path + "/:id",
+      this.path + "/:id/board/:boardId",
       authMiddleware,
       authorizePermission("label:update", PERM_TYPE.board),
       this.labelController.updateLabel
     ),
       this.router.delete(
-        this.path + "/:id",
+        this.path + "/:id/board/:boardId",
         authMiddleware,
         authorizePermission("label:delete", PERM_TYPE.board),
         this.labelController.deleteLabel

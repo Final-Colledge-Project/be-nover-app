@@ -31,6 +31,7 @@ const SubCardSchema = new mongoose.Schema(
     assignedTo: {
       type: SCHEMA_TYPE,
       ref: MODEL_NAME.user,
+      default: null,
     },
     dueDate: {
       type: Date,

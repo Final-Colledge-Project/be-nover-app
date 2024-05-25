@@ -73,14 +73,17 @@ export const isBoardMember = async (
   boardId: string,
   memberId: string
 ): Promise<Boolean> => {
-  const teamWorkspace = await BoardSchema.findById(boardId).exec();
-  const checkMember = teamWorkspace?.memberIds.find((member: string) => {
+  const board = await BoardSchema.findById(boardId).exec();
+  const checkMember = board?.memberIds.find((member: string) => {
     return member.toString() === memberId;
   });
-  const checkOwner = teamWorkspace?.ownerIds.find((owner) => {
-    return owner === memberId;
+  const checkOwner = board?.ownerIds.find((owner) => {
+    return owner.toString() === memberId;
   });
-  return !!checkOwner;
+  // if (!checkMember && !checkOwner) {
+  //   return false;
+  // }
+  return !!checkMember || !!checkOwner;
 };
 
 export const isCardNumber = async (

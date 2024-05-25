@@ -10,6 +10,7 @@ import CreateCardDto from "./dtos/createCardDto";
 import { Route } from "@core/interfaces";
 import UpdateCardDto from "./dtos/updateCardDto";
 import { PERM_TYPE } from "@core/utils";
+import AssignMemDto from "./dtos/assignedMemDto";
 export default class CardRoute implements Route {
   public path = "/api/v1/cards";
   public router = Router();
@@ -19,7 +20,7 @@ export default class CardRoute implements Route {
   }
   private initializeRoute() {
     this.router.post(
-      this.path,
+      this.path + "/board/:boardId",
       validationMiddleware(CreateCardDto, true),
       authMiddleware,
       authorizePermission("card:create", PERM_TYPE.board),
@@ -36,7 +37,8 @@ export default class CardRoute implements Route {
         this.cardController.getDetailCardById
       ),
       this.router.patch(
-        this.path + "/:id/assign-member/:assigneeId",
+        this.path + "/:id/assign-member/board/:boardId",
+        validationMiddleware(AssignMemDto, true),
         authMiddleware,
         authorizePermission("card:update", PERM_TYPE.board),
         this.cardController.assignMemberToCard
@@ -48,27 +50,28 @@ export default class CardRoute implements Route {
       this.cardController.getMemsInCard
     );
     this.router.patch(
-      this.path + "/:id",
+      this.path + "/:id/board/:boardId",
       validationMiddleware(UpdateCardDto, true),
       authMiddleware,
       authorizePermission("card:update", PERM_TYPE.board),
       this.cardController.updateCard
     );
     this.router.patch(
-      this.path + "/:id/upload-cover",
+      this.path + "/:id/upload-cover/board/:boardId",
       authMiddleware,
       uploadSingleImage("cover"),
       authorizePermission("card:update", PERM_TYPE.board),
       this.cardController.uploadCoverCard
     );
     this.router.patch(
-      this.path + "/:id/unassign-member/:assigneeId",
+      this.path + "/:id/unassign-member/board/:boardId",
+      validationMiddleware(AssignMemDto, true),
       authMiddleware,
       authorizePermission("card:update", PERM_TYPE.board),
       this.cardController.unAssignMemberFromCard
     );
     this.router.delete(
-      this.path + "/:id",
+      this.path + "/:id/board/:boardId",
       authMiddleware,
       authorizePermission("card:delete", PERM_TYPE.board),
       this.cardController.deleteCard
