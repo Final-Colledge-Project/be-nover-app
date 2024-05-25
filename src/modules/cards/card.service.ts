@@ -189,7 +189,12 @@ export default class CardService {
     if (!member) {
       throw new HttpException(StatusCodes.CONFLICT, "User not found");
     }
-    const card = await this.cardSchema.findById(cardId).exec();
+    const card = await this.cardSchema
+      .findOne({
+        _id: cardId,
+        isActive: true,
+      })
+      .exec();
     if (!card) {
       throw new HttpException(StatusCodes.CONFLICT, "Card not found");
     }
@@ -203,19 +208,12 @@ export default class CardService {
         "Assignee is not member of this board"
       );
     }
-    // const checkCardMember = await isCardNumber(cardId, member.id);
-    // if (checkCardMember) {
-    //   throw new HttpException(
-    //     StatusCodes.CONFLICT,
-    //     "User is already member of this card"
-    //   );
-    // }
     await this.cardSchema.findByIdAndUpdate(
       {
         _id: cardId,
       },
       {
-        $push: { memberIds: member.id },
+        $set: { memberIds: [assigneeId] },
       },
       { new: true }
     );
@@ -325,32 +323,17 @@ export default class CardService {
     await existCard.save();
     return existCard.cover;
   }
-  public async unAssignMemberFromCard(
-    userId: string,
-    cardId: string,
-    assigneeId: string
-  ): Promise<void> {
-    const member = await this.userSchema.findById(assigneeId).exec();
-    if (!member) {
-      throw new HttpException(StatusCodes.CONFLICT, "User not found");
-    }
+  public async unAssignMemberFromCard(cardId: string): Promise<void> {
     const card = await this.cardSchema.findById(cardId).exec();
     if (!card) {
       throw new HttpException(StatusCodes.CONFLICT, "Card not found");
-    }
-    const checkCardMember = await isCardNumber(cardId, member.id);
-    if (!checkCardMember) {
-      throw new HttpException(
-        StatusCodes.CONFLICT,
-        "User is not member of this card"
-      );
     }
     await this.cardSchema.findByIdAndUpdate(
       {
         _id: cardId,
       },
       {
-        $pull: { memberIds: member.id },
+        $set: { memberIds: [] },
       },
       { new: true }
     );

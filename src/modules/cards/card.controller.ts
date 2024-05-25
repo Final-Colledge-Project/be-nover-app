@@ -68,10 +68,8 @@ export default class CardController {
   );
   public unAssignMemberFromCard = catchAsync(
     async (req: Request, res: Response) => {
-      const userId = req.user.id;
       const cardId = req.params.id;
-      const assigneeId = req.body.memId;
-      await this.cardService.unAssignMemberFromCard(userId, cardId, assigneeId);
+      await this.cardService.unAssignMemberFromCard(cardId);
       res
         .status(StatusCodes.OK)
         .json({ message: "Unassign member to card successfully" });

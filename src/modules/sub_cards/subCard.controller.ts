@@ -7,21 +7,20 @@ export default class SubCardController {
   private subCardService = new SubCardService();
   public createSubCard = catchAsync(async (req: Request, res: Response) => {
     const model: AddSubTaskDto = req.body;
-    const userId = req.user.id;
-    const subCard = await this.subCardService.createSubCard(model, userId);
+    const subCard = await this.subCardService.createSubCard(model);
     res
       .status(StatusCodes.CREATED)
       .json({ data: subCard, message: "Create sub card successfully" });
   });
   public assignMemberToSubCard = catchAsync(
     async (req: Request, res: Response) => {
-      const userId = req.user.id;
       const subCardId = req.params.id;
-      const assigneeId = req.params.assigneeId;
+      const assigneeId = req.body.memId;
+      const boardId = req.params.boardId;
       await this.subCardService.assignMemberToSubCard(
-        userId,
         subCardId,
-        assigneeId
+        assigneeId,
+        boardId
       );
       res
         .status(StatusCodes.OK)
@@ -36,25 +35,30 @@ export default class SubCardController {
         cardId,
         userId
       );
-      res
-        .status(StatusCodes.OK)
-        .json({
-          data: subCards,
-          message: "Get all sub card in card successfully",
-        });
+      res.status(StatusCodes.OK).json({
+        data: subCards,
+        message: "Get all sub card in card successfully",
+      });
     }
   );
   public updateSubCard = catchAsync(async (req: Request, res: Response) => {
-    const userId = req.user.id;
     const subCardId = req.params.id;
     const model: AddSubTaskDto = req.body;
     const updatedSubCard = await this.subCardService.updateSubCard(
       model,
-      subCardId,
-      userId
+      subCardId
     );
     res
       .status(StatusCodes.OK)
       .json({ data: updatedSubCard, message: "Update sub card successfully" });
   });
+  public unassignMemberToSubCard = catchAsync(
+    async (req: Request, res: Response) => {
+      const subCardId = req.params.id;
+      await this.subCardService.unAssignMemberFromSubCard(subCardId);
+      res
+        .status(StatusCodes.OK)
+        .json({ message: "Unassign member to sub card successfully" });
+    }
+  );
 }

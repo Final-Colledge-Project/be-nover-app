@@ -25,7 +25,7 @@ export default class SubCardRoute implements Route {
       this.subCardController.createSubCard
     );
     this.router.patch(
-      this.path + "/:id/assign-member/:assigneeId/board/:boardId",
+      this.path + "/:id/assign-member/board/:boardId",
       authMiddleware,
       authorizePermission("card:update", PERM_TYPE.board),
       this.subCardController.assignMemberToSubCard
@@ -42,5 +42,12 @@ export default class SubCardRoute implements Route {
       authorizePermission("card:update", PERM_TYPE.board),
       this.subCardController.updateSubCard
     );
+    this.router.patch(
+      this.path + "/:id/unassign-member/board/:boardId",
+      authMiddleware,
+      authorizePermission("card:update", PERM_TYPE.board),
+      this.subCardController.unassignMemberToSubCard
+    );
   }
+ 
 }
