@@ -18,14 +18,14 @@ export default class SubCardRoute implements Route {
   }
   private initializeRoute() {
     this.router.post(
-      this.path,
+      this.path + "/board/:boardId",
       validationMiddleware(AddSubTaskDto, true),
       authMiddleware,
       authorizePermission("card:update", PERM_TYPE.board),
       this.subCardController.createSubCard
     );
     this.router.patch(
-      this.path + "/:id/assign-member/:assigneeId",
+      this.path + "/:id/assign-member/:assigneeId/board/:boardId",
       authMiddleware,
       authorizePermission("card:update", PERM_TYPE.board),
       this.subCardController.assignMemberToSubCard
@@ -36,7 +36,7 @@ export default class SubCardRoute implements Route {
       this.subCardController.getAllSubCardInCard
     );
     this.router.patch(
-      this.path + "/:id",
+      this.path + "/:id/board/:boardId",
       validationMiddleware(UpdateSubTaskDto, true),
       authMiddleware,
       authorizePermission("card:update", PERM_TYPE.board),

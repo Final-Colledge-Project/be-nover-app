@@ -18,18 +18,19 @@ export default class ColumnService {
   private boardSchema = BoardSchema;
   public async createColumn(
     model: CreateColumnDto,
-    userId: string
+    userId: string,
+    boardId: string
   ): Promise<IColumn> {
     if (isEmptyObject(model)) {
       throw new HttpException(StatusCodes.BAD_REQUEST, "Model is empty");
     }
-    const board = await this.boardSchema.findById(model.boardId).exec();
+    const board = await this.boardSchema.findById(boardId).exec();
     if (!board) {
       throw new HttpException(StatusCodes.CONFLICT, "Board not found");
     }
     const existColumn = await this.columnSchema.findOne({
       title: model.title,
-      boardId: model.boardId,
+      boardId,
     });
 
     if (existColumn) {
@@ -38,7 +39,7 @@ export default class ColumnService {
         `Column with title ${model.title} already exists`
       );
     }
-    const newColumn = await this.columnSchema.create({ ...model });
+    const newColumn = await this.columnSchema.create({ ...model, boardId });
     if (!newColumn) {
       throw new HttpException(StatusCodes.CONFLICT, "Column not created");
     }

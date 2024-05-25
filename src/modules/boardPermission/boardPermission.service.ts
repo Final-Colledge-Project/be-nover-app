@@ -201,6 +201,10 @@ export default class BoardPermissionService {
       })
       .select("-memberIds")
       .exec();
+    console.log(
+      "🚀 ~ BoardPermissionService ~ groupPermission:",
+      groupPermission
+    );
     if (!groupPermission) {
       throw new HttpException(StatusCodes.NOT_FOUND, "Permission denied");
     }

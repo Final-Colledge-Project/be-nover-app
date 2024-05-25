@@ -18,7 +18,7 @@ export default class ColumnRoute implements Route {
   }
   private initializeRoute() {
     this.router.post(
-      this.path,
+      this.path + "/board/:boardId",
       validationMiddleware(CreateColumnDto, true),
       authMiddleware,
       authorizePermission("column:create", PERM_TYPE.board),
@@ -35,14 +35,14 @@ export default class ColumnRoute implements Route {
       this.columnController.getColumnByBoardId
     );
     this.router.patch(
-      this.path + "/:id",
+      this.path + "/:id/board/:boardId",
       validationMiddleware(UpdateColumnDto, true),
       authMiddleware,
       authorizePermission("column:update", PERM_TYPE.board),
       this.columnController.updateColumn
     );
     this.router.delete(
-      this.path + "/:id",
+      this.path + "/:id/board/:boardId",
       authMiddleware,
       authorizePermission("column:delete", PERM_TYPE.board),
       this.columnController.deleteColumn
