@@ -61,7 +61,7 @@ export default class InvitationService {
       const updateInvitation = await this.invitationSchema
         .findByIdAndUpdate(
           existInvitation.id,
-          { status: INVITE_STATUS.pending, updatedAt: Date.now() },
+          { status: INVITE_STATUS.pending },
           { new: true }
         )
         .exec();

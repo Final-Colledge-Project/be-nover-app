@@ -298,14 +298,14 @@ class TeamWorkspaceService {
     }).exec();
     const filterDeleteBoard = { teamWorkspaceId: workspaceId, isActive: true };
     const updateBoard = {
-      $set: { isActive: false, updatedAt: Date.now() },
+      $set: { isActive: false },
     };
     await BoardSchema.updateMany(filterDeleteBoard, updateBoard);
 
     deletedBoard.forEach(async (board) => {
       const filterDelete = { boardId: board.id };
       const updateOperation = {
-        $set: { isActive: false, updatedAt: Date.now() },
+        $set: { isActive: false },
       };
       await ColumnSchema.updateMany(filterDelete, updateOperation);
       await CardSchema.updateMany(filterDelete, updateOperation);

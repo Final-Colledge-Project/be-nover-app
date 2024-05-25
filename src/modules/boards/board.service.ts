@@ -545,7 +545,6 @@ export default class BoardService {
         boardId,
         {
           ...model,
-          updatedAt: Date.now(),
         },
         { new: true }
       )
@@ -712,7 +711,6 @@ export default class BoardService {
       );
     }
     board.isActive = false;
-    board.updatedAt = new Date();
     await board.save();
     const filter = {
       boardId: boardId,
@@ -721,7 +719,6 @@ export default class BoardService {
     const updateOperation = {
       $set: {
         isActive: false,
-        updatedAt: Date.now(),
       },
     };
     await CardSchema.updateMany(filter, updateOperation).exec();

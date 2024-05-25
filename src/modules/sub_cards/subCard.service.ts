@@ -39,7 +39,6 @@ export default class SubCardService {
         { _id: new OBJECT_ID(newSubCard.cardId) },
         {
           $push: { subCards: newSubCard._id },
-          $set: { updatedAt: Date.now() },
         },
         { new: true }
       )
@@ -67,11 +66,7 @@ export default class SubCardService {
       throw new HttpException(StatusCodes.CONFLICT, "Member not found in card");
     }
     await this.subCardSchema
-      .findByIdAndUpdate(
-        subCardId,
-        { assignedTo: assigneeId, updatedAt: Date.now() },
-        { new: true }
-      )
+      .findByIdAndUpdate(subCardId, { assignedTo: assigneeId }, { new: true })
       .exec();
   }
   public async getAllSubCardInCard(
@@ -121,11 +116,7 @@ export default class SubCardService {
       throw new HttpException(StatusCodes.CONFLICT, "Card not found");
     }
     const updatedSubCard = await this.subCardSchema
-      .findByIdAndUpdate(
-        subCardId,
-        { ...model, updatedAt: Date.now() },
-        { new: true }
-      )
+      .findByIdAndUpdate(subCardId, { ...model }, { new: true })
       .exec();
     if (!updatedSubCard) {
       throw new HttpException(StatusCodes.CONFLICT, "Subcard not found");
@@ -148,7 +139,6 @@ export default class SubCardService {
         subCardId,
         {
           isDeleted: true,
-          updatedAt: Date.now(),
         },
         { new: true }
       )
@@ -158,7 +148,6 @@ export default class SubCardService {
         { _id: new OBJECT_ID(existSubCard.cardId) },
         {
           $pull: { subCards: existSubCard._id },
-          $set: { updatedAt: Date.now() },
         },
         { new: true }
       )

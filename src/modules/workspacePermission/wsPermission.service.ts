@@ -41,29 +41,32 @@ export default class WorkspacePermissionService {
     if (!existUser || existUser.length !== (model.memberIds || []).length) {
       throw new HttpException(StatusCodes.BAD_REQUEST, "User not found");
     }
-    const existedMember = (workspace.workspaceMembers || []).some((item) =>
-      (model.memberIds || []).includes(item.user.toString())
-    );
-    if (!existedMember && (model.memberIds || []).length > 0) {
-      throw new HttpException(
-        StatusCodes.BAD_REQUEST,
-        "Member not found in workspace"
+    //Handle members in perm
+    if (model.memberIds) {
+      const existedMember = (workspace.workspaceMembers || []).some((item) =>
+        (model.memberIds || []).includes(item.user.toString())
       );
-    }
-    const exitMemInPerm = await this.wsPermissionSchema.findOne({
-      workspaceId: wsId,
-      memberIds: { $in: model.memberIds },
-    });
-    if (exitMemInPerm && (model.memberIds || []).length > 0) {
-      const listPromise = (model.memberIds || []).map((item) => {
-        if ((exitMemInPerm.memberIds || []).includes(item)) {
-          exitMemInPerm.memberIds = (exitMemInPerm.memberIds || []).filter(
-            (i: string) => i.toString() !== item
-          );
-          return exitMemInPerm.save();
-        }
+      if (!existedMember) {
+        throw new HttpException(
+          StatusCodes.BAD_REQUEST,
+          "Member not found in workspace"
+        );
+      }
+      const exitMemInPerm = await this.wsPermissionSchema.findOne({
+        workspaceId: wsId,
+        memberIds: { $in: model.memberIds },
       });
-      await Promise.all(listPromise);
+      if (exitMemInPerm && (model.memberIds || []).length > 0) {
+        const listPromise = (model.memberIds || []).map((item) => {
+          if ((exitMemInPerm.memberIds || []).includes(item)) {
+            exitMemInPerm.memberIds = (exitMemInPerm.memberIds || []).filter(
+              (i: string) => i.toString() !== item
+            );
+            return exitMemInPerm.save();
+          }
+        });
+        await Promise.all(listPromise);
+      }
     }
     const workspacePerm = await this.wsPermissionSchema.create({
       ...model,
@@ -117,61 +120,64 @@ export default class WorkspacePermissionService {
     const existedMember = (workspace.workspaceMembers || []).some((item) =>
       (model.memberIds || []).includes(item.user.toString())
     );
-    if (!existedMember && (model.memberIds || []).length > 0) {
-      throw new HttpException(
-        StatusCodes.BAD_REQUEST,
-        "Member not found in workspace"
-      );
-    }
-    const exitMemInPerm = await this.wsPermissionSchema.findOne({
-      workspaceId: wsPermission.workspaceId,
-      memberIds: { $in: model.memberIds },
-    });
-    if (
-      exitMemInPerm &&
-      (model.memberIds || []).length > 0 &&
-      exitMemInPerm._id.toString() !== permissionId
-    ) {
-      const listPromise = (model.memberIds || []).map((item) => {
-        if ((exitMemInPerm.memberIds || []).includes(item)) {
-          exitMemInPerm.memberIds = (exitMemInPerm.memberIds || []).filter(
-            (i: string) => i.toString() !== item
-          );
-          return exitMemInPerm.save();
-        }
-      });
-      await Promise.all(listPromise);
-    }
-    const removeIds: string[] = [];
-    (wsPermission.memberIds || []).forEach((item) => {
-      if (!(model.memberIds || []).includes(item))
-        removeIds.push(item.toString());
-    });
-    const viewerPerm = await this.wsPermissionSchema
-      .findOne({
-        workspaceId: wsPermission.workspaceId,
-        isWSViewer: true,
-      })
-      .exec();
-    let updateMemberIds: string[] = [];
-    if (viewerPerm && removeIds.length > 0) {
-      updateMemberIds = [
-        ...new Set([
-          ...viewerPerm.memberIds.map((item) => item.toString()),
-          ...removeIds,
-        ]),
-      ];
-      if (viewerPerm._id.toString() !== permissionId) {
-        viewerPerm.memberIds = updateMemberIds;
-        await viewerPerm.save();
-      }
-    }
     let updateModel = model;
-    if (wsPermission.isWSViewer && removeIds.length > 0) {
-      updateModel = {
-        ...model,
-        memberIds: updateMemberIds,
-      };
+    if (model.memberIds) {
+      if (!existedMember) {
+        throw new HttpException(
+          StatusCodes.BAD_REQUEST,
+          "Member not found in workspace"
+        );
+      }
+      const exitMemInPerm = await this.wsPermissionSchema.findOne({
+        workspaceId: wsPermission.workspaceId,
+        memberIds: { $in: model.memberIds },
+      });
+      if (
+        exitMemInPerm &&
+        (model.memberIds || []).length > 0 &&
+        exitMemInPerm._id.toString() !== permissionId
+      ) {
+        const listPromise = (model.memberIds || []).map((item) => {
+          if ((exitMemInPerm.memberIds || []).includes(item)) {
+            exitMemInPerm.memberIds = (exitMemInPerm.memberIds || []).filter(
+              (i: string) => i.toString() !== item
+            );
+            return exitMemInPerm.save();
+          }
+        });
+        await Promise.all(listPromise);
+      }
+      const removeIds: string[] = [];
+      (wsPermission.memberIds || []).forEach((item) => {
+        if (!(model.memberIds || []).includes(item))
+          removeIds.push(item.toString());
+      });
+      const viewerPerm = await this.wsPermissionSchema
+        .findOne({
+          workspaceId: wsPermission.workspaceId,
+          isWSViewer: true,
+        })
+        .exec();
+      let updateMemberIds: string[] = [];
+      if (viewerPerm && removeIds.length > 0) {
+        updateMemberIds = [
+          ...new Set([
+            ...viewerPerm.memberIds.map((item) => item.toString()),
+            ...removeIds,
+          ]),
+        ];
+        if (viewerPerm._id.toString() !== permissionId) {
+          viewerPerm.memberIds = updateMemberIds;
+          await viewerPerm.save();
+        }
+      }
+
+      if (wsPermission.isWSViewer && removeIds.length > 0) {
+        updateModel = {
+          ...model,
+          memberIds: updateMemberIds,
+        };
+      }
     }
     await this.wsPermissionSchema.findByIdAndUpdate(permissionId, updateModel);
   }

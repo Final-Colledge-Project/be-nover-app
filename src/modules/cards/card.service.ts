@@ -27,7 +27,8 @@ export default class CardService {
   private boardSchema = BoardSchema;
   public async createCard(
     model: CreateCardDto,
-    userId: string
+    userId: string,
+    boardId: string
   ): Promise<ICard> {
     if (isEmptyObject(model)) {
       throw new HttpException(StatusCodes.BAD_REQUEST, "Model is empty");
@@ -36,22 +37,20 @@ export default class CardService {
     if (!existColumn) {
       throw new HttpException(StatusCodes.CONFLICT, "Column not found");
     }
-    const existBoard = await BoardSchema.findById(existColumn.boardId).exec();
+    const existBoard = await BoardSchema.findById(boardId).exec();
     if (!existBoard) {
       throw new HttpException(StatusCodes.CONFLICT, "Board not found");
     }
-    const lengthCardInBoard = await this.cardSchema
-      .find({ boardId: existColumn.boardId })
-      .count();
+    const lengthCardInBoard = await this.cardSchema.find({ boardId }).count();
     const newCard = await this.cardSchema.create({
       ...model,
       cardId: generateCardId(existBoard.title, lengthCardInBoard),
-      boardId: existColumn.boardId,
+      boardId: boardId,
       reporterId: userId,
     });
     await ColumnSchema.findByIdAndUpdate(
       { _id: new OBJECT_ID(newCard.columnId) },
-      { $push: { cardOrderIds: newCard._id }, $set: { updatedAt: Date.now() } },
+      { $push: { cardOrderIds: newCard._id } },
       { new: true }
     ).exec();
     return newCard;
@@ -174,11 +173,7 @@ export default class CardService {
       throw new HttpException(StatusCodes.CONFLICT, "Card not found");
     }
     const updateCard = await this.cardSchema
-      .findByIdAndUpdate(
-        { _id: cardId },
-        { ...model, updatedAt: Date.now() },
-        { new: true }
-      )
+      .findByIdAndUpdate({ _id: cardId }, { ...model }, { new: true })
       .exec();
     if (!updateCard) {
       throw new HttpException(StatusCodes.CONFLICT, "Update card failed");
@@ -204,24 +199,23 @@ export default class CardService {
     );
     if (!checkBoarMemberByAssignee) {
       throw new HttpException(
-        StatusCodes.FORBIDDEN,
+        StatusCodes.BAD_REQUEST,
         "Assignee is not member of this board"
       );
     }
-    const checkCardMember = await isCardNumber(cardId, member.id);
-    if (checkCardMember) {
-      throw new HttpException(
-        StatusCodes.CONFLICT,
-        "User is already member of this card"
-      );
-    }
+    // const checkCardMember = await isCardNumber(cardId, member.id);
+    // if (checkCardMember) {
+    //   throw new HttpException(
+    //     StatusCodes.CONFLICT,
+    //     "User is already member of this card"
+    //   );
+    // }
     await this.cardSchema.findByIdAndUpdate(
       {
         _id: cardId,
       },
       {
         $push: { memberIds: member.id },
-        $set: { updatedAt: Date.now() },
       },
       { new: true }
     );
@@ -357,7 +351,6 @@ export default class CardService {
       },
       {
         $pull: { memberIds: member.id },
-        $set: { updatedAt: Date.now() },
       },
       { new: true }
     );
@@ -372,7 +365,6 @@ export default class CardService {
         cardId,
         {
           isActive: false,
-          updatedAt: Date.now(),
         },
         { new: true }
       )
@@ -384,7 +376,6 @@ export default class CardService {
       { _id: new OBJECT_ID(deletedCard.columnId) },
       {
         $pull: { cardOrderIds: deletedCard._id },
-        $set: { updatedAt: Date.now() },
       },
       { new: true }
     ).exec();

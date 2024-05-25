@@ -10,6 +10,7 @@ import CreateCardDto from "./dtos/createCardDto";
 import { Route } from "@core/interfaces";
 import UpdateCardDto from "./dtos/updateCardDto";
 import { PERM_TYPE } from "@core/utils";
+import AssignMemDto from "./dtos/assignedMemDto";
 export default class CardRoute implements Route {
   public path = "/api/v1/cards";
   public router = Router();
@@ -31,12 +32,13 @@ export default class CardRoute implements Route {
         this.cardController.assignedToMe
       ),
       this.router.get(
-        this.path + "/:id/board/:boardId",
+        this.path + "/:id",
         authMiddleware,
         this.cardController.getDetailCardById
       ),
       this.router.patch(
-        this.path + "/:id/assign-member/:assigneeId/board/:boardId",
+        this.path + "/:id/assign-member/board/:boardId",
+        validationMiddleware(AssignMemDto, true),
         authMiddleware,
         authorizePermission("card:update", PERM_TYPE.board),
         this.cardController.assignMemberToCard
@@ -62,7 +64,8 @@ export default class CardRoute implements Route {
       this.cardController.uploadCoverCard
     );
     this.router.patch(
-      this.path + "/:id/unassign-member/:assigneeId/board/:boardId",
+      this.path + "/:id/unassign-member/board/:boardId",
+      validationMiddleware(AssignMemDto, true),
       authMiddleware,
       authorizePermission("card:update", PERM_TYPE.board),
       this.cardController.unAssignMemberFromCard

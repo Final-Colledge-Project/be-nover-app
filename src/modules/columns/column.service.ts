@@ -105,7 +105,6 @@ export default class ColumnService {
         columnId,
         {
           ...model,
-          updatedAt: Date.now(),
         },
         { new: true }
       )
