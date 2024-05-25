@@ -9,7 +9,8 @@ export default class CardController {
   public createCard = catchAsync(async (req: Request, res: Response) => {
     const userId = req.user.id;
     const model = req.body;
-    const newCard = await this.cardService.createCard(model, userId);
+    const boardId = req.params.boardId;
+    const newCard = await this.cardService.createCard(model, userId, boardId);
     res
       .status(StatusCodes.CREATED)
       .json({ data: newCard, message: "Create card successfully" });
@@ -35,7 +36,7 @@ export default class CardController {
     async (req: Request, res: Response) => {
       const userId = req.user.id;
       const cardId = req.params.id;
-      const assigneeId = req.params.assigneeId;
+      const assigneeId = req.body.memId;
       await this.cardService.assignMemberToCard(userId, cardId, assigneeId);
       res
         .status(StatusCodes.OK)
@@ -67,10 +68,8 @@ export default class CardController {
   );
   public unAssignMemberFromCard = catchAsync(
     async (req: Request, res: Response) => {
-      const userId = req.user.id;
       const cardId = req.params.id;
-      const assigneeId = req.params.assigneeId;
-      await this.cardService.unAssignMemberFromCard(userId, cardId, assigneeId);
+      await this.cardService.unAssignMemberFromCard(cardId);
       res
         .status(StatusCodes.OK)
         .json({ message: "Unassign member to card successfully" });
@@ -84,11 +83,9 @@ export default class CardController {
   });
   public assignedToMe = catchAsync(async (req: Request, res: Response) => {
     const assignedToMe = await this.cardService.cardAssignedToMe(req.user.id);
-    res
-      .status(StatusCodes.OK)
-      .json({
-        data: assignedToMe,
-        message: "Get task assigned to me successfully",
-      });
+    res.status(StatusCodes.OK).json({
+      data: assignedToMe,
+      message: "Get task assigned to me successfully",
+    });
   });
 }

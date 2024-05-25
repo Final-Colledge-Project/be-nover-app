@@ -1,18 +1,25 @@
-import { IsDefined, IsHexColor, IsNotEmpty, IsString, Matches, MaxLength, MinLength } from "class-validator";
+import {
+  IsDefined,
+  IsHexColor,
+  IsNotEmpty,
+  IsString,
+  Matches,
+  MaxLength,
+  MinLength,
+} from "class-validator";
 
 export default class CreateLabelDto {
-  constructor(name: string, color: string, boardId: string){
-    this.name = name
-    this.color = color
-    this.boardId = boardId
+  constructor(name: string, color: string) {
+    this.name = name;
+    this.color = color;
   }
   @IsNotEmpty()
   @IsString()
   @MinLength(2, {
-    message: 'Name must be at least 2 characters long',
+    message: "Name must be at least 2 characters long",
   })
   @MaxLength(20, {
-    message: 'Name must be at most 20 characters long',
+    message: "Name must be at most 20 characters long",
   })
   @IsDefined()
   public name: string;
@@ -20,7 +27,4 @@ export default class CreateLabelDto {
   @IsString()
   @IsHexColor()
   public color: string;
-  @IsNotEmpty()
-  @IsString()
-  public boardId: string;
 }

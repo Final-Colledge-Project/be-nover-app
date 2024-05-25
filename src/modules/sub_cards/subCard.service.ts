@@ -1,6 +1,7 @@
 import {
   OBJECT_ID,
   generateSubCardId,
+  isBoardMember,
   isEmptyObject,
   permissionCard,
   viewedBoardPermission,
@@ -15,10 +16,7 @@ import UpdateSubTaskDto from "./dtos/updateSubTaskDto";
 export default class SubCardService {
   private subCardSchema = SubCardSchema;
   private cardSchema = CardSchema;
-  public async createSubCard(
-    model: AddSubTaskDto,
-    userId: string
-  ): Promise<ISubCard> {
+  public async createSubCard(model: AddSubTaskDto): Promise<ISubCard> {
     if (isEmptyObject(model)) {
       throw new HttpException(StatusCodes.BAD_REQUEST, "Model is empty");
     }
@@ -39,7 +37,6 @@ export default class SubCardService {
         { _id: new OBJECT_ID(newSubCard.cardId) },
         {
           $push: { subCards: newSubCard._id },
-          $set: { updatedAt: Date.now() },
         },
         { new: true }
       )
@@ -48,9 +45,9 @@ export default class SubCardService {
     return newSubCard;
   }
   public async assignMemberToSubCard(
-    userId: string,
     subCardId: string,
-    assigneeId: string
+    assigneeId: string,
+    boardId: string
   ): Promise<void> {
     const existedSubCard = await this.subCardSchema.findById(subCardId).exec();
     if (!existedSubCard) {
@@ -62,16 +59,15 @@ export default class SubCardService {
     if (!existedCard) {
       throw new HttpException(StatusCodes.CONFLICT, "Card not found");
     }
-    const isMemberInCard = existedCard.memberIds.includes(assigneeId);
-    if (!isMemberInCard) {
-      throw new HttpException(StatusCodes.CONFLICT, "Member not found in card");
+    const checkBoarMemberByAssignee = await isBoardMember(boardId, assigneeId);
+    if (!checkBoarMemberByAssignee) {
+      throw new HttpException(
+        StatusCodes.BAD_REQUEST,
+        "Assignee is not member of this board"
+      );
     }
     await this.subCardSchema
-      .findByIdAndUpdate(
-        subCardId,
-        { assignedTo: assigneeId, updatedAt: Date.now() },
-        { new: true }
-      )
+      .findByIdAndUpdate(subCardId, { assignedTo: assigneeId }, { new: true })
       .exec();
   }
   public async getAllSubCardInCard(
@@ -104,8 +100,7 @@ export default class SubCardService {
   }
   public async updateSubCard(
     model: UpdateSubTaskDto,
-    subCardId: string,
-    userId: string
+    subCardId: string
   ): Promise<ISubCard> {
     if (isEmptyObject(model)) {
       throw new HttpException(StatusCodes.BAD_REQUEST, "Model is empty");
@@ -121,18 +116,14 @@ export default class SubCardService {
       throw new HttpException(StatusCodes.CONFLICT, "Card not found");
     }
     const updatedSubCard = await this.subCardSchema
-      .findByIdAndUpdate(
-        subCardId,
-        { ...model, updatedAt: Date.now() },
-        { new: true }
-      )
+      .findByIdAndUpdate(subCardId, { ...model }, { new: true })
       .exec();
     if (!updatedSubCard) {
       throw new HttpException(StatusCodes.CONFLICT, "Subcard not found");
     }
     return updatedSubCard;
   }
-  public async deleteSubCard(subCardId: string, userId: string): Promise<void> {
+  public async deleteSubCard(subCardId: string): Promise<void> {
     const existSubCard = await this.subCardSchema.findById(subCardId).exec();
     if (!existSubCard) {
       throw new HttpException(StatusCodes.CONFLICT, "Subcard not found");
@@ -148,7 +139,6 @@ export default class SubCardService {
         subCardId,
         {
           isDeleted: true,
-          updatedAt: Date.now(),
         },
         { new: true }
       )
@@ -158,10 +148,24 @@ export default class SubCardService {
         { _id: new OBJECT_ID(existSubCard.cardId) },
         {
           $pull: { subCards: existSubCard._id },
-          $set: { updatedAt: Date.now() },
         },
         { new: true }
       )
       .exec();
+  }
+  public async unAssignMemberFromSubCard(subCardId: string): Promise<void> {
+    const card = await this.subCardSchema.findById(subCardId).exec();
+    if (!card) {
+      throw new HttpException(StatusCodes.BAD_REQUEST, "SubCard not found");
+    }
+    await this.subCardSchema.findByIdAndUpdate(
+      {
+        _id: subCardId,
+      },
+      {
+        $set: { assignedTo: null },
+      },
+      { new: true }
+    );
   }
 }
