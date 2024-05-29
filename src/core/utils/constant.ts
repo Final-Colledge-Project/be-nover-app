@@ -35,6 +35,9 @@ export const MODEL_NAME = {
   boardPermission: "BoardPermission",
   workspacePermission: "WorkspacePermission",
   sprint: "Sprint",
+  columnStatus: "ColumnStatus",
+  issueType: "IssueType",
+  priority: "Priority",
 };
 export const SUBTASK_STATUS = {
   todo: "todo",

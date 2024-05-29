@@ -1,6 +1,6 @@
 import mongoose, { Query } from "mongoose";
 import IColumn from "./column.interface";
-import { MODEL_NAME, SCHEMA_TYPE } from "@core/utils";
+import { MODEL_NAME, OBJECT_ID, SCHEMA_TYPE } from "@core/utils";
 const ColumnSchema = new mongoose.Schema(
   {
     title: {
@@ -20,6 +20,11 @@ const ColumnSchema = new mongoose.Schema(
         ref: MODEL_NAME.card,
       },
     ],
+    columnStatusId: {
+      type: OBJECT_ID,
+      ref: MODEL_NAME.columnStatus,
+      default: null,
+    },
     isActive: {
       type: Boolean,
       default: true,

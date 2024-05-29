@@ -72,10 +72,6 @@ const BoardPermissionSchema = new mongoose.Schema(
       },
     },
     issueType: {
-      viewAll: {
-        type: Boolean,
-        default: true,
-      },
       create: {
         type: Boolean,
         default: false,
@@ -90,10 +86,6 @@ const BoardPermissionSchema = new mongoose.Schema(
       },
     },
     priority: {
-      viewAll: {
-        type: Boolean,
-        default: true,
-      },
       create: {
         type: Boolean,
         default: false,
@@ -108,10 +100,6 @@ const BoardPermissionSchema = new mongoose.Schema(
       },
     },
     label: {
-      viewAll: {
-        type: Boolean,
-        default: true,
-      },
       create: {
         type: Boolean,
         default: false,

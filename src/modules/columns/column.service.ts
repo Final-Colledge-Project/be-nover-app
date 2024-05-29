@@ -18,7 +18,6 @@ export default class ColumnService {
   private boardSchema = BoardSchema;
   public async createColumn(
     model: CreateColumnDto,
-    userId: string,
     boardId: string
   ): Promise<IColumn> {
     if (isEmptyObject(model)) {
@@ -39,7 +38,10 @@ export default class ColumnService {
         `Column with title ${model.title} already exists`
       );
     }
-    const newColumn = await this.columnSchema.create({ ...model, boardId });
+    const newColumn = await this.columnSchema.create({
+      ...model,
+      boardId,
+    });
     if (!newColumn) {
       throw new HttpException(StatusCodes.CONFLICT, "Column not created");
     }
@@ -78,8 +80,7 @@ export default class ColumnService {
   }
   public async updateColumn(
     model: UpdateColumnDto,
-    columnId: string,
-    userId: string
+    columnId: string
   ): Promise<IColumn> {
     if (isEmptyObject(model)) {
       throw new HttpException(StatusCodes.BAD_REQUEST, "Model is empty");
@@ -114,10 +115,7 @@ export default class ColumnService {
     }
     return updatedColumn;
   }
-  public async deleteColumn(
-    columnId: string,
-    userId: string
-  ): Promise<IColumn> {
+  public async deleteColumn(columnId: string): Promise<IColumn> {
     const column = await this.columnSchema.findById(columnId).exec();
     if (!column) {
       throw new HttpException(StatusCodes.CONFLICT, "Column not found");

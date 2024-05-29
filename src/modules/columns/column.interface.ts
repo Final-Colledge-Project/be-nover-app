@@ -7,9 +7,10 @@ export default interface IColumn {
   cardOrderIds: string[];
   createdAt: Date;
   updatedAt: Date;
+  columnStatusId: string;
   isActive: boolean;
 }
 
 export interface IResColumn extends IColumn {
-  cards: ICard[]
+  cards: ICard[];
 }

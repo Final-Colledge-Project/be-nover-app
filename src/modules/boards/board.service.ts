@@ -27,7 +27,7 @@ import { StatusCodes } from "http-status-codes";
 import { NotificationService } from "@modules/notifications";
 import PushNotificationDto from "@modules/notifications/dtos/pushNotificationDto";
 import { CardSchema } from "@modules/cards";
-import { SubCardSchema } from "@modules/sub_cards";
+import { SubCardSchema } from "@modules/subCards";
 import { LabelSchema } from "@modules/labels";
 import { BoardPermissionSchema } from "@modules/boardPermission";
 import { UserSchema } from "@modules/users";
