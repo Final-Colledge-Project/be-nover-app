@@ -4,7 +4,7 @@ import IPriority from "./priority.interface";
 
 const PrioritySchema = new mongoose.Schema(
   {
-    boarId: {
+    boardId: {
       type: OBJECT_ID,
       ref: MODEL_NAME.board,
       required: [true, "BoardId is required"],
@@ -21,11 +21,6 @@ const PrioritySchema = new mongoose.Schema(
       maxlength: [300, "Description must be at most 300 characters long"],
       trim: true,
       default: "",
-    },
-    icon: {
-      type: String,
-      default: "",
-      required: [true, "Icon is required"],
     },
     color: {
       type: String,

@@ -14,6 +14,7 @@ export default interface IBoard {
   updatedAt: Date;
   dueDate: Date;
   isActive: boolean;
+  defaultAssignee: string;
 }
 
 export interface IBoardAdmin {

@@ -4,7 +4,7 @@ import IIssueType from "./issueType.interface";
 
 const IssueTypeSchema = new mongoose.Schema(
   {
-    boarId: {
+    boardId: {
       type: OBJECT_ID,
       ref: MODEL_NAME.board,
       required: [true, "BoardId is required"],

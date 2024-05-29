@@ -72,6 +72,7 @@ export const SPRINT_STATUS = {
   pending: "pending",
   active: "active",
   completed: "completed",
+  backlog: "backlog",
 };
 
 export const SPRINT_DURATION = {

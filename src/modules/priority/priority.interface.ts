@@ -4,7 +4,6 @@ export default interface IPriority {
   name: string;
   description: string;
   color: string;
-  icon: string;
   createdAt: Date;
   updatedAt: Date;
   isActive: boolean;

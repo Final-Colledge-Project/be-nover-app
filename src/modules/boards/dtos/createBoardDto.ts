@@ -34,10 +34,10 @@ export default class CreateBoardDto {
   @IsNotEmpty()
   @IsString()
   @MinLength(2, {
-    message: "Title must be at least 2 characters long",
+    message: "Description must be at least 2 characters long",
   })
   @MaxLength(100, {
-    message: "Title must be at most 100 characters long",
+    message: "Description must be at most 100 characters long",
   })
   public description: string;
   @IsEnum([MODE_ACCESS.public, MODE_ACCESS.private], {

@@ -148,6 +148,7 @@ export default class InvitationService {
         })
         .session(session)
         .exec();
+      console.log("🚀 ~ InvitationService ~ viewerPermGroup:", viewerPermGroup);
       if (!viewerPermGroup) {
         throw new HttpException(
           StatusCodes.CONFLICT,

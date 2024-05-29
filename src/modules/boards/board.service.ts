@@ -3,6 +3,7 @@ import {
   MODEL_NAME,
   OBJECT_ID,
   ROLE,
+  SPRINT_STATUS,
   isBoardAdmin,
   isBoardMember,
   isEmptyObject,
@@ -19,7 +20,7 @@ import { Request } from "express";
 import APIFeatures from "@core/utils/apiFeature";
 import { cloneDeep, create } from "lodash";
 import ICard from "@modules/cards/card.interface";
-import { IResColumn } from "@modules/columns";
+import { ColumnSchema, IColumn, IResColumn } from "@modules/columns";
 import { TeamWorkspaceSchema } from "@modules/teamWorkspace";
 import UpdateBoardDto from "./dtos/updateBoardDto";
 import AddMemsToBoardDto from "./dtos/addMemsToBoard";
@@ -33,12 +34,19 @@ import { BoardPermissionSchema } from "@modules/boardPermission";
 import { UserSchema } from "@modules/users";
 import mongoose from "mongoose";
 import { WorkspacePermissionSchema } from "@modules/workspacePermission";
+import { PrioritySchema } from "@modules/priority";
+import { IssueTypeSchema } from "@modules/issueType";
+import { SprintSchema } from "@modules/sprint";
 export default class BoardService {
   private boardSchema = BoardSchema;
   private workspaceSchema = TeamWorkspaceSchema;
   private boardPermissionSchema = BoardPermissionSchema;
   private wsPermissionSchema = WorkspacePermissionSchema;
+  private prioritySchema = PrioritySchema;
+  private colSchema = ColumnSchema;
+  private issueTypeSchema = IssueTypeSchema;
   private userSchema = UserSchema;
+  private sprintSchema = SprintSchema;
   private notificationService = new NotificationService();
   public async createBoard(
     model: CreateBoardDto,
@@ -134,6 +142,160 @@ export default class BoardService {
       ],
       { session }
     );
+    await this.prioritySchema.create(
+      [
+        {
+          boardId: createdBoard[0]._id,
+          name: "Lowest",
+          color: "#419CFF",
+          description: "This is lowest priority",
+        },
+        {
+          boardId: createdBoard[0]._id,
+          name: "Low",
+          color: "#0B84FF",
+          description: "This is low priority",
+        },
+        {
+          boardId: createdBoard[0]._id,
+          name: "Medium",
+          color: "#FF9F0B",
+          description: "This is medium priority",
+        },
+        {
+          boardId: createdBoard[0]._id,
+          name: "High",
+          color: "#FF6861",
+          description: "This is high priority",
+        },
+        {
+          boardId: createdBoard[0]._id,
+          name: "Highest",
+          color: "#FF453A",
+          description: "This is highest priority",
+        },
+      ],
+      { session }
+    );
+
+    const columns = await this.colSchema.create(
+      [
+        {
+          boardId: createdBoard[0]._id,
+          title: "To Do",
+          color: "#C7C7CC",
+          description: "This column is for tasks that have not been started",
+        },
+        {
+          boardId: createdBoard[0]._id,
+          title: "In Progress",
+          color: "#0B84FF",
+          description: "This column is for tasks that are in progress",
+        },
+        {
+          boardId: createdBoard[0]._id,
+          title: "Done",
+          isResolved: true,
+          color: "#27CD41",
+          description: "This column is for tasks that have been completed",
+        },
+      ],
+      { session }
+    );
+
+    await this.boardSchema.findByIdAndUpdate(
+      createdBoard[0]._id,
+      {
+        columnOrderIds: columns.map((col: IColumn) => col._id),
+      },
+      { session }
+    );
+
+    if (createdBoard[0].template === BOARD_TEMPLATE.scrum) {
+      await this.issueTypeSchema.create(
+        [
+          {
+            boardId: createdBoard[0]._id,
+            name: "Epic",
+            color: "#3634A3",
+            description:
+              "An epic is a large body of work that can be broken down into a number of smaller stories",
+            hierarchy: 1,
+          },
+          {
+            boardId: createdBoard[0]._id,
+            name: "Task",
+            color: "#007AFF",
+            description: "A task is a small, distinct piece of work",
+            hierarchy: 2,
+          },
+          {
+            boardId: createdBoard[0]._id,
+            name: "User Story",
+            color: "#27CD41",
+            description:
+              "A user story is the smallest unit of work in an agile framework",
+            hierarchy: 2,
+          },
+          {
+            boardId: createdBoard[0]._id,
+            name: "Bug",
+            color: "#FF3B2F",
+            description:
+              "A bug is a problem which impairs or prevents the functions of a product",
+            hierarchy: 2,
+          },
+          {
+            boardId: createdBoard[0]._id,
+            name: "SubTask",
+            color: "#5DE6FF",
+            description: "A subtask is a smaller piece of work within a task",
+            hierarchy: 3,
+          },
+        ],
+        { session }
+      );
+      await this.sprintSchema.create(
+        [
+          {
+            boardId: createdBoard[0]._id,
+            name: "Backlog",
+            creatorId: ownerId,
+            status: SPRINT_STATUS.backlog,
+          },
+        ],
+        { session }
+      );
+    } else {
+      await this.issueTypeSchema.create(
+        [
+          {
+            boardId: createdBoard[0]._id,
+            name: "Epic",
+            color: "#3634A3",
+            description:
+              "An epic is a large body of work that can be broken down into a number of smaller stories",
+            hierarchy: 1,
+          },
+          {
+            boardId: createdBoard[0]._id,
+            name: "Task",
+            color: "#007AFF",
+            description: "A task is a small, distinct piece of work",
+            hierarchy: 2,
+          },
+          {
+            boardId: createdBoard[0]._id,
+            name: "SubTask",
+            color: "#5DE6FF",
+            description: "A subtask is a smaller piece of work within a task",
+            hierarchy: 3,
+          },
+        ],
+        { session }
+      );
+    }
+
     await session.commitTransaction();
     session.endSession();
     return createdBoard[0];

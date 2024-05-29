@@ -20,7 +20,7 @@ const BoardSchema = new mongoose.Schema(
       type: String,
       required: [true, "Key is required"],
       unique: true,
-      minlength: [3, "Key must be at least 3 characters long"],
+      minlength: [2, "Key must be at least 2 characters long"],
       maxlength: [10, "Key must be at most 10 characters long"],
       trim: true,
     },
@@ -75,6 +75,11 @@ const BoardSchema = new mongoose.Schema(
       type: Boolean,
       default: true,
       select: false,
+    },
+    defaultAssignee: {
+      type: SCHEMA_TYPE,
+      ref: MODEL_NAME.user,
+      default: null,
     },
   },
   { timestamps: true }

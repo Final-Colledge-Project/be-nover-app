@@ -38,11 +38,9 @@ const SprintSchema = new mongoose.Schema(
     },
     startDate: {
       type: Date,
-      required: [true, "StartDate is required"],
     },
     endDate: {
       type: Date,
-      required: [true, "EndDate is required"],
     },
     goal: {
       type: String,
