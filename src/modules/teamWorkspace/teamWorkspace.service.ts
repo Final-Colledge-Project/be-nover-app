@@ -80,6 +80,7 @@ class TeamWorkspaceService {
           name: "Viewer",
           description: "This group can view boards, members in workspace",
           workspaceId: newWorkspace[0].id,
+          isWSViewer: true,
         },
       ],
       { session }
