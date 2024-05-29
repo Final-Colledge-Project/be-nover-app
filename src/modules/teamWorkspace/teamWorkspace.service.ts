@@ -72,7 +72,6 @@ class TeamWorkspaceService {
             create: true,
           },
           member: {
-            viewAll: true,
             invite: true,
           },
           isWSAdmin: true,

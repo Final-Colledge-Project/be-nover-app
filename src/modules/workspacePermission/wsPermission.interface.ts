@@ -10,7 +10,6 @@ export default interface IWorkspacePermission {
     create: boolean;
   };
   member: {
-    viewAll: boolean;
     invite: boolean;
   };
   createdAt: Date;
