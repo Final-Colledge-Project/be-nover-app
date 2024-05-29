@@ -16,23 +16,19 @@ export default interface IBoardPermission {
     delete: boolean;
   };
   member: {
-    viewAll: boolean;
     invite: boolean;
   };
   issueType: {
-    viewAll: boolean;
     create: boolean;
     update: boolean;
     delete: boolean;
   };
   priority: {
-    viewAll: boolean;
     create: boolean;
     update: boolean;
     delete: boolean;
   };
   label: {
-    viewAll: boolean;
     create: boolean;
     update: boolean;
     delete: boolean;

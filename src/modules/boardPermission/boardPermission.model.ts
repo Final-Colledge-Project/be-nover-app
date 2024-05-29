@@ -62,10 +62,6 @@ const BoardPermissionSchema = new mongoose.Schema(
       },
     },
     member: {
-      viewAll: {
-        type: Boolean,
-        default: true,
-      },
       invite: {
         type: Boolean,
         default: false,
