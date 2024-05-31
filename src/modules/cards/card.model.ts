@@ -14,6 +14,7 @@ const CardSchema = new mongoose.Schema(
       ref: MODEL_NAME.column,
     },
     cardId: {
+      //key
       type: String,
       default: null,
     },
@@ -27,19 +28,10 @@ const CardSchema = new mongoose.Schema(
     description: {
       type: String,
       minlength: [2, "Description must be at least 2 characters long"],
-      maxlength: [200, "Description must be at most 200 characters long"],
       trim: true,
     },
     cover: {
       type: String,
-      default: null,
-    },
-    startDate: {
-      type: Date,
-      default: Date.now,
-    },
-    dueDate: {
-      type: Date,
       default: null,
     },
     memberIds: [
@@ -114,25 +106,63 @@ const CardSchema = new mongoose.Schema(
       ref: MODEL_NAME.label,
     },
     priority: {
-      type: String,
-      enum: [
-        PRIORITY.lowest,
-        PRIORITY.low,
-        PRIORITY.medium,
-        PRIORITY.high,
-        PRIORITY.highest,
-      ],
-      default: PRIORITY.medium,
-    },
-    isOverdue: {
-      type: Boolean,
-      default: false,
+      type: SCHEMA_TYPE,
+      ref: MODEL_NAME.priority,
     },
     isActive: {
       type: Boolean,
       default: true,
       select: false,
     },
+    epicId: {
+      type: SCHEMA_TYPE,
+      ref: MODEL_NAME.epic,
+    },
+    sprintId: {
+      type: SCHEMA_TYPE,
+      ref: MODEL_NAME.sprint,
+    },
+    deletedAt: {
+      type: Date,
+      default: null,
+    },
+    resolvedAt: {
+      type: Date,
+      default: null,
+    },
+    storyPoint: {
+      type: Number,
+      default: null,
+    },
+    issueLinks: [
+      {
+        relation: {
+          type: SCHEMA_TYPE,
+          ref: MODEL_NAME.issueLink,
+        },
+        issueId: {
+          type: SCHEMA_TYPE,
+          ref: MODEL_NAME.card || MODEL_NAME.subCard || MODEL_NAME.epic,
+          level: Number,
+        },
+      },
+    ],
+    taskLogs: [
+      {
+        type: SCHEMA_TYPE,
+        ref: MODEL_NAME.taskLog,
+      },
+    ],
+    watchers: [
+      {
+        type: SCHEMA_TYPE,
+        ref: MODEL_NAME.user,
+      },
+    ],
+    issueType: {
+      type: SCHEMA_TYPE,
+      ref: MODEL_NAME.issueType,
+    }
   },
   { timestamps: true }
 );

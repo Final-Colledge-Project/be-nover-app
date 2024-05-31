@@ -1,11 +1,11 @@
-import { MODEL_NAME, OBJECT_ID } from "@core/utils";
+import { MODEL_NAME, SCHEMA_TYPE } from "@core/utils";
 import mongoose, { Query } from "mongoose";
 import IPriority from "./priority.interface";
 
 const PrioritySchema = new mongoose.Schema(
   {
     boardId: {
-      type: OBJECT_ID,
+      type: SCHEMA_TYPE,
       ref: MODEL_NAME.board,
       required: [true, "BoardId is required"],
     },

@@ -20,11 +20,6 @@ const ColumnSchema = new mongoose.Schema(
         ref: MODEL_NAME.card,
       },
     ],
-    columnStatusId: {
-      type: OBJECT_ID,
-      ref: MODEL_NAME.columnStatus,
-      default: null,
-    },
     isActive: {
       type: Boolean,
       default: true,

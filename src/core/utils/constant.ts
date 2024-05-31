@@ -38,6 +38,9 @@ export const MODEL_NAME = {
   columnStatus: "ColumnStatus",
   issueType: "IssueType",
   priority: "Priority",
+  taskLog: "TaskLog",
+  issueLink: "IssueLink",
+  epic: "Epic",
 };
 export const SUBTASK_STATUS = {
   todo: "todo",
@@ -81,4 +84,10 @@ export const SPRINT_DURATION = {
   threeWeeks: "3 weeks",
   fourWeeks: "4 weeks",
   custom: "custom",
+};
+
+export const DIRECTION_ISSUE = {
+  directed: "directed",
+  undirected: "undirected",
+  aggregation: "aggregation",
 };

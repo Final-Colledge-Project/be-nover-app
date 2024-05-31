@@ -6,16 +6,12 @@ export default class CreateCardDto {
     columnId: string,
     title: string,
     description: string,
-    startDate: Date,
-    dueDate: Date,
     labelId: string,
     priorityId: string,
   ) {
     this.columnId = columnId;
     this.title = title;
     this.description = description;
-    this.startDate = startDate;
-    this.dueDate = dueDate;
     this.labelId = labelId;
     this.priorityId = priorityId;
   }
@@ -41,11 +37,6 @@ export default class CreateCardDto {
   })
   public description;
   @Transform(({value} : TransformFnParams) => formatDate(value) )
-  @IsDateString()
-  public startDate: Date;
-  @Transform(({value} : TransformFnParams) => formatDate(value) )
-  @IsDateString()
-  public dueDate: Date;
   @IsString()
   public labelId: string;
   @IsString()

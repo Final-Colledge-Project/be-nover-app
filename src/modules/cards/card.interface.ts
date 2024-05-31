@@ -6,8 +6,6 @@ export default interface ICard {
   title: string;
   description: string;
   cover: string;
-  startDate: Date;
-  dueDate: Date;
   memberIds: string[];
   comments: IComment[];
   subTasks: string[];
@@ -17,8 +15,16 @@ export default interface ICard {
   reporterId: string;
   labelId: string;
   priority: string;
-  isOverdue: boolean;
   isActive: boolean;
+  epicId: string;
+  sprintId: string;
+  deletedAt: Date;
+  resolvedAt: Date;
+  storyPoint: number;
+  issueLinks: string[];
+  taskLogs: string[];
+  watchers: string[];
+  issueType: string;
 }
 export interface IComment {
   user: string;
@@ -34,4 +40,5 @@ export interface IAttachment {
   fileUrl: string,
   createAt: Date,
 }
+
 

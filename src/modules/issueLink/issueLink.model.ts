@@ -1,8 +1,8 @@
-import { MODEL_NAME, OBJECT_ID, SCHEMA_TYPE } from "@core/utils";
+import { DIRECTION_ISSUE, MODEL_NAME, SCHEMA_TYPE } from "@core/utils";
 import mongoose, { Query } from "mongoose";
-import IIssueType from "./issueType.interface";
+import IIssueLink from "./issueLink.interface";
 
-const IssueTypeSchema = new mongoose.Schema(
+const IssueLinkSchema = new mongoose.Schema(
   {
     boardId: {
       type: SCHEMA_TYPE,
@@ -22,13 +22,10 @@ const IssueTypeSchema = new mongoose.Schema(
       trim: true,
       default: "",
     },
-    icon: {
+    direction: {
       type: String,
-      default: "",
-    },
-    hierarchy: {
-      type: Number,
-      default: 0,
+      enum: Object.values(DIRECTION_ISSUE),
+      required: [true, "Direction is required"],
     },
     isActive: {
       type: Boolean,
@@ -38,15 +35,15 @@ const IssueTypeSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-IssueTypeSchema.pre(/^find/, async function (next) {
+IssueLinkSchema.pre(/^find/, async function (next) {
   if (this instanceof Query) {
-    const issueType = this;
-    issueType.find({ active: { $ne: false } }).select("-__v");
+    const issueLink = this;
+    issueLink.find({ active: { $ne: false } }).select("-__v");
   }
   next();
 });
 
-export default mongoose.model<IIssueType & mongoose.Document>(
-  MODEL_NAME.issueType,
-  IssueTypeSchema
+export default mongoose.model<IIssueLink & mongoose.Document>(
+  MODEL_NAME.issueLink,
+  IssueLinkSchema
 );
