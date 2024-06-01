@@ -8,37 +8,40 @@ export default interface ICard {
   cover: string;
   memberIds: string[];
   comments: IComment[];
-  subTasks: string[];
+  subTaskIds: string[];
   attachments: IAttachment[];
   createdAt: Date;
   updatedAt: Date;
   reporterId: string;
   labelId: string;
-  priority: string;
+  priorityId: string;
   isActive: boolean;
   epicId: string;
   sprintId: string;
   deletedAt: Date;
   resolvedAt: Date;
   storyPoint: number;
-  issueLinks: string[];
-  taskLogs: string[];
-  watchers: string[];
-  issueType: string;
+  issueLinks: IIssueLinkType[];
+  taskLogIds: string[];
+  watcherIds: string[];
+  issueTypeId: string;
 }
 export interface IComment {
   user: string;
-  email: string,
-  avatar: string,
-  displayName: string,
-  content: string,
-  createdAt: Date,
+  email: string;
+  avatar: string;
+  displayName: string;
+  content: string;
+  createdAt: Date;
 }
 export interface IAttachment {
-  fileName: string,
-  fileType: string,
-  fileUrl: string,
-  createAt: Date,
+  fileName: string;
+  fileType: string;
+  fileUrl: string;
+  createAt: Date;
 }
 
-
+export interface IIssueLinkType {
+  linkType: string;
+  issueId: string;
+}

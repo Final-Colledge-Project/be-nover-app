@@ -4,17 +4,34 @@ import { NextFunction, Request, Response } from "express";
 import UpdateCardDto from "./dtos/updateCardDto";
 import { StatusCodes } from "http-status-codes";
 import assignUserDto from "./dtos/assignUserDto";
+import { startSession } from "mongoose";
 export default class CardController {
   private cardService = new CardService();
-  public createCard = catchAsync(async (req: Request, res: Response) => {
-    const userId = req.user.id;
-    const model = req.body;
-    const boardId = req.params.boardId;
-    const newCard = await this.cardService.createCard(model, userId, boardId);
-    res
-      .status(StatusCodes.CREATED)
-      .json({ data: newCard, message: "Create card successfully" });
-  });
+  public createCard = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    const session = await startSession();
+    try {
+      const userId = req.user.id;
+      const model = req.body;
+      const boardId = req.params.boardId;
+      const newCard = await this.cardService.createCard(
+        model,
+        userId,
+        boardId,
+        session
+      );
+      res
+        .status(StatusCodes.CREATED)
+        .json({ data: newCard, message: "Create card successfully" });
+    } catch (error) {
+      await session.abortTransaction();
+      session.endSession();
+      next(error);
+    }
+  };
   public getDetailCardById = catchAsync(async (req: Request, res: Response) => {
     const cardId = req.params.id;
     const userId = req.user.id;

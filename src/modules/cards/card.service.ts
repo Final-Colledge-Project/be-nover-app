@@ -1,6 +1,8 @@
 import {
+  BOARD_TEMPLATE,
   MODEL_NAME,
   OBJECT_ID,
+  SPRINT_STATUS,
   isBoardMember,
   isCardNumber,
   isEmptyObject,
@@ -20,40 +22,158 @@ import assignUserDto from "./dtos/assignUserDto";
 import { UserSchema } from "@modules/users";
 import PushNotificationDto from "@modules/notifications/dtos/pushNotificationDto";
 import { NotificationService } from "@modules/notifications";
+import { LabelSchema } from "@modules/labels";
+import { PrioritySchema } from "@modules/priority";
+import { SprintSchema } from "@modules/sprint";
+import { EpicSchema } from "@modules/epic";
+import { IssueLinkSchema } from "@modules/issueLink";
+import { TaskLogSchema } from "@modules/taskLog";
+import { IssueTypeSchema } from "@modules/issueType";
+import { ClientSession } from "mongoose";
 export default class CardService {
   private cardSchema = CardSchema;
   private notificationService = new NotificationService();
   private userSchema = UserSchema;
   private boardSchema = BoardSchema;
+  private colSchema = ColumnSchema;
+  private labelSchema = LabelSchema;
+  private prioritySchema = PrioritySchema;
+  private epicSchema = EpicSchema;
+  private sprintSchema = SprintSchema;
+  private issueLinkSchema = IssueLinkSchema;
+  private taskLogSchema = TaskLogSchema;
+  private issueTypeSchema = IssueTypeSchema;
   public async createCard(
     model: CreateCardDto,
     userId: string,
-    boardId: string
+    boardId: string,
+    session: ClientSession
   ): Promise<ICard> {
     if (isEmptyObject(model)) {
       throw new HttpException(StatusCodes.BAD_REQUEST, "Model is empty");
     }
-    const existColumn = await ColumnSchema.findById(model.columnId).exec();
-    if (!existColumn) {
-      throw new HttpException(StatusCodes.CONFLICT, "Column not found");
-    }
-    const existBoard = await BoardSchema.findById(boardId).exec();
+    const existBoard = await this.boardSchema.findById(boardId).exec();
     if (!existBoard) {
-      throw new HttpException(StatusCodes.CONFLICT, "Board not found");
+      throw new HttpException(StatusCodes.BAD_REQUEST, "Board not found");
     }
+    if (model.reporterId) {
+      const reporter = await this.userSchema.findById(model.reporterId).exec();
+      if (!reporter) {
+        throw new HttpException(StatusCodes.BAD_REQUEST, "Reporter not found");
+      }
+    }
+    if (model.labelId) {
+      const label = await this.labelSchema.findById(model.labelId).exec();
+      if (!label) {
+        throw new HttpException(StatusCodes.BAD_REQUEST, "Label not found");
+      }
+    }
+    if (model.priorityId) {
+      const priority = await this.prioritySchema
+        .findById(model.priorityId)
+        .exec();
+      if (!priority) {
+        throw new HttpException(StatusCodes.BAD_REQUEST, "Priority not found");
+      }
+    }
+    if (model.epicId) {
+      const epic = await this.epicSchema.findById(model.epicId).exec();
+      if (!epic) {
+        throw new HttpException(StatusCodes.BAD_REQUEST, "Epic not found");
+      }
+    }
+    const issueType = await this.issueTypeSchema
+      .findById(model.issueTypeId)
+      .exec();
+    if (!issueType) {
+      throw new HttpException(StatusCodes.BAD_REQUEST, "IssueType not found");
+    }
+    if (model.assigneeId) {
+      const assignee = await this.userSchema.findById(model.assigneeId).exec();
+      if (!assignee) {
+        throw new HttpException(StatusCodes.BAD_REQUEST, "Assignee not found");
+      }
+    }
+
+    if (model.issueLinks) {
+      const issueLinkIds = model.issueLinks.map((item) => item.linkType) || [];
+      const issueLink = await this.issueLinkSchema
+        .find({ _id: { $in: issueLinkIds } })
+        .exec();
+      if ((issueLinkIds || []).length !== issueLink.length) {
+        throw new HttpException(StatusCodes.BAD_REQUEST, "IssueLink not found");
+      }
+      const issueIds = model.issueLinks.map((item) => item.issueId) || [];
+      const issue = await this.cardSchema
+        .find({ _id: { $in: issueIds } })
+        .exec();
+      if ((issueIds || []).length !== issue.length) {
+        throw new HttpException(StatusCodes.BAD_REQUEST, "Issue not found");
+      }
+    }
+
     const lengthCardInBoard = await this.cardSchema.find({ boardId }).count();
-    const newCard = await this.cardSchema.create({
-      ...model,
-      cardId: generateCardId(existBoard.title, lengthCardInBoard),
-      boardId: boardId,
-      reporterId: userId,
-    });
-    await ColumnSchema.findByIdAndUpdate(
-      { _id: new OBJECT_ID(newCard.columnId) },
-      { $push: { cardOrderIds: newCard._id } },
-      { new: true }
-    ).exec();
-    return newCard;
+    const newCard = await this.cardSchema.create(
+      [
+        {
+          ...model,
+          cardId: generateCardId(existBoard.key, lengthCardInBoard),
+          boardId: boardId,
+          reporterId: !model.reporterId ? userId : model.reporterId,
+          columnId: model.columnId ? model.columnId : existBoard.initColumnId,
+        },
+      ],
+      { session }
+    );
+
+    if (model.sprintId) {
+      const sprint = await this.sprintSchema.findById(model.sprintId).exec();
+      if (!sprint) {
+        throw new HttpException(StatusCodes.BAD_REQUEST, "Sprint not found");
+      }
+      sprint.cardOrderIds.push(newCard[0]._id);
+      await sprint.save({ session });
+    } else {
+      if (existBoard.template === BOARD_TEMPLATE.scrum) {
+        const sprint = await this.sprintSchema
+          .findOne({
+            boardId,
+            status: SPRINT_STATUS.backlog,
+          })
+          .exec();
+        if (sprint) {
+          sprint.cardOrderIds.push(newCard[0]._id);
+          await sprint.save({ session });
+        } else {
+          throw new HttpException(
+            StatusCodes.BAD_REQUEST,
+            "Create card failed"
+          );
+        }
+      }
+    }
+    if (model.columnId) {
+      const existColumn = await this.colSchema.findById(model.columnId).exec();
+      if (!existColumn) {
+        throw new HttpException(StatusCodes.BAD_REQUEST, "Column not found");
+      }
+      await ColumnSchema.findByIdAndUpdate(
+        { _id: new OBJECT_ID(newCard[0].columnId) },
+        { $push: { cardOrderIds: newCard[0]._id } },
+        { new: true, session }
+      ).exec();
+    }
+    await this.taskLogSchema.create(
+      [
+        {
+          userId: userId,
+          target: "Issue",
+          msg: "created the",
+        },
+      ],
+      { session }
+    );
+    return newCard[0];
   }
   public async getDetailCardById(
     cardId: string,

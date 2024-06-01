@@ -17,10 +17,10 @@ export const checkUserChangePasswordAfter = (
   return false;
 };
 export const generateCardId = (
-  workSpaceName: string,
+  boardName: string,
   lengthCard: number
 ): string => {
-  const formatName = workSpaceName.substring(0, 3).toUpperCase();
+  const formatName = boardName.toUpperCase();
   return `${formatName}-${lengthCard + 1}`;
 };
 export const generateSubCardId = (

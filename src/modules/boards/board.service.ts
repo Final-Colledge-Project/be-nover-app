@@ -37,6 +37,7 @@ import { WorkspacePermissionSchema } from "@modules/workspacePermission";
 import { PrioritySchema } from "@modules/priority";
 import { IssueTypeSchema } from "@modules/issueType";
 import { SprintSchema } from "@modules/sprint";
+import { IssueLinkSchema } from "@modules/issueLink";
 export default class BoardService {
   private boardSchema = BoardSchema;
   private workspaceSchema = TeamWorkspaceSchema;
@@ -48,6 +49,7 @@ export default class BoardService {
   private userSchema = UserSchema;
   private sprintSchema = SprintSchema;
   private notificationService = new NotificationService();
+  private issueLinkSchema = IssueLinkSchema;
   public async createBoard(
     model: CreateBoardDto,
     ownerId: string,
@@ -207,6 +209,7 @@ export default class BoardService {
       createdBoard[0]._id,
       {
         columnOrderIds: columns.map((col: IColumn) => col._id),
+        initColumnId: columns[0]._id,
       },
       { session }
     );
@@ -295,6 +298,10 @@ export default class BoardService {
         { session }
       );
     }
+
+    await this.issueLinkSchema.create([
+      
+    ], { session });
 
     await session.commitTransaction();
     session.endSession();

@@ -71,7 +71,7 @@ const CardSchema = new mongoose.Schema(
         },
       },
     ],
-    subCards: [
+    subCardIds: [
       {
         type: SCHEMA_TYPE,
         ref: MODEL_NAME.subCard,
@@ -105,7 +105,7 @@ const CardSchema = new mongoose.Schema(
       type: SCHEMA_TYPE,
       ref: MODEL_NAME.label,
     },
-    priority: {
+    priorityId: {
       type: SCHEMA_TYPE,
       ref: MODEL_NAME.priority,
     },
@@ -136,7 +136,7 @@ const CardSchema = new mongoose.Schema(
     },
     issueLinks: [
       {
-        relation: {
+        linkType: {
           type: SCHEMA_TYPE,
           ref: MODEL_NAME.issueLink,
         },
@@ -147,22 +147,22 @@ const CardSchema = new mongoose.Schema(
         },
       },
     ],
-    taskLogs: [
+    taskLogIds: [
       {
         type: SCHEMA_TYPE,
         ref: MODEL_NAME.taskLog,
       },
     ],
-    watchers: [
+    watcherIds: [
       {
         type: SCHEMA_TYPE,
         ref: MODEL_NAME.user,
       },
     ],
-    issueType: {
+    issueTypeId: {
       type: SCHEMA_TYPE,
       ref: MODEL_NAME.issueType,
-    }
+    },
   },
   { timestamps: true }
 );

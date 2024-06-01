@@ -81,6 +81,10 @@ const BoardSchema = new mongoose.Schema(
       ref: MODEL_NAME.user,
       default: null,
     },
+    initColumnId: {
+      type: SCHEMA_TYPE,
+      ref: MODEL_NAME.column,
+    },
   },
   { timestamps: true }
 );

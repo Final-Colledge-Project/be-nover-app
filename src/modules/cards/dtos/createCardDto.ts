@@ -1,6 +1,15 @@
 import { formatDate } from "@core/utils";
 import { Transform, TransformFnParams } from "class-transformer";
-import { IsDateString, IsNotEmpty, IsString, MaxLength, Min, MinLength } from "class-validator";
+import {
+  IsDateString,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  MaxLength,
+  Min,
+  MinLength,
+} from "class-validator";
+import { IIssueLinkType } from "../card.interface";
 export default class CreateCardDto {
   constructor(
     columnId: string,
@@ -8,12 +17,24 @@ export default class CreateCardDto {
     description: string,
     labelId: string,
     priorityId: string,
+    reporterId: string,
+    assigneeId: string,
+    sprintId: string,
+    epicId: string,
+    issueTypeId: string,
+    issueLinks: IIssueLinkType[]
   ) {
     this.columnId = columnId;
     this.title = title;
     this.description = description;
     this.labelId = labelId;
     this.priorityId = priorityId;
+    this.reporterId = reporterId;
+    this.assigneeId = assigneeId;
+    this.sprintId = sprintId;
+    this.epicId = epicId;
+    this.issueTypeId = issueTypeId;
+    this.issueLinks = issueLinks;
   }
   @IsNotEmpty()
   @IsString()
@@ -21,24 +42,42 @@ export default class CreateCardDto {
   @IsNotEmpty()
   @IsString()
   @MinLength(2, {
-    message: 'Title must be at least 2 characters long',
+    message: "Title must be at least 2 characters long",
   })
   @MaxLength(50, {
-    message: 'Title must be at most 50 characters long',
+    message: "Title must be at most 50 characters long",
   })
   public title: string;
   @IsNotEmpty()
   @IsString()
   @MinLength(2, {
-    message: 'Description must be at least 2 characters long',
+    message: "Description must be at least 2 characters long",
   })
   @MaxLength(200, {
-    message: 'Description must be at most 200 characters long',
+    message: "Description must be at most 200 characters long",
   })
   public description;
-  @Transform(({value} : TransformFnParams) => formatDate(value) )
+  @Transform(({ value }: TransformFnParams) => formatDate(value))
   @IsString()
   public labelId: string;
   @IsString()
   public priorityId: string;
+  @IsString()
+  @IsNotEmpty()
+  public reporterId: string;
+  @IsOptional()
+  @IsString()
+  public assigneeId: string;
+  @IsOptional()
+  @IsString()
+  public sprintId: string;
+  @IsOptional()
+  @IsString()
+  public epicId: string;
+  @IsNotEmpty()
+  @IsString()
+  public issueTypeId: string;
+  @IsOptional()
+  @IsString()
+  public issueLinks: IIssueLinkType[];
 }
