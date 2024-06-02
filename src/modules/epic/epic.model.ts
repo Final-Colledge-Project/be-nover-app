@@ -1,4 +1,4 @@
-import { DIRECTION_ISSUE, MODEL_NAME, SCHEMA_TYPE } from "@core/utils";
+import { MODEL_NAME, SCHEMA_TYPE } from "@core/utils";
 import mongoose, { Query } from "mongoose";
 import IEpic from "./epic.interface";
 
@@ -22,11 +22,106 @@ const EpicSchema = new mongoose.Schema(
       trim: true,
       default: "",
     },
-    direction: {
-      type: String,
-      enum: Object.values(DIRECTION_ISSUE),
-      required: [true, "Direction is required"],
+    startDate: {
+      type: Date,
+      default: null,
     },
+    dueDate: {
+      type: Date,
+      default: null,
+    },
+    cardOrderIds: [
+      {
+        type: SCHEMA_TYPE,
+        ref: MODEL_NAME.card,
+      },
+    ],
+    color: {
+      type: String,
+      pattern: [/^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/],
+      trim: true,
+      default: "#1677FF",
+    },
+    preEpicId: {
+      type: SCHEMA_TYPE,
+      ref: MODEL_NAME.epic,
+      default: null,
+    },
+    nextEpicId: {
+      type: SCHEMA_TYPE,
+      ref: MODEL_NAME.epic,
+      default: null,
+    },
+    columnId: {
+      type: SCHEMA_TYPE,
+      ref: MODEL_NAME.column,
+      required: [true, "ColumnId is required"],
+    },
+    assigneeId: {
+      type: SCHEMA_TYPE,
+      ref: MODEL_NAME.user,
+      default: null,
+    },
+    labelId: {
+      type: SCHEMA_TYPE,
+      ref: MODEL_NAME.label,
+      default: null,
+    },
+    comments: [
+      {
+        user: {
+          type: SCHEMA_TYPE,
+          ref: MODEL_NAME.user,
+          required: [true, "User is required"],
+        },
+        email: {
+          type: String,
+          required: [true, "Email is required"],
+        },
+        avatar: {
+          type: String,
+          required: [true, "Avatar is required"],
+        },
+        displayName: {
+          type: String,
+          required: [true, "DisplayName is required"],
+        },
+        content: {
+          type: String,
+          required: [true, "Content is required"],
+        },
+        createdAt: {
+          type: Date,
+          default: Date.now,
+        },
+      },
+    ],
+    attachments: [
+      {
+        fileName: {
+          type: String,
+          required: [true, "FileName is required"],
+        },
+        fileType: {
+          type: String,
+          required: [true, "FileType is required"],
+        },
+        fileUrl: {
+          type: String,
+          required: [true, "FileUrl is required"],
+        },
+        createAt: {
+          type: Date,
+          default: Date.now,
+        },
+      },
+    ],
+    taskLogs: [
+      {
+        type: SCHEMA_TYPE,
+        ref: MODEL_NAME.taskLog,
+      },
+    ],
     isActive: {
       type: Boolean,
       default: true,

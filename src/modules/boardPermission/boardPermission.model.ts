@@ -127,6 +127,34 @@ const BoardPermissionSchema = new mongoose.Schema(
         default: false,
       },
     },
+    epic: {
+      create: {
+        type: Boolean,
+        default: false,
+      },
+      update: {
+        type: Boolean,
+        default: false,
+      },
+      delete: {
+        type: Boolean,
+        default: false,
+      },
+    },
+    issueLinkType: {
+      create: {
+        type: Boolean,
+        default: false,
+      },
+      update: {
+        type: Boolean,
+        default: false,
+      },
+      delete: {
+        type: Boolean,
+        default: false,
+      },
+    },
     isAdmin: {
       type: Boolean,
       default: false,

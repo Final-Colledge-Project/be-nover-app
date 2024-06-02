@@ -41,6 +41,7 @@ export const MODEL_NAME = {
   taskLog: "TaskLog",
   issueLink: "IssueLink",
   epic: "Epic",
+  issueLinkType: "IssueLinkType",
 };
 export const SUBTASK_STATUS = {
   todo: "todo",
@@ -86,7 +87,7 @@ export const SPRINT_DURATION = {
   custom: "custom",
 };
 
-export const DIRECTION_ISSUE = {
+export const DIRECTION_TYPE = {
   directed: "directed",
   undirected: "undirected",
   aggregation: "aggregation",

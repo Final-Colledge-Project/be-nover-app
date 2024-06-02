@@ -38,6 +38,16 @@ export default interface IBoardPermission {
     update: boolean;
     delete: boolean;
   };
+  epic: {
+    create: boolean;
+    update: boolean;
+    delete: boolean;
+  };
+  issueLinkType: {
+    create: boolean;
+    update: boolean;
+    delete: boolean;
+  };
   createdAt: Date;
   updatedAt: Date;
   isActive: boolean;

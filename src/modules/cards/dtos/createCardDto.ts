@@ -1,15 +1,15 @@
-import { formatDate } from "@core/utils";
-import { Transform, TransformFnParams } from "class-transformer";
 import {
-  IsDateString,
   IsNotEmpty,
   IsOptional,
   IsString,
   MaxLength,
-  Min,
   MinLength,
 } from "class-validator";
-import { IIssueLinkType } from "../card.interface";
+
+export interface IIssueLinkPayload {
+  targetIssueId: string;
+  linkIssueTypeId: string;
+}
 export default class CreateCardDto {
   constructor(
     columnId: string,
@@ -21,8 +21,7 @@ export default class CreateCardDto {
     assigneeId: string,
     sprintId: string,
     epicId: string,
-    issueTypeId: string,
-    issueLinks: IIssueLinkType[]
+    issueTypeId: string
   ) {
     this.columnId = columnId;
     this.title = title;
@@ -34,9 +33,8 @@ export default class CreateCardDto {
     this.sprintId = sprintId;
     this.epicId = epicId;
     this.issueTypeId = issueTypeId;
-    this.issueLinks = issueLinks;
   }
-  @IsNotEmpty()
+  @IsOptional()
   @IsString()
   public columnId: string;
   @IsNotEmpty()
@@ -57,10 +55,11 @@ export default class CreateCardDto {
     message: "Description must be at most 200 characters long",
   })
   public description;
-  @Transform(({ value }: TransformFnParams) => formatDate(value))
   @IsString()
+  @IsOptional()
   public labelId: string;
   @IsString()
+  @IsOptional()
   public priorityId: string;
   @IsString()
   @IsNotEmpty()
@@ -77,7 +76,4 @@ export default class CreateCardDto {
   @IsNotEmpty()
   @IsString()
   public issueTypeId: string;
-  @IsOptional()
-  @IsString()
-  public issueLinks: IIssueLinkType[];
 }

@@ -5,7 +5,7 @@ export default interface IEpic {
   description: string;
   startDate: Date;
   dueDate: Date;
-  cards: string[];
+  cardOrderIds: string[];
   color: string;
   preEpicId: string;
   nextEpicId: string;

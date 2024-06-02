@@ -1,5 +1,6 @@
 import {
   BOARD_TEMPLATE,
+  DIRECTION_TYPE,
   MODEL_NAME,
   OBJECT_ID,
   ROLE,
@@ -18,7 +19,7 @@ import CreateBoardDto from "./dtos/createBoardDto";
 import { HttpException } from "@core/exceptions";
 import { Request } from "express";
 import APIFeatures from "@core/utils/apiFeature";
-import { cloneDeep, create } from "lodash";
+import { cloneDeep } from "lodash";
 import ICard from "@modules/cards/card.interface";
 import { ColumnSchema, IColumn, IResColumn } from "@modules/columns";
 import { TeamWorkspaceSchema } from "@modules/teamWorkspace";
@@ -38,6 +39,7 @@ import { PrioritySchema } from "@modules/priority";
 import { IssueTypeSchema } from "@modules/issueType";
 import { SprintSchema } from "@modules/sprint";
 import { IssueLinkSchema } from "@modules/issueLink";
+import { IssueLinkTypeSchema } from "@modules/issueLinkType";
 export default class BoardService {
   private boardSchema = BoardSchema;
   private workspaceSchema = TeamWorkspaceSchema;
@@ -49,7 +51,7 @@ export default class BoardService {
   private userSchema = UserSchema;
   private sprintSchema = SprintSchema;
   private notificationService = new NotificationService();
-  private issueLinkSchema = IssueLinkSchema;
+  private issueLinkTypeSchema = IssueLinkTypeSchema;
   public async createBoard(
     model: CreateBoardDto,
     ownerId: string,
@@ -98,6 +100,11 @@ export default class BoardService {
               update: true,
               delete: true,
             },
+            epic: {
+              create: true,
+              update: true,
+              delete: true,
+            },
           }
         : {};
 
@@ -127,6 +134,11 @@ export default class BoardService {
             delete: true,
           },
           label: {
+            create: true,
+            update: true,
+            delete: true,
+          },
+          issueLinkType: {
             create: true,
             update: true,
             delete: true,
@@ -299,11 +311,42 @@ export default class BoardService {
       );
     }
 
-    await this.issueLinkSchema.create([
-      
-    ], { session });
-
-    await session.commitTransaction();
+    await this.issueLinkTypeSchema.create(
+      [
+        {
+          boardId: createdBoard[0]._id,
+          name: "Blocker",
+          inwardName: "is blocked by",
+          outwardName: "blocks",
+          direction: DIRECTION_TYPE.directed,
+        },
+        {
+          boardId: createdBoard[0]._id,
+          name: "Duplicate",
+          inwardName: "is duplicated by",
+          outwardName: "duplicates",
+          direction: DIRECTION_TYPE.aggregation,
+        },
+        {
+          boardId: createdBoard[0]._id,
+          name: "Relates",
+          inwardName: "is related to",
+          outwardName: "relates to",
+          direction: DIRECTION_TYPE.undirected,
+        },
+        {
+          boardId: createdBoard[0]._id,
+          name: "Depends",
+          inwardName: "depends on",
+          outwardName: "is required for",
+          direction: DIRECTION_TYPE.directed,
+        },
+      ],
+      {
+        session,
+      }
+    );
+    await await session.commitTransaction();
     session.endSession();
     return createdBoard[0];
   }

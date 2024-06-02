@@ -17,6 +17,7 @@ export default class CardController {
       const userId = req.user.id;
       const model = req.body;
       const boardId = req.params.boardId;
+      session.startTransaction();
       const newCard = await this.cardService.createCard(
         model,
         userId,

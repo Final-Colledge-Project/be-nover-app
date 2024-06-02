@@ -14,7 +14,7 @@ export default interface IBoard {
   updatedAt: Date;
   dueDate: Date;
   isActive: boolean;
-  defaultAssignee: string;
+  defaultAssigneeId: string;
   initColumnId: string;
 }
 

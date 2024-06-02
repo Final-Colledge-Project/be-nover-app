@@ -1,10 +1,13 @@
 export default interface IIssueLink {
   _id: string;
-  boardId: string;
-  name: string;
-  direction: string;
-  description: string;
+  sourceIssue: ILinkedIssue;
+  targetIssue: ILinkedIssue[];
+  linkIssueTypeId: string;
   createdAt: Date;
   updatedAt: Date;
-  isActive: boolean;
+}
+
+export interface ILinkedIssue {
+  issueId: string;
+  issueModel: string;
 }

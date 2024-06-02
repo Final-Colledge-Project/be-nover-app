@@ -76,7 +76,7 @@ const BoardSchema = new mongoose.Schema(
       default: true,
       select: false,
     },
-    defaultAssignee: {
+    defaultAssigneeId: {
       type: SCHEMA_TYPE,
       ref: MODEL_NAME.user,
       default: null,

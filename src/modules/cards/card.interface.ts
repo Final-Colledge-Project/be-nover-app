@@ -1,3 +1,5 @@
+import { IIssueLink } from "@modules/issueLink";
+
 export default interface ICard {
   _id: string;
   boardId: string;
@@ -6,6 +8,8 @@ export default interface ICard {
   title: string;
   description: string;
   cover: string;
+  startDate: Date;
+  dueDate: Date;
   memberIds: string[];
   comments: IComment[];
   subTaskIds: string[];
@@ -21,7 +25,7 @@ export default interface ICard {
   deletedAt: Date;
   resolvedAt: Date;
   storyPoint: number;
-  issueLinks: IIssueLinkType[];
+  issueLinks: IIssueLink[];
   taskLogIds: string[];
   watcherIds: string[];
   issueTypeId: string;
@@ -39,9 +43,4 @@ export interface IAttachment {
   fileType: string;
   fileUrl: string;
   createAt: Date;
-}
-
-export interface IIssueLinkType {
-  linkType: string;
-  issueId: string;
 }

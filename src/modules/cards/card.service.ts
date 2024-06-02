@@ -47,7 +47,7 @@ export default class CardService {
     model: CreateCardDto,
     userId: string,
     boardId: string,
-    session: ClientSession
+    session: any
   ): Promise<ICard> {
     if (isEmptyObject(model)) {
       throw new HttpException(StatusCodes.BAD_REQUEST, "Model is empty");
@@ -93,23 +93,7 @@ export default class CardService {
       if (!assignee) {
         throw new HttpException(StatusCodes.BAD_REQUEST, "Assignee not found");
       }
-    }
-
-    if (model.issueLinks) {
-      const issueLinkIds = model.issueLinks.map((item) => item.linkType) || [];
-      const issueLink = await this.issueLinkSchema
-        .find({ _id: { $in: issueLinkIds } })
-        .exec();
-      if ((issueLinkIds || []).length !== issueLink.length) {
-        throw new HttpException(StatusCodes.BAD_REQUEST, "IssueLink not found");
-      }
-      const issueIds = model.issueLinks.map((item) => item.issueId) || [];
-      const issue = await this.cardSchema
-        .find({ _id: { $in: issueIds } })
-        .exec();
-      if ((issueIds || []).length !== issue.length) {
-        throw new HttpException(StatusCodes.BAD_REQUEST, "Issue not found");
-      }
+    } else {
     }
 
     const lengthCardInBoard = await this.cardSchema.find({ boardId }).count();
@@ -121,6 +105,9 @@ export default class CardService {
           boardId: boardId,
           reporterId: !model.reporterId ? userId : model.reporterId,
           columnId: model.columnId ? model.columnId : existBoard.initColumnId,
+          assigneeId: model.assigneeId
+            ? model.assigneeId
+            : existBoard.defaultAssigneeId,
         },
       ],
       { session }
@@ -157,11 +144,25 @@ export default class CardService {
       if (!existColumn) {
         throw new HttpException(StatusCodes.BAD_REQUEST, "Column not found");
       }
-      await ColumnSchema.findByIdAndUpdate(
-        { _id: new OBJECT_ID(newCard[0].columnId) },
+      await this.colSchema
+        .findByIdAndUpdate(
+          { _id: new OBJECT_ID(newCard[0].columnId) },
+          { $push: { cardOrderIds: newCard[0]._id } },
+          { new: true, session }
+        )
+        .exec();
+    } else {
+      const existColumn = await this.colSchema
+        .findById(existBoard.initColumnId)
+        .exec();
+      if (!existColumn) {
+        throw new HttpException(StatusCodes.BAD_REQUEST, "Column not found");
+      }
+      await this.colSchema.findByIdAndUpdate(
+        { _id: new OBJECT_ID(existBoard.initColumnId) },
         { $push: { cardOrderIds: newCard[0]._id } },
         { new: true, session }
-      ).exec();
+      );
     }
     await this.taskLogSchema.create(
       [
@@ -173,6 +174,8 @@ export default class CardService {
       ],
       { session }
     );
+    await session.commitTransaction();
+    session.endSession();
     return newCard[0];
   }
   public async getDetailCardById(
@@ -278,6 +281,7 @@ export default class CardService {
     if (!card) {
       throw new HttpException(409, "Card not found");
     }
+
     return card[0];
   }
   public async updateCard(
