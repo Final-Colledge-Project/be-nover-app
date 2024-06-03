@@ -30,6 +30,7 @@ import { IssueLinkSchema } from "@modules/issueLink";
 import { TaskLogSchema } from "@modules/taskLog";
 import { IssueTypeSchema } from "@modules/issueType";
 import { ClientSession } from "mongoose";
+import { cloneDeep } from "lodash";
 export default class CardService {
   private cardSchema = CardSchema;
   private notificationService = new NotificationService();
@@ -47,7 +48,7 @@ export default class CardService {
     model: CreateCardDto,
     userId: string,
     boardId: string,
-    session: any
+    session: ClientSession
   ): Promise<ICard> {
     if (isEmptyObject(model)) {
       throw new HttpException(StatusCodes.BAD_REQUEST, "Model is empty");
@@ -287,7 +288,8 @@ export default class CardService {
   public async updateCard(
     cardId: string,
     model: UpdateCardDto,
-    userId: string
+    userId: string,
+    session: ClientSession
   ): Promise<ICard> {
     if (isEmptyObject(model)) {
       throw new HttpException(StatusCodes.BAD_REQUEST, "Model is empty");
@@ -296,11 +298,176 @@ export default class CardService {
     if (!card) {
       throw new HttpException(StatusCodes.CONFLICT, "Card not found");
     }
+    const cloneCard = cloneDeep(card);
     const updateCard = await this.cardSchema
-      .findByIdAndUpdate({ _id: cardId }, { ...model }, { new: true })
+      .findByIdAndUpdate({ _id: cardId }, { ...model }, { new: true, session })
       .exec();
     if (!updateCard) {
       throw new HttpException(StatusCodes.CONFLICT, "Update card failed");
+    }
+    if (model.columnId) {
+      const oldCol = await this.colSchema.findById(cloneCard.columnId).exec();
+      const newCol = await this.colSchema.findById(model.columnId).exec();
+      if (!oldCol || !newCol) {
+        throw new HttpException(StatusCodes.CONFLICT, "Column not found");
+      }
+      await this.taskLogSchema.create(
+        [
+          {
+            userId: userId,
+            target: "Status",
+            msg: "changed the",
+            oldVal: oldCol.title,
+            newVal: newCol.title,
+          },
+        ],
+        { session }
+      );
+    }
+    if (model.title) {
+      await this.taskLogSchema.create(
+        [
+          {
+            userId: userId,
+            target: "Title",
+            msg: "changed the",
+            oldVal: cloneCard.title,
+            newVal: model.title,
+          },
+        ],
+        { session }
+      );
+    }
+    if (model.description) {
+      await this.taskLogSchema.create(
+        [
+          {
+            userId: userId,
+            target: "Description",
+            msg: "changed the",
+            oldVal: JSON.stringify(cloneCard.description),
+            newVal: JSON.stringify(model.description),
+          },
+        ],
+        { session }
+      );
+    }
+    if (model.labelId) {
+      const oldLabel = await this.labelSchema
+        .findById(cloneCard.labelId)
+        .exec();
+      const newLabel = await this.labelSchema.findById(model.labelId).exec();
+      if (!oldLabel || !newLabel) {
+        throw new HttpException(StatusCodes.CONFLICT, "Label not found");
+      }
+      await this.taskLogSchema.create(
+        [
+          {
+            userId: userId,
+            target: "Label",
+            msg: "changed the",
+            oldVal: oldLabel.name,
+            newVal: newLabel.name,
+          },
+        ],
+        { session }
+      );
+    }
+    if (model.priorityId) {
+      const oldPriority = await this.prioritySchema
+        .findById(cloneCard.priorityId)
+        .exec();
+      const newPriority = await this.prioritySchema.findById(model.priorityId);
+      if (!oldPriority || !newPriority) {
+        throw new HttpException(StatusCodes.CONFLICT, "Priority not found");
+      }
+      await this.taskLogSchema.create(
+        [
+          {
+            userId: userId,
+            target: "Priority",
+            msg: "changed the",
+            oldVal: oldPriority.name,
+            newVal: newPriority.name,
+          },
+        ],
+        { session }
+      );
+    }
+    if (model.sprintId) {
+      const oldSprint = await this.sprintSchema.findById(cloneCard.sprintId);
+      const newSprint = await this.sprintSchema.findById(model.sprintId);
+      if (!oldSprint || !newSprint) {
+        throw new HttpException(StatusCodes.CONFLICT, "Sprint not found");
+      }
+      await this.taskLogSchema.create(
+        [
+          {
+            userId: userId,
+            target: "Sprint",
+            msg: "changed the",
+            oldVal: oldSprint.name,
+            newVal: newSprint.name,
+          },
+        ],
+        { session }
+      );
+    }
+    if (model.epicId) {
+      const oldEpic = await this.epicSchema.findById(cloneCard.epicId);
+      const newEpic = await this.epicSchema.findById(model.epicId);
+      if (!oldEpic || !newEpic) {
+        throw new HttpException(StatusCodes.CONFLICT, "Epic not found");
+      }
+      await this.taskLogSchema.create(
+        [
+          {
+            userId: userId,
+            target: "Epic",
+            msg: "changed the",
+            oldVal: oldEpic.name,
+            newVal: newEpic.name,
+          },
+        ],
+        { session }
+      );
+    }
+    if (model.issueTypeId) {
+      const oldIssueType = await this.issueTypeSchema
+        .findById(cloneCard.issueTypeId)
+        .exec();
+      const newIssueType = await this.issueTypeSchema
+        .findById(model.issueTypeId)
+        .exec();
+      if (!oldIssueType || !newIssueType) {
+        throw new HttpException(StatusCodes.CONFLICT, "IssueType not found");
+      }
+      await this.taskLogSchema.create(
+        [
+          {
+            userId: userId,
+            target: "IssueType",
+            msg: "changed the",
+            oldVal: oldIssueType.name,
+            newVal: newIssueType.name,
+          },
+        ],
+        { session }
+      );
+    }
+    if (model.storyPoint) {
+      await this.taskLogSchema.create(
+        [
+          {
+            userId: userId,
+            target: "StoryPoint",
+            msg: "changed the",
+            oldVal: cloneCard.storyPoint,
+            newVal: model.storyPoint,
+          },
+        ],
+        { session }
+      );
     }
     return updateCard;
   }

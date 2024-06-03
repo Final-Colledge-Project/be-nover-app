@@ -41,15 +41,33 @@ export default class CardController {
       .status(StatusCodes.OK)
       .json({ data: card, message: "Get card successfully" });
   });
-  public updateCard = catchAsync(async (req: Request, res: Response) => {
-    const userId = req.user.id;
-    const cardId = req.params.id;
-    const model: UpdateCardDto = req.body;
-    const card = await this.cardService.updateCard(cardId, model, userId);
-    res
-      .status(StatusCodes.OK)
-      .json({ data: card, message: "Update card successfully" });
-  });
+  public updateCard = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    const session = await startSession();
+    try {
+      const userId = req.user.id;
+      const cardId = req.params.id;
+      const model: UpdateCardDto = req.body;
+      session.startTransaction();
+      const card = await this.cardService.updateCard(
+        cardId,
+        model,
+        userId,
+        session
+      );
+      res
+        .status(StatusCodes.OK)
+        .json({ data: card, message: "Update card successfully" });
+    } catch (err) {
+      await session.abortTransaction();
+      session.endSession();
+      next(err);
+    }
+  };
+
   public assignMemberToCard = catchAsync(
     async (req: Request, res: Response) => {
       const userId = req.user.id;

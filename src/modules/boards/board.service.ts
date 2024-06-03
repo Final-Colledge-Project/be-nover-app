@@ -33,7 +33,7 @@ import { SubCardSchema } from "@modules/subCards";
 import { LabelSchema } from "@modules/labels";
 import { BoardPermissionSchema } from "@modules/boardPermission";
 import { UserSchema } from "@modules/users";
-import mongoose from "mongoose";
+import mongoose, { ClientSession } from "mongoose";
 import { WorkspacePermissionSchema } from "@modules/workspacePermission";
 import { PrioritySchema } from "@modules/priority";
 import { IssueTypeSchema } from "@modules/issueType";
@@ -56,7 +56,7 @@ export default class BoardService {
     model: CreateBoardDto,
     ownerId: string,
     wsId: string,
-    session: any
+    session: ClientSession
   ): Promise<IBoard> {
     if (isEmptyObject(model)) {
       throw new HttpException(StatusCodes.BAD_REQUEST, "Model is empty");
@@ -354,7 +354,7 @@ export default class BoardService {
     userId: string,
     boardId: string,
     memberIds: AddMemsToBoardDto,
-    session: any
+    session: ClientSession
   ): Promise<IBoard> {
     const board = await this.boardSchema.findById(boardId).exec();
     if (!board) {

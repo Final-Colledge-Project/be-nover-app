@@ -40,7 +40,7 @@ const EpicSchema = new mongoose.Schema(
       type: String,
       pattern: [/^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/],
       trim: true,
-      default: "#1677FF",
+      default: "#3634A3",
     },
     preEpicId: {
       type: SCHEMA_TYPE,
