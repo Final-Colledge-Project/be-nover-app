@@ -67,18 +67,32 @@ export default class CardController {
       next(err);
     }
   };
-
-  public assignMemberToCard = catchAsync(
-    async (req: Request, res: Response) => {
+  public assignMemberToCard = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    const session = await startSession();
+    try {
       const userId = req.user.id;
       const cardId = req.params.id;
       const assigneeId = req.body.memId;
-      await this.cardService.assignMemberToCard(userId, cardId, assigneeId);
+      session.startTransaction();
+      await this.cardService.assignMemberToCard(
+        userId,
+        cardId,
+        assigneeId,
+        session
+      );
       res
         .status(StatusCodes.OK)
         .json({ message: "Assign member to card successfully" });
+    } catch (error) {
+      await session.abortTransaction();
+      session.endSession();
+      next(error);
     }
-  );
+  };
   public getMemsInCard = catchAsync(async (req: Request, res: Response) => {
     const cardId = req.params.id;
     const userId = req.user.id;
@@ -102,15 +116,26 @@ export default class CardController {
         .json({ data: cardCover, message: "Upload card cover successfully" });
     }
   );
-  public unAssignMemberFromCard = catchAsync(
-    async (req: Request, res: Response) => {
+  public unAssignMemberFromCard = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    const session = await startSession();
+    try {
       const cardId = req.params.id;
-      await this.cardService.unAssignMemberFromCard(cardId);
+      const userId = req.user.id;
+      session.startTransaction();
+      await this.cardService.unAssignMemberFromCard(cardId, userId, session);
       res
         .status(StatusCodes.OK)
         .json({ message: "Unassign member to card successfully" });
+    } catch (error) {
+      await session.abortTransaction();
+      session.endSession();
+      next(error);
     }
-  );
+  };
   public deleteCard = catchAsync(async (req: Request, res: Response) => {
     const userId = req.user.id;
     const cardId = req.params.id;

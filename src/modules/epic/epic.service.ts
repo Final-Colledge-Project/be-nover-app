@@ -9,26 +9,38 @@ import {
 
 import { HttpException } from "@core/exceptions";
 import { BoardSchema } from "@modules/boards";
-
 import { StatusCodes } from "http-status-codes";
 import { EpicSchema } from ".";
 import CreateEpicDto from "./dtos/createEpicDto";
 import IEpic from "./epic.interface";
+import { ClientSession } from "mongoose";
+import { ITaskLog, TaskLogSchema } from "@modules/taskLog";
+import UpdateEpicDto from "./dtos/updateEpicDto";
+import { cloneDeep } from "lodash";
+import dayjs from "dayjs";
+import { LabelSchema } from "@modules/labels";
+import { UserSchema } from "@modules/users";
+import { ColumnSchema } from "@modules/columns";
 
-export default class ColumnService {
+export default class EpicService {
   private epicSchema = EpicSchema;
   private boardSchema = BoardSchema;
+  private taskLogSchema = TaskLogSchema;
+  private labelSchema = LabelSchema;
+  private userSchema = UserSchema;
+  private columnSchema = ColumnSchema;
   public async createEpic(
     model: CreateEpicDto,
     boardId: string,
-    session: 
+    userId: string,
+    session: ClientSession
   ): Promise<IEpic> {
     if (isEmptyObject(model)) {
       throw new HttpException(StatusCodes.BAD_REQUEST, "Model is empty");
     }
     const board = await this.boardSchema.findById(boardId).exec();
     if (!board) {
-      throw new HttpException(StatusCodes.CONFLICT, "Board not found");
+      throw new HttpException(StatusCodes.BAD_REQUEST, "Board not found");
     }
     const existEpic = await this.epicSchema.findOne({
       title: model.name,
@@ -37,106 +49,185 @@ export default class ColumnService {
 
     if (existEpic) {
       throw new HttpException(
-        StatusCodes.CONFLICT,
+        StatusCodes.BAD_REQUEST,
         `Column with title ${model.name} already exists`
       );
     }
-    const newEpic = await this.epicSchema.create({
-      ...model,
-      boardId,
-    });
+    const newEpic = await this.epicSchema.create(
+      [
+        {
+          ...model,
+          boardId,
+          columnId: board.initColumnId,
+        },
+      ],
+      { session: session }
+    );
     if (!newEpic) {
-      throw new HttpException(StatusCodes.CONFLICT, "Column not created");
+      throw new HttpException(StatusCodes.BAD_REQUEST, "Column not created");
     }
-    await EpicSchema.findByIdAndUpdate(
-      { _id: new OBJECT_ID(newEpic.boardId) },
-      { $push: { columnOrderIds: newEpic._id } },
-      { new: true }
-    ).exec();
-    return newEpic;
+    await this.taskLogSchema.create(
+      [
+        {
+          userId: userId,
+          target: "Epic",
+          msg: "created the",
+        },
+      ],
+      {
+        session: session,
+      }
+    );
+    await session.commitTransaction();
+    session.endSession();
+    return newEpic[0];
   }
-  public async getColumnById(columnId: string): Promise<IColumn> {
-    const column = await this.columnSchema.findById(columnId).exec();
-    if (!column) {
-      throw new HttpException(StatusCodes.CONFLICT, "Column not found");
-    }
-    return column;
-  }
-  public async getColumnsByBoardId(
+  public updateEpic = async (
+    model: UpdateEpicDto,
     boardId: string,
-    userId: string
-  ): Promise<IColumn[]> {
-    if ((await viewedBoardPermission(boardId, userId)) === false) {
-      throw new HttpException(
-        StatusCodes.FORBIDDEN,
-        "You are not member of this board"
-      );
-    }
-    const columns = await this.columnSchema
-      .find({ boardId })
-      .select("-__v")
-      .exec();
-    if (!columns) {
-      throw new HttpException(StatusCodes.CONFLICT, "Columns not found");
-    }
-    return columns;
-  }
-  public async updateColumn(
-    model: UpdateColumnDto,
-    columnId: string
-  ): Promise<IColumn> {
+    userId: string,
+    session: ClientSession,
+    epicId: string
+  ): Promise<void> => {
     if (isEmptyObject(model)) {
       throw new HttpException(StatusCodes.BAD_REQUEST, "Model is empty");
     }
-    const existColumn = await this.columnSchema.findById(columnId).exec();
-    if (!existColumn) {
-      throw new HttpException(StatusCodes.CONFLICT, "Column not found");
+    const board = await this.boardSchema.findById(boardId).exec();
+    if (!board) {
+      throw new HttpException(StatusCodes.BAD_REQUEST, "Board not found");
     }
-
-    if (model.title) {
-      const existTitle = await this.columnSchema
-        .findOne({ title: model.title, boardId: existColumn.boardId })
-        .exec();
-      if (existTitle) {
-        throw new HttpException(
-          StatusCodes.CONFLICT,
-          `Column with title ${model.title} already exists`
-        );
-      }
+    const existEpic = await this.epicSchema.findOne({
+      title: model.name,
+      _id: { $ne: epicId },
+      boardId,
+    });
+    if (existEpic) {
+      throw new HttpException(
+        StatusCodes.BAD_REQUEST,
+        `Column with title ${model.name} already exists`
+      );
     }
-    const updatedColumn = await this.columnSchema
+    const epic = await this.epicSchema.findById(epicId).exec();
+    if (!epic) {
+      throw new HttpException(StatusCodes.BAD_REQUEST, "Epic not found");
+    }
+    const cloneEpic = cloneDeep(epic);
+    await this.epicSchema
       .findByIdAndUpdate(
-        columnId,
+        { _id: epicId },
         {
           ...model,
         },
-        { new: true }
+        { new: true, session }
       )
       .exec();
-    if (!updatedColumn) {
-      throw new HttpException(StatusCodes.CONFLICT, "Column not updated");
+    const taskLogs: ITaskLog[] = [];
+    if (model.name) {
+      taskLogs.push({
+        userId,
+        target: "Name",
+        msg: "changed the",
+        oldVal: cloneEpic.name,
+        newVal: model.name,
+      });
     }
-    return updatedColumn;
-  }
-  public async deleteColumn(columnId: string): Promise<IColumn> {
-    const column = await this.columnSchema.findById(columnId).exec();
-    if (!column) {
-      throw new HttpException(StatusCodes.CONFLICT, "Column not found");
+    if (model.description) {
+      taskLogs.push({
+        userId,
+        target: "Description",
+        msg: "changed the",
+        oldVal: cloneEpic.description,
+        newVal: model.description,
+      });
     }
-    if (column.cardOrderIds.length > 0) {
-      throw new HttpException(StatusCodes.CONFLICT, "Column not empty");
+    if (model.startDate) {
+      taskLogs.push({
+        userId,
+        target: "Start date",
+        msg: "changed the",
+        oldVal: dayjs(cloneEpic.startDate).format("YYYY-MM-DD"),
+        newVal: dayjs(model.startDate).format("YYYY-MM-DD"),
+      });
     }
-    const deletedColumn = await this.columnSchema
-      .findByIdAndDelete(columnId)
-      .exec();
-    if (!deletedColumn) {
-      throw new HttpException(StatusCodes.CONFLICT, "Column not deleted");
+    if (model.dueDate) {
+      taskLogs.push({
+        userId,
+        target: "Due date",
+        msg: "changed the",
+        oldVal: dayjs(cloneEpic.dueDate).format("YYYY-MM-DD"),
+        newVal: dayjs(model.dueDate).format("YYYY-MM-DD"),
+      });
     }
-    await BoardSchema.findByIdAndUpdate(
-      { _id: new OBJECT_ID(deletedColumn.boardId) },
-      { $pull: { columnOrderIds: deletedColumn._id } },
-      { new: true }
-    ).exec();
-    return deletedColumn;
-  }
+    if (model.color) {
+      taskLogs.push({
+        userId,
+        target: "Color",
+        msg: "changed the",
+        oldVal: cloneEpic.color,
+        newVal: model.color,
+      });
+    }
+    if (model.labelId) {
+      const oldLabel = await this.labelSchema
+        .findById(cloneEpic.labelId)
+        .exec();
+      const newLabel = await this.labelSchema.findById(model.labelId).exec();
+      if (!oldLabel || !newLabel) {
+        throw new HttpException(StatusCodes.BAD_REQUEST, "Label not found");
+      }
+      taskLogs.push({
+        userId,
+        target: "Label",
+        msg: "changed the",
+        oldVal: oldLabel.name,
+        newVal: newLabel.name,
+      });
+    }
+    if (model.assigneeId) {
+      const oldAssignee = await this.userSchema
+        .findById(cloneEpic.assigneeId)
+        .exec();
+      const newAssignee = await this.userSchema
+        .findById(model.assigneeId)
+        .exec();
+      if (!oldAssignee || !newAssignee) {
+        throw new HttpException(StatusCodes.BAD_REQUEST, "Assignee not found");
+      }
+      taskLogs.push({
+        userId,
+        target: "Assignee",
+        msg: "changed the",
+        oldVal: `${oldAssignee.firstName} ${oldAssignee.lastName}`,
+        newVal: `${newAssignee.firstName} ${newAssignee.lastName}`,
+      });
+    }
+    if (model.columnId) {
+      const oldColumn = await this.columnSchema.findById(cloneEpic.columnId);
+      const newColumn = await this.columnSchema.findById(model.columnId);
+      if (!oldColumn || !newColumn) {
+        throw new HttpException(StatusCodes.BAD_REQUEST, "Column not found");
+      }
+      taskLogs.push({
+        userId,
+        target: "Status",
+        msg: "changed the",
+        oldVal: oldColumn.title,
+        newVal: newColumn.title,
+      });
+    }
+    if (model.cardOrderIds) {
+      taskLogs.push({
+        userId,
+        target: "card in Epic",
+        msg: "changed",
+      });
+    }
+    if (taskLogs.length) {
+      await this.taskLogSchema.create([taskLogs], {
+        session,
+      });
+    }
+    await session.commitTransaction();
+    session.endSession();
+  };
 }

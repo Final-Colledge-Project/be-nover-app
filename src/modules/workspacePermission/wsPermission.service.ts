@@ -74,7 +74,7 @@ export default class WorkspacePermissionService {
     });
     if (!workspacePerm) {
       throw new HttpException(
-        StatusCodes.CONFLICT,
+        StatusCodes.BAD_REQUEST,
         "Create workspace permission failed"
       );
     }
@@ -93,7 +93,7 @@ export default class WorkspacePermissionService {
     const wsPermission = await this.wsPermissionSchema.findById(permissionId);
     if (!wsPermission) {
       throw new HttpException(
-        StatusCodes.NOT_FOUND,
+        StatusCodes.BAD_REQUEST,
         "Permission group not found"
       );
     }
@@ -197,7 +197,7 @@ export default class WorkspacePermissionService {
     });
     if (!groupPermission) {
       throw new HttpException(
-        StatusCodes.NOT_FOUND,
+        StatusCodes.BAD_REQUEST,
         "Permission group not found"
       );
     }
@@ -221,7 +221,7 @@ export default class WorkspacePermissionService {
       .exec();
     if (!groupPermission) {
       throw new HttpException(
-        StatusCodes.NOT_FOUND,
+        StatusCodes.BAD_REQUEST,
         "Permission group not found"
       );
     }

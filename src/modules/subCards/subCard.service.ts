@@ -22,7 +22,7 @@ export default class SubCardService {
     }
     const existCard = await this.cardSchema.findById(model.cardId).exec();
     if (!existCard) {
-      throw new HttpException(StatusCodes.CONFLICT, "Card not found");
+      throw new HttpException(StatusCodes.BAD_REQUEST, "Card not found");
     }
     const lengthSubCardInCard = await this.subCardSchema
       .find({ cardId: existCard._id })
@@ -51,13 +51,13 @@ export default class SubCardService {
   ): Promise<void> {
     const existedSubCard = await this.subCardSchema.findById(subCardId).exec();
     if (!existedSubCard) {
-      throw new HttpException(StatusCodes.CONFLICT, "Subcard not found");
+      throw new HttpException(StatusCodes.BAD_REQUEST, "Subcard not found");
     }
     const existedCard = await this.cardSchema
       .findById(existedSubCard.cardId)
       .exec();
     if (!existedCard) {
-      throw new HttpException(StatusCodes.CONFLICT, "Card not found");
+      throw new HttpException(StatusCodes.BAD_REQUEST, "Card not found");
     }
     const checkBoarMemberByAssignee = await isBoardMember(boardId, assigneeId);
     if (!checkBoarMemberByAssignee) {
@@ -76,7 +76,7 @@ export default class SubCardService {
   ): Promise<object> {
     const existCard = await this.cardSchema.findById(cardId).exec();
     if (!existCard) {
-      throw new HttpException(StatusCodes.CONFLICT, "Card not found");
+      throw new HttpException(StatusCodes.BAD_REQUEST, "Card not found");
     }
     const isViewedBoard = await viewedBoardPermission(
       existCard.boardId,
@@ -107,32 +107,32 @@ export default class SubCardService {
     }
     const existSubCard = await this.subCardSchema.findById(subCardId).exec();
     if (!existSubCard) {
-      throw new HttpException(StatusCodes.CONFLICT, "Subcard not found");
+      throw new HttpException(StatusCodes.BAD_REQUEST, "Subcard not found");
     }
     const existCard = await this.cardSchema
       .findById(existSubCard.cardId)
       .exec();
     if (!existCard) {
-      throw new HttpException(StatusCodes.CONFLICT, "Card not found");
+      throw new HttpException(StatusCodes.BAD_REQUEST, "Card not found");
     }
     const updatedSubCard = await this.subCardSchema
       .findByIdAndUpdate(subCardId, { ...model }, { new: true })
       .exec();
     if (!updatedSubCard) {
-      throw new HttpException(StatusCodes.CONFLICT, "Subcard not found");
+      throw new HttpException(StatusCodes.BAD_REQUEST, "Subcard not found");
     }
     return updatedSubCard;
   }
   public async deleteSubCard(subCardId: string): Promise<void> {
     const existSubCard = await this.subCardSchema.findById(subCardId).exec();
     if (!existSubCard) {
-      throw new HttpException(StatusCodes.CONFLICT, "Subcard not found");
+      throw new HttpException(StatusCodes.BAD_REQUEST, "Subcard not found");
     }
     const existCard = await this.cardSchema
       .findById(existSubCard.cardId)
       .exec();
     if (!existCard) {
-      throw new HttpException(StatusCodes.CONFLICT, "Card not found");
+      throw new HttpException(StatusCodes.BAD_REQUEST, "Card not found");
     }
     await this.subCardSchema
       .findByIdAndUpdate(

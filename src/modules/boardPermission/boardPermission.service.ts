@@ -208,7 +208,7 @@ export default class BoardPermissionService {
       .select("-memberIds")
       .exec();
     if (!groupPermission) {
-      throw new HttpException(StatusCodes.NOT_FOUND, "Permission denied");
+      throw new HttpException(StatusCodes.FORBIDDEN, "Permission denied");
     }
     return groupPermission;
   }

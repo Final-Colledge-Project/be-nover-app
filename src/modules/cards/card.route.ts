@@ -65,7 +65,6 @@ export default class CardRoute implements Route {
     );
     this.router.patch(
       this.path + "/:id/unassign-member/board/:boardId",
-      validationMiddleware(AssignMemDto, true),
       authMiddleware,
       authorizePermission("card:update", PERM_TYPE.board),
       this.cardController.unAssignMemberFromCard

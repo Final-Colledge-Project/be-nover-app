@@ -40,7 +40,7 @@ class TeamWorkspaceService {
       )
     ) {
       throw new HttpException(
-        StatusCodes.CONFLICT,
+        StatusCodes.BAD_REQUEST,
         `Team workspace with name ${model.name} already exists`
       );
     }
@@ -55,7 +55,7 @@ class TeamWorkspaceService {
     );
     if (!newWorkspace) {
       throw new HttpException(
-        StatusCodes.CONFLICT,
+        StatusCodes.BAD_REQUEST,
         "Create team workspace failed"
       );
     }
@@ -105,18 +105,18 @@ class TeamWorkspaceService {
       .findById(workspaceId)
       .exec();
     if (!teamWorkspace) {
-      throw new HttpException(StatusCodes.CONFLICT, "Workspace not found");
+      throw new HttpException(StatusCodes.BAD_REQUEST, "Workspace not found");
     }
     const member = await UserSchema.findOne({ email: model.emailUser }).exec();
     if ((await isWorkspaceAdmin(workspaceId, member?.id)) === true) {
-      throw new HttpException(StatusCodes.CONFLICT, "User is already admin");
+      throw new HttpException(StatusCodes.BAD_REQUEST, "User is already admin");
     }
     if ((await isWorkspaceMember(workspaceId, member?.id)) === false) {
-      throw new HttpException(StatusCodes.CONFLICT, "User is not member");
+      throw new HttpException(StatusCodes.BAD_REQUEST, "User is not member");
     }
     if ((await isSuperAdmin(workspaceId, adminId)) === false) {
       throw new HttpException(
-        StatusCodes.CONFLICT,
+        StatusCodes.BAD_REQUEST,
         "You are not permission to assign member to admin"
       );
     }
@@ -132,7 +132,7 @@ class TeamWorkspaceService {
   public async getTeamWorkspaceById(userId: string, workspaceId: string) {
     if ((await viewWorkspacePermission(workspaceId, userId)) === false) {
       throw new HttpException(
-        StatusCodes.CONFLICT,
+        StatusCodes.BAD_REQUEST,
         "You are not permission to view this workspace"
       );
     }
@@ -285,7 +285,7 @@ class TeamWorkspaceService {
       .findById(workspaceId)
       .exec();
     if (!workspace) {
-      throw new HttpException(StatusCodes.CONFLICT, "Workspace not found");
+      throw new HttpException(StatusCodes.BAD_REQUEST, "Workspace not found");
     }
     const checkSuperAdmin = await isSuperAdmin(workspaceId, userId);
     if (!checkSuperAdmin) {

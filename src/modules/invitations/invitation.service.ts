@@ -27,30 +27,36 @@ export default class InvitationService {
     workspaceId: string
   ): Promise<void> {
     if (isEmptyObject(model)) {
-      throw new HttpException(StatusCodes.CONFLICT, "Model is empty");
+      throw new HttpException(StatusCodes.BAD_REQUEST, "Model is empty");
     }
     const adminUser = await UserSchema.findById(adminId).exec();
     const invitedUser = await UserSchema.findOne({
       email: model.emailUser,
     }).exec();
     if (!adminUser) {
-      throw new HttpException(StatusCodes.CONFLICT, "You are not an user");
+      throw new HttpException(StatusCodes.BAD_REQUEST, "You are not an user");
     }
     if (!invitedUser) {
-      throw new HttpException(StatusCodes.CONFLICT, "User not found");
+      throw new HttpException(StatusCodes.BAD_REQUEST, "User not found");
     }
     const teamWorkspace = await this.teamWorkspaceSchema
       .findById(workspaceId)
       .exec();
     if (!teamWorkspace) {
-      throw new HttpException(StatusCodes.CONFLICT, "Workspace not found");
+      throw new HttpException(StatusCodes.BAD_REQUEST, "Workspace not found");
     }
 
     if (await isWorkspaceAdmin(workspaceId, invitedUser.id)) {
-      throw new HttpException(StatusCodes.CONFLICT, "User is already an admin");
+      throw new HttpException(
+        StatusCodes.BAD_REQUEST,
+        "User is already an admin"
+      );
     }
     if (await isWorkspaceMember(workspaceId, invitedUser.id)) {
-      throw new HttpException(StatusCodes.CONFLICT, "User is already a member");
+      throw new HttpException(
+        StatusCodes.BAD_REQUEST,
+        "User is already a member"
+      );
     }
     const existInvitation = await this.invitationSchema.findOne({
       workspaceId: new OBJECT_ID(workspaceId),
@@ -67,7 +73,7 @@ export default class InvitationService {
         .exec();
       if (!updateInvitation) {
         throw new HttpException(
-          StatusCodes.CONFLICT,
+          StatusCodes.BAD_REQUEST,
           "Update invitation failed"
         );
       }
@@ -98,20 +104,26 @@ export default class InvitationService {
       .findById(workspaceId)
       .exec();
     if (!teamWorkspace) {
-      throw new HttpException(StatusCodes.CONFLICT, "Workspace not found");
+      throw new HttpException(StatusCodes.BAD_REQUEST, "Workspace not found");
     }
     if (await isWorkspaceAdmin(workspaceId, userId)) {
-      throw new HttpException(StatusCodes.CONFLICT, "User is already an admin");
+      throw new HttpException(
+        StatusCodes.BAD_REQUEST,
+        "User is already an admin"
+      );
     }
     if (await isWorkspaceMember(workspaceId, userId)) {
-      throw new HttpException(StatusCodes.CONFLICT, "User is already a member");
+      throw new HttpException(
+        StatusCodes.BAD_REQUEST,
+        "User is already a member"
+      );
     }
     const existedInvitation = await this.invitationSchema.findOne({
       workspaceId: new OBJECT_ID(workspaceId),
       receiverId: new OBJECT_ID(userId),
     });
     if (!existedInvitation) {
-      throw new HttpException(StatusCodes.CONFLICT, "Invitation not found");
+      throw new HttpException(StatusCodes.BAD_REQUEST, "Invitation not found");
     }
     await this.invitationSchema
       .findOneAndUpdate(
@@ -151,7 +163,7 @@ export default class InvitationService {
       console.log("🚀 ~ InvitationService ~ viewerPermGroup:", viewerPermGroup);
       if (!viewerPermGroup) {
         throw new HttpException(
-          StatusCodes.CONFLICT,
+          StatusCodes.BAD_REQUEST,
           "Viewer permission group not found"
         );
       }
@@ -179,7 +191,7 @@ export default class InvitationService {
       .findById(invitationId)
       .exec();
     if (!existInvitation) {
-      throw new HttpException(StatusCodes.CONFLICT, "Invitation not found");
+      throw new HttpException(StatusCodes.BAD_REQUEST, "Invitation not found");
     }
     const invitationDetail = await this.invitationSchema
       .aggregate([

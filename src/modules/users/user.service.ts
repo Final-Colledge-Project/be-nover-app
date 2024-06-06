@@ -253,7 +253,7 @@ class UserService {
       )
       .exec();
     if (!updatedUser) {
-      throw new HttpException(StatusCodes.CONFLICT, "You are not an user");
+      throw new HttpException(StatusCodes.BAD_REQUEST, "You are not an user");
     }
   }
   public async getUserByQuery(req: Request): Promise<Object> {

@@ -89,13 +89,6 @@ export default class CardService {
     if (!issueType) {
       throw new HttpException(StatusCodes.BAD_REQUEST, "IssueType not found");
     }
-    if (model.assigneeId) {
-      const assignee = await this.userSchema.findById(model.assigneeId).exec();
-      if (!assignee) {
-        throw new HttpException(StatusCodes.BAD_REQUEST, "Assignee not found");
-      }
-    } else {
-    }
 
     const lengthCardInBoard = await this.cardSchema.find({ boardId }).count();
     const newCard = await this.cardSchema.create(
@@ -109,6 +102,7 @@ export default class CardService {
           assigneeId: model.assigneeId
             ? model.assigneeId
             : existBoard.defaultAssigneeId,
+          watcherIds: model.assigneeId ? [userId, model.assigneeId] : [userId],
         },
       ],
       { session }
@@ -185,7 +179,7 @@ export default class CardService {
   ): Promise<object> {
     const existed = await this.cardSchema.findById(cardId).exec();
     if (!existed) {
-      throw new HttpException(StatusCodes.CONFLICT, "Card not found");
+      throw new HttpException(StatusCodes.BAD_REQUEST, "Card not found");
     }
 
     const isViewedBoard = await viewedBoardPermission(existed.boardId, userId);
@@ -296,20 +290,20 @@ export default class CardService {
     }
     const card = await this.cardSchema.findById(cardId).exec();
     if (!card) {
-      throw new HttpException(StatusCodes.CONFLICT, "Card not found");
+      throw new HttpException(StatusCodes.BAD_REQUEST, "Card not found");
     }
     const cloneCard = cloneDeep(card);
     const updateCard = await this.cardSchema
       .findByIdAndUpdate({ _id: cardId }, { ...model }, { new: true, session })
       .exec();
     if (!updateCard) {
-      throw new HttpException(StatusCodes.CONFLICT, "Update card failed");
+      throw new HttpException(StatusCodes.BAD_REQUEST, "Update card failed");
     }
     if (model.columnId) {
       const oldCol = await this.colSchema.findById(cloneCard.columnId).exec();
       const newCol = await this.colSchema.findById(model.columnId).exec();
       if (!oldCol || !newCol) {
-        throw new HttpException(StatusCodes.CONFLICT, "Column not found");
+        throw new HttpException(StatusCodes.BAD_REQUEST, "Column not found");
       }
       await this.taskLogSchema.create(
         [
@@ -358,7 +352,7 @@ export default class CardService {
         .exec();
       const newLabel = await this.labelSchema.findById(model.labelId).exec();
       if (!oldLabel || !newLabel) {
-        throw new HttpException(StatusCodes.CONFLICT, "Label not found");
+        throw new HttpException(StatusCodes.BAD_REQUEST, "Label not found");
       }
       await this.taskLogSchema.create(
         [
@@ -379,7 +373,7 @@ export default class CardService {
         .exec();
       const newPriority = await this.prioritySchema.findById(model.priorityId);
       if (!oldPriority || !newPriority) {
-        throw new HttpException(StatusCodes.CONFLICT, "Priority not found");
+        throw new HttpException(StatusCodes.BAD_REQUEST, "Priority not found");
       }
       await this.taskLogSchema.create(
         [
@@ -398,7 +392,7 @@ export default class CardService {
       const oldSprint = await this.sprintSchema.findById(cloneCard.sprintId);
       const newSprint = await this.sprintSchema.findById(model.sprintId);
       if (!oldSprint || !newSprint) {
-        throw new HttpException(StatusCodes.CONFLICT, "Sprint not found");
+        throw new HttpException(StatusCodes.BAD_REQUEST, "Sprint not found");
       }
       await this.taskLogSchema.create(
         [
@@ -417,7 +411,7 @@ export default class CardService {
       const oldEpic = await this.epicSchema.findById(cloneCard.epicId);
       const newEpic = await this.epicSchema.findById(model.epicId);
       if (!oldEpic || !newEpic) {
-        throw new HttpException(StatusCodes.CONFLICT, "Epic not found");
+        throw new HttpException(StatusCodes.BAD_REQUEST, "Epic not found");
       }
       await this.taskLogSchema.create(
         [
@@ -440,7 +434,7 @@ export default class CardService {
         .findById(model.issueTypeId)
         .exec();
       if (!oldIssueType || !newIssueType) {
-        throw new HttpException(StatusCodes.CONFLICT, "IssueType not found");
+        throw new HttpException(StatusCodes.BAD_REQUEST, "IssueType not found");
       }
       await this.taskLogSchema.create(
         [
@@ -469,16 +463,19 @@ export default class CardService {
         { session }
       );
     }
+    await session.commitTransaction();
+    session.endSession();
     return updateCard;
   }
   public async assignMemberToCard(
     userId: string,
     cardId: string,
-    assigneeId: string
+    assigneeId: string,
+    session: ClientSession
   ): Promise<void> {
     const member = await this.userSchema.findById(assigneeId).exec();
     if (!member) {
-      throw new HttpException(StatusCodes.CONFLICT, "User not found");
+      throw new HttpException(StatusCodes.BAD_REQUEST, "User not found");
     }
     const card = await this.cardSchema
       .findOne({
@@ -487,8 +484,9 @@ export default class CardService {
       })
       .exec();
     if (!card) {
-      throw new HttpException(StatusCodes.CONFLICT, "Card not found");
+      throw new HttpException(StatusCodes.BAD_REQUEST, "Card not found");
     }
+    const cloneCard = cloneDeep(card);
     const checkBoarMemberByAssignee = await isBoardMember(
       card.boardId,
       assigneeId
@@ -499,14 +497,39 @@ export default class CardService {
         "Assignee is not member of this board"
       );
     }
+    const assignee = await this.userSchema.findById(assigneeId);
+    const currentAssignee = await this.userSchema.findById(
+      cloneCard.memberIds[0]
+    );
+    if (!assignee) {
+      throw new HttpException(StatusCodes.BAD_REQUEST, "User not found");
+    }
     await this.cardSchema.findByIdAndUpdate(
       {
         _id: cardId,
       },
       {
-        $set: { memberIds: [assigneeId] },
+        $set: {
+          memberIds: [assigneeId],
+          watcherIds: [...new Set([...cloneCard.watcherIds, assigneeId])],
+        },
       },
-      { new: true }
+      { new: true, session }
+    );
+
+    await this.taskLogSchema.create(
+      [
+        {
+          userId: userId,
+          target: "Assignee",
+          msg: "changed the",
+          oldVal: currentAssignee
+            ? `${currentAssignee.firstName} ${currentAssignee.lastName}`
+            : null,
+          newVal: `${assignee.firstName} ${assignee.lastName}`,
+        },
+      ],
+      { session }
     );
     const board = await this.boardSchema.findById(card.boardId).exec();
     const message = "have assigned you to the task";
@@ -522,6 +545,8 @@ export default class CardService {
       receiverId: assigneeId,
     };
     await this.notificationService.pushNotification(model);
+    await session.commitTransaction();
+    session.endSession();
   }
   public async getMemberInCard(
     cardId: string,
@@ -529,7 +554,7 @@ export default class CardService {
   ): Promise<object> {
     const existCard = await this.cardSchema.findById(cardId).exec();
     if (!existCard) {
-      throw new HttpException(StatusCodes.CONFLICT, "Card not found");
+      throw new HttpException(StatusCodes.BAD_REQUEST, "Card not found");
     }
     const isViewedBoard = await viewedBoardPermission(
       existCard.boardId,
@@ -597,7 +622,7 @@ export default class CardService {
       },
     ]);
     if (!card) {
-      throw new HttpException(StatusCodes.CONFLICT, "Card not found");
+      throw new HttpException(StatusCodes.BAD_REQUEST, "Card not found");
     }
     return card[0];
   }
@@ -608,31 +633,61 @@ export default class CardService {
   ): Promise<String> {
     const existCard = await this.cardSchema.findById(cardId).exec();
     if (!existCard) {
-      throw new HttpException(StatusCodes.CONFLICT, "Card not found");
+      throw new HttpException(StatusCodes.BAD_REQUEST, "Card not found");
     }
     existCard.cover = cover;
     await existCard.save();
     return existCard.cover;
   }
-  public async unAssignMemberFromCard(cardId: string): Promise<void> {
+  public async unAssignMemberFromCard(
+    cardId: string,
+    userId: string,
+    session: ClientSession
+  ): Promise<void> {
     const card = await this.cardSchema.findById(cardId).exec();
     if (!card) {
-      throw new HttpException(StatusCodes.CONFLICT, "Card not found");
+      throw new HttpException(StatusCodes.BAD_REQUEST, "Card not found");
     }
+    const cloneCard = cloneDeep(card);
     await this.cardSchema.findByIdAndUpdate(
       {
         _id: cardId,
       },
       {
-        $set: { memberIds: [] },
+        $set: {
+          memberIds: [],
+          watcherIds: card.watcherIds.filter(
+            (id) => id.toString() !== card.memberIds[0].toString()
+          ),
+        },
       },
-      { new: true }
+      { new: true, session }
     );
+    const currentAssignee = await this.userSchema
+      .findById(cloneCard.memberIds[0])
+      .exec();
+    if (!currentAssignee) {
+      throw new HttpException(StatusCodes.BAD_REQUEST, "Assignee not found");
+    }
+    await this.taskLogSchema.create(
+      [
+        {
+          userId: userId,
+          target: "Assignee",
+          msg: "changed the",
+          oldVal: `${currentAssignee?.firstName} ${currentAssignee?.lastName}`,
+          newVal: null,
+        },
+      ],
+      { session }
+    );
+    await session.commitTransaction();
+    session.endSession();
   }
   public async deleteCard(cardId: string, userId: string): Promise<void> {
     const card = await this.cardSchema.findById(cardId).exec();
     if (!card) {
-      throw new HttpException(StatusCodes.CONFLICT, "Card not found");
+      throw new HttpException(StatusCodes.BAD_REQUEST, "Card not found");
     }
     const deletedCard = await this.cardSchema
       .findByIdAndUpdate(
@@ -644,7 +699,7 @@ export default class CardService {
       )
       .exec();
     if (!deletedCard) {
-      throw new HttpException(StatusCodes.CONFLICT, "Card not deleted");
+      throw new HttpException(StatusCodes.BAD_REQUEST, "Card not deleted");
     }
     await ColumnSchema.findByIdAndUpdate(
       { _id: new OBJECT_ID(deletedCard.columnId) },

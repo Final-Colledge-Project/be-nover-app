@@ -52,13 +52,13 @@ export const authorizePermission = (roles: string, permType: string) => {
       case PERM_TYPE.workspace: {
         if (!isValidObjectId(req.params.wsId)) {
           return next(
-            new HttpException(StatusCodes.NOT_FOUND, "Workspace not found")
+            new HttpException(StatusCodes.BAD_REQUEST, "Workspace not found")
           );
         }
         const existedWS = await TeamWorkspaceSchema.findById(req.params.wsId);
         if (!existedWS) {
           return next(
-            new HttpException(StatusCodes.NOT_FOUND, "Workspace not found")
+            new HttpException(StatusCodes.BAD_REQUEST, "Workspace not found")
           );
         }
         const wsPermGroup = await WorkspacePermissionSchema.findOne({
@@ -98,7 +98,7 @@ export const authorizePermission = (roles: string, permType: string) => {
         const existedBoard = await BoardSchema.findById(req.params.boardId);
         if (!existedBoard) {
           return next(
-            new HttpException(StatusCodes.NOT_FOUND, "Board not found")
+            new HttpException(StatusCodes.BAD_REQUEST, "Board not found")
           );
         }
         const boardPermGroup = await BoardPermissionSchema.findOne({

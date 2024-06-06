@@ -18,7 +18,3 @@ export default interface IBoard {
   initColumnId: string;
 }
 
-export interface IBoardAdmin {
-  user: string;
-  role: string;
-}

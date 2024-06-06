@@ -69,7 +69,7 @@ export default class BoardService {
       })
       .exec();
     if (existedBoard) {
-      throw new HttpException(StatusCodes.CONFLICT, "Board already exists");
+      throw new HttpException(StatusCodes.BAD_REQUEST, "Board already exists");
     }
     const createdBoard = await this.boardSchema.create(
       [
@@ -83,11 +83,11 @@ export default class BoardService {
     );
 
     if (!createdBoard) {
-      throw new HttpException(StatusCodes.CONFLICT, "Board not created");
+      throw new HttpException(StatusCodes.BAD_REQUEST, "Board not created");
     }
     const workspace = await this.workspaceSchema.findById(wsId).exec();
     if (!workspace) {
-      throw new HttpException(StatusCodes.CONFLICT, "Workspace not found");
+      throw new HttpException(StatusCodes.BAD_REQUEST, "Workspace not found");
     }
     const superAdmin = workspace.workspaceAdmins.find(
       (mem) => mem.role === ROLE.superAdmin
@@ -358,12 +358,12 @@ export default class BoardService {
   ): Promise<IBoard> {
     const board = await this.boardSchema.findById(boardId).exec();
     if (!board) {
-      throw new HttpException(StatusCodes.CONFLICT, "Board not found");
+      throw new HttpException(StatusCodes.BAD_REQUEST, "Board not found");
     }
     const workspaceId = board.teamWorkspaceId;
     const workspace = await this.workspaceSchema.findById(workspaceId).exec();
     if (!workspace) {
-      throw new HttpException(StatusCodes.CONFLICT, "Workspace not found");
+      throw new HttpException(StatusCodes.BAD_REQUEST, "Workspace not found");
     }
     const members = memberIds.memberIds;
     const objectIdArray = members.map((id) => new mongoose.Types.ObjectId(id));
@@ -653,7 +653,7 @@ export default class BoardService {
     });
 
     if (!workspaces) {
-      throw new HttpException(StatusCodes.CONFLICT, "Workspace not found");
+      throw new HttpException(StatusCodes.BAD_REQUEST, "Workspace not found");
     }
     const userBoards = await this.workspaceSchema.aggregate([
       {
@@ -759,7 +759,7 @@ export default class BoardService {
     }
     const existBoard = await this.boardSchema.findById(boardId).exec();
     if (!existBoard) {
-      throw new HttpException(StatusCodes.CONFLICT, "Board not found");
+      throw new HttpException(StatusCodes.BAD_REQUEST, "Board not found");
     }
     const checkPermissionBoard = await permissionBoard(boardId, userId);
     if (!checkPermissionBoard) {
@@ -775,7 +775,7 @@ export default class BoardService {
       )
       .exec();
     if (!updatedBoard) {
-      throw new HttpException(StatusCodes.CONFLICT, "Board not updated");
+      throw new HttpException(StatusCodes.BAD_REQUEST, "Board not updated");
     }
     updatedBoard.save();
     return updatedBoard;
@@ -787,7 +787,7 @@ export default class BoardService {
   ): Promise<void> {
     const board = await this.boardSchema.findById(boardId).exec();
     if (!board) {
-      throw new HttpException(StatusCodes.CONFLICT, "Board not found");
+      throw new HttpException(StatusCodes.BAD_REQUEST, "Board not found");
     }
     const checkSuperAdmin = await isSuperAdmin(board.teamWorkspaceId, userId);
     if (!checkSuperAdmin) {
@@ -799,7 +799,7 @@ export default class BoardService {
     const checkBoardMember = await isBoardMember(boardId, memberId);
     if (!checkBoardMember) {
       throw new HttpException(
-        StatusCodes.CONFLICT,
+        StatusCodes.BAD_REQUEST,
         "This member is not member of this board"
       );
     }
@@ -817,7 +817,7 @@ export default class BoardService {
   ): Promise<void> {
     const board = await this.boardSchema.findById(boardId).exec();
     if (!board) {
-      throw new HttpException(StatusCodes.CONFLICT, "Board not found");
+      throw new HttpException(StatusCodes.BAD_REQUEST, "Board not found");
     }
     const checkSuperAdmin = await isSuperAdmin(board.teamWorkspaceId, userId);
 
@@ -833,14 +833,14 @@ export default class BoardService {
     );
     if (!checkWorkspaceMem) {
       throw new HttpException(
-        StatusCodes.CONFLICT,
+        StatusCodes.BAD_REQUEST,
         "This member is not member of this workspace"
       );
     }
     const checkBoardAdmin = await isBoardAdmin(boardId, boardAdminId);
     if (!checkBoardAdmin) {
       throw new HttpException(
-        StatusCodes.CONFLICT,
+        StatusCodes.BAD_REQUEST,
         "This member is not admin of this board"
       );
     }
@@ -880,7 +880,7 @@ export default class BoardService {
   ): Promise<void> {
     const board = await this.boardSchema.findById(boardId).exec();
     if (!board) {
-      throw new HttpException(StatusCodes.CONFLICT, "Board not found");
+      throw new HttpException(StatusCodes.BAD_REQUEST, "Board not found");
     }
     const checkPermissionBoard = await permissionBoard(boardId, userId);
     if (!checkPermissionBoard) {
@@ -892,7 +892,7 @@ export default class BoardService {
     const checkBoardMember = await isBoardMember(boardId, memberId);
     if (!checkBoardMember) {
       throw new HttpException(
-        StatusCodes.CONFLICT,
+        StatusCodes.BAD_REQUEST,
         "This member is not member of this board"
       );
     }
@@ -926,7 +926,7 @@ export default class BoardService {
   public async deleteBoard(boardId: string, userId: string): Promise<void> {
     const board = await this.boardSchema.findById(boardId).exec();
     if (!board) {
-      throw new HttpException(StatusCodes.CONFLICT, "Board not found");
+      throw new HttpException(StatusCodes.BAD_REQUEST, "Board not found");
     }
     const checkSuperAdmin = await isSuperAdmin(board.teamWorkspaceId, userId);
     if (!checkSuperAdmin) {
