@@ -26,6 +26,16 @@ const TaskLogSchema = new mongoose.Schema(
       type: String,
       default: null,
     },
+    issueModel: {
+      type: String,
+      required: [true, "IssueModel is required"],
+      enum: [MODEL_NAME.card, MODEL_NAME.epic, MODEL_NAME.subCard],
+    },
+    issueId: {
+      type: SCHEMA_TYPE,
+      refPath: "issueModel",
+      require: [true, "IssueId is required"],
+    },
   },
   { timestamps: true }
 );

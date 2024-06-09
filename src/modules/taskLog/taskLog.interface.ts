@@ -5,6 +5,8 @@ export default interface ITaskLog {
   msg: string;
   oldVal?: string;
   newVal?: string;
+  issueModel: string;
+  issueId: string;
   createdAt?: Date;
   updatedAt?: Date;
 }

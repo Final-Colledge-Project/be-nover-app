@@ -5,7 +5,7 @@ import {
   isEmptyObject,
   permissionCard,
   viewedBoardPermission,
-} from "@core/utils";
+} from "@core/utils"; 
 import AddSubTaskDto from "./dtos/addSubTaskDto";
 import SubCardSchema from "./subCard.model";
 import { HttpException } from "@core/exceptions";

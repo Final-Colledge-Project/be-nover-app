@@ -155,12 +155,6 @@ const CardSchema = new mongoose.Schema(
         },
       },
     ],
-    taskLogIds: [
-      {
-        type: SCHEMA_TYPE,
-        ref: MODEL_NAME.taskLog,
-      },
-    ],
     watcherIds: [
       {
         type: SCHEMA_TYPE,

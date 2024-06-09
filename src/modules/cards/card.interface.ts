@@ -26,7 +26,6 @@ export default interface ICard {
   resolvedAt: Date;
   storyPoint: number;
   issueLinks: IIssueLink[];
-  taskLogIds: string[];
   watcherIds: string[];
   issueTypeId: string;
 }

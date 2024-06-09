@@ -14,7 +14,6 @@ export default interface IEpic {
   labelId: string;
   comments: IComment[];
   attachments: IAttachment[];
-  taskLogs: string[];
 }
 
 export interface IComment {

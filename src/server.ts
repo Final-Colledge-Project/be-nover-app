@@ -19,6 +19,7 @@ import { BoardPermissionRoute } from "@modules/boardPermission";
 import { WorkspacePermissionRoute } from "@modules/workspacePermission";
 import { SprintRoute } from "@modules/sprint";
 import { EpicRoute } from "@modules/epic";
+import { TaskLogRoute } from "@modules/taskLog";
 validateEnv();
 const routes = [
   new IndexRoute(),
@@ -39,6 +40,7 @@ const routes = [
   new WorkspacePermissionRoute(),
   new SprintRoute(),
   new EpicRoute(),
+  new TaskLogRoute(),
 ];
 const app = new App(routes);
 app.listen();

@@ -116,12 +116,6 @@ const EpicSchema = new mongoose.Schema(
         },
       },
     ],
-    taskLogs: [
-      {
-        type: SCHEMA_TYPE,
-        ref: MODEL_NAME.taskLog,
-      },
-    ],
     isActive: {
       type: Boolean,
       default: true,

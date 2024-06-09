@@ -27,7 +27,7 @@ import { PrioritySchema } from "@modules/priority";
 import { SprintSchema } from "@modules/sprint";
 import { EpicSchema } from "@modules/epic";
 import { IssueLinkSchema } from "@modules/issueLink";
-import { TaskLogSchema } from "@modules/taskLog";
+import { ITaskLog, TaskLogSchema } from "@modules/taskLog";
 import { IssueTypeSchema } from "@modules/issueType";
 import { ClientSession } from "mongoose";
 import { cloneDeep } from "lodash";
@@ -165,6 +165,8 @@ export default class CardService {
           userId: userId,
           target: "Issue",
           msg: "created the",
+          issueModel: MODEL_NAME.card,
+          issueId: newCard[0]._id,
         },
       ],
       { session }
@@ -299,132 +301,112 @@ export default class CardService {
     if (!updateCard) {
       throw new HttpException(StatusCodes.BAD_REQUEST, "Update card failed");
     }
+    const taskLogs: ITaskLog[] = [];
     if (model.columnId) {
       const oldCol = await this.colSchema.findById(cloneCard.columnId).exec();
       const newCol = await this.colSchema.findById(model.columnId).exec();
-      if (!oldCol || !newCol) {
+      if (!newCol) {
         throw new HttpException(StatusCodes.BAD_REQUEST, "Column not found");
       }
-      await this.taskLogSchema.create(
-        [
-          {
-            userId: userId,
-            target: "Status",
-            msg: "changed the",
-            oldVal: oldCol.title,
-            newVal: newCol.title,
-          },
-        ],
-        { session }
-      );
+      taskLogs.push({
+        userId: userId,
+        target: "Status",
+        msg: "changed the",
+        oldVal: (oldCol || {}).title,
+        newVal: newCol.title,
+        issueModel: MODEL_NAME.card,
+        issueId: card._id,
+      });
     }
     if (model.title) {
-      await this.taskLogSchema.create(
-        [
-          {
-            userId: userId,
-            target: "Title",
-            msg: "changed the",
-            oldVal: cloneCard.title,
-            newVal: model.title,
-          },
-        ],
-        { session }
-      );
+      taskLogs.push({
+        userId: userId,
+        target: "Title",
+        msg: "changed the",
+        oldVal: cloneCard.title,
+        newVal: model.title,
+        issueModel: MODEL_NAME.card,
+        issueId: card._id,
+      });
     }
     if (model.description) {
-      await this.taskLogSchema.create(
-        [
-          {
-            userId: userId,
-            target: "Description",
-            msg: "changed the",
-            oldVal: JSON.stringify(cloneCard.description),
-            newVal: JSON.stringify(model.description),
-          },
-        ],
-        { session }
-      );
+      taskLogs.push({
+        userId: userId,
+        target: "Description",
+        msg: "changed the",
+        oldVal: JSON.stringify(cloneCard.description),
+        newVal: JSON.stringify(model.description),
+        issueModel: MODEL_NAME.card,
+        issueId: card._id,
+      });
     }
     if (model.labelId) {
       const oldLabel = await this.labelSchema
         .findById(cloneCard.labelId)
         .exec();
       const newLabel = await this.labelSchema.findById(model.labelId).exec();
-      if (!oldLabel || !newLabel) {
+      if (!newLabel) {
         throw new HttpException(StatusCodes.BAD_REQUEST, "Label not found");
       }
-      await this.taskLogSchema.create(
-        [
-          {
-            userId: userId,
-            target: "Label",
-            msg: "changed the",
-            oldVal: oldLabel.name,
-            newVal: newLabel.name,
-          },
-        ],
-        { session }
-      );
+      taskLogs.push({
+        userId: userId,
+        target: "Label",
+        msg: "changed the",
+        oldVal: (oldLabel || {}).name,
+        newVal: newLabel.name,
+        issueModel: MODEL_NAME.card,
+        issueId: card._id,
+      });
     }
     if (model.priorityId) {
       const oldPriority = await this.prioritySchema
         .findById(cloneCard.priorityId)
         .exec();
       const newPriority = await this.prioritySchema.findById(model.priorityId);
-      if (!oldPriority || !newPriority) {
+      if (!newPriority) {
         throw new HttpException(StatusCodes.BAD_REQUEST, "Priority not found");
       }
-      await this.taskLogSchema.create(
-        [
-          {
-            userId: userId,
-            target: "Priority",
-            msg: "changed the",
-            oldVal: oldPriority.name,
-            newVal: newPriority.name,
-          },
-        ],
-        { session }
-      );
+      taskLogs.push({
+        userId: userId,
+        target: "Priority",
+        msg: "changed the",
+        oldVal: (oldPriority || {}).name,
+        newVal: newPriority.name,
+        issueModel: MODEL_NAME.card,
+        issueId: card._id,
+      });
     }
     if (model.sprintId) {
       const oldSprint = await this.sprintSchema.findById(cloneCard.sprintId);
       const newSprint = await this.sprintSchema.findById(model.sprintId);
-      if (!oldSprint || !newSprint) {
+      if (!newSprint) {
         throw new HttpException(StatusCodes.BAD_REQUEST, "Sprint not found");
       }
-      await this.taskLogSchema.create(
-        [
-          {
-            userId: userId,
-            target: "Sprint",
-            msg: "changed the",
-            oldVal: oldSprint.name,
-            newVal: newSprint.name,
-          },
-        ],
-        { session }
-      );
+      taskLogs.push({
+        userId: userId,
+        target: "Sprint",
+        msg: "changed the",
+        oldVal: (oldSprint || {}).name,
+        newVal: newSprint.name,
+        issueModel: MODEL_NAME.card,
+        issueId: card._id,
+      });
     }
     if (model.epicId) {
       const oldEpic = await this.epicSchema.findById(cloneCard.epicId);
       const newEpic = await this.epicSchema.findById(model.epicId);
-      if (!oldEpic || !newEpic) {
+      if (!newEpic) {
         throw new HttpException(StatusCodes.BAD_REQUEST, "Epic not found");
       }
-      await this.taskLogSchema.create(
-        [
-          {
-            userId: userId,
-            target: "Epic",
-            msg: "changed the",
-            oldVal: oldEpic.name,
-            newVal: newEpic.name,
-          },
-        ],
-        { session }
-      );
+      taskLogs.push({
+        userId: userId,
+        target: "Epic",
+        msg: "changed the",
+        oldVal: (oldEpic || {}).name,
+        newVal: newEpic.name,
+        issueModel: MODEL_NAME.card,
+        issueId: card._id,
+      });
     }
     if (model.issueTypeId) {
       const oldIssueType = await this.issueTypeSchema
@@ -433,35 +415,32 @@ export default class CardService {
       const newIssueType = await this.issueTypeSchema
         .findById(model.issueTypeId)
         .exec();
-      if (!oldIssueType || !newIssueType) {
+      if (!newIssueType) {
         throw new HttpException(StatusCodes.BAD_REQUEST, "IssueType not found");
       }
-      await this.taskLogSchema.create(
-        [
-          {
-            userId: userId,
-            target: "IssueType",
-            msg: "changed the",
-            oldVal: oldIssueType.name,
-            newVal: newIssueType.name,
-          },
-        ],
-        { session }
-      );
+      taskLogs.push({
+        userId: userId,
+        target: "IssueType",
+        msg: "changed the",
+        oldVal: (oldIssueType || {}).name,
+        newVal: newIssueType.name,
+        issueModel: MODEL_NAME.card,
+        issueId: card._id,
+      });
     }
     if (model.storyPoint) {
-      await this.taskLogSchema.create(
-        [
-          {
-            userId: userId,
-            target: "StoryPoint",
-            msg: "changed the",
-            oldVal: cloneCard.storyPoint,
-            newVal: model.storyPoint,
-          },
-        ],
-        { session }
-      );
+      taskLogs.push({
+        userId: userId,
+        target: "StoryPoint",
+        msg: "changed the",
+        oldVal: cloneCard.storyPoint.toString(),
+        newVal: model.storyPoint.toString(),
+        issueModel: MODEL_NAME.card,
+        issueId: card._id,
+      });
+    }
+    if (taskLogs.length) {
+      await this.taskLogSchema.create(taskLogs, { session });
     }
     await session.commitTransaction();
     session.endSession();
@@ -527,6 +506,8 @@ export default class CardService {
             ? `${currentAssignee.firstName} ${currentAssignee.lastName}`
             : null,
           newVal: `${assignee.firstName} ${assignee.lastName}`,
+          issueModel: MODEL_NAME.card,
+          issueId: card._id,
         },
       ],
       { session }
@@ -677,6 +658,8 @@ export default class CardService {
           msg: "changed the",
           oldVal: `${currentAssignee?.firstName} ${currentAssignee?.lastName}`,
           newVal: null,
+          issueModel: MODEL_NAME.card,
+          issueId: card._id,
         },
       ],
       { session }

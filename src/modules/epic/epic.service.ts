@@ -1,11 +1,4 @@
-import {
-  OBJECT_ID,
-  isBoardAdmin,
-  isBoardMember,
-  isEmptyObject,
-  permissionColumn,
-  viewedBoardPermission,
-} from "@core/utils";
+import { MODEL_NAME, isEmptyObject } from "@core/utils";
 
 import { HttpException } from "@core/exceptions";
 import { BoardSchema } from "@modules/boards";
@@ -72,6 +65,8 @@ export default class EpicService {
           userId: userId,
           target: "Epic",
           msg: "created the",
+          issueModel: MODEL_NAME.epic,
+          issueId: newEpic[0]._id,
         },
       ],
       {
@@ -96,11 +91,13 @@ export default class EpicService {
     if (!board) {
       throw new HttpException(StatusCodes.BAD_REQUEST, "Board not found");
     }
-    const existEpic = await this.epicSchema.findOne({
-      title: model.name,
-      _id: { $ne: epicId },
-      boardId,
-    });
+    const existEpic = await this.epicSchema
+      .findOne({
+        title: model.name,
+        _id: { $ne: epicId },
+        boardId,
+      })
+      .exec();
     if (existEpic) {
       throw new HttpException(
         StatusCodes.BAD_REQUEST,
@@ -129,6 +126,8 @@ export default class EpicService {
         msg: "changed the",
         oldVal: cloneEpic.name,
         newVal: model.name,
+        issueModel: MODEL_NAME.epic,
+        issueId: epic._id,
       });
     }
     if (model.description) {
@@ -138,6 +137,8 @@ export default class EpicService {
         msg: "changed the",
         oldVal: cloneEpic.description,
         newVal: model.description,
+        issueModel: MODEL_NAME.epic,
+        issueId: epic._id,
       });
     }
     if (model.startDate) {
@@ -147,6 +148,8 @@ export default class EpicService {
         msg: "changed the",
         oldVal: dayjs(cloneEpic.startDate).format("YYYY-MM-DD"),
         newVal: dayjs(model.startDate).format("YYYY-MM-DD"),
+        issueModel: MODEL_NAME.epic,
+        issueId: epic._id,
       });
     }
     if (model.dueDate) {
@@ -156,6 +159,8 @@ export default class EpicService {
         msg: "changed the",
         oldVal: dayjs(cloneEpic.dueDate).format("YYYY-MM-DD"),
         newVal: dayjs(model.dueDate).format("YYYY-MM-DD"),
+        issueModel: MODEL_NAME.epic,
+        issueId: epic._id,
       });
     }
     if (model.color) {
@@ -165,6 +170,8 @@ export default class EpicService {
         msg: "changed the",
         oldVal: cloneEpic.color,
         newVal: model.color,
+        issueModel: MODEL_NAME.epic,
+        issueId: epic._id,
       });
     }
     if (model.labelId) {
@@ -172,15 +179,17 @@ export default class EpicService {
         .findById(cloneEpic.labelId)
         .exec();
       const newLabel = await this.labelSchema.findById(model.labelId).exec();
-      if (!oldLabel || !newLabel) {
+      if (!newLabel) {
         throw new HttpException(StatusCodes.BAD_REQUEST, "Label not found");
       }
       taskLogs.push({
         userId,
         target: "Label",
         msg: "changed the",
-        oldVal: oldLabel.name,
+        oldVal: (oldLabel || {}).name,
         newVal: newLabel.name,
+        issueModel: MODEL_NAME.epic,
+        issueId: epic._id,
       });
     }
     if (model.assigneeId) {
@@ -199,20 +208,24 @@ export default class EpicService {
         msg: "changed the",
         oldVal: `${oldAssignee.firstName} ${oldAssignee.lastName}`,
         newVal: `${newAssignee.firstName} ${newAssignee.lastName}`,
+        issueModel: MODEL_NAME.epic,
+        issueId: epic._id,
       });
     }
     if (model.columnId) {
       const oldColumn = await this.columnSchema.findById(cloneEpic.columnId);
       const newColumn = await this.columnSchema.findById(model.columnId);
-      if (!oldColumn || !newColumn) {
+      if (!newColumn) {
         throw new HttpException(StatusCodes.BAD_REQUEST, "Column not found");
       }
       taskLogs.push({
         userId,
         target: "Status",
         msg: "changed the",
-        oldVal: oldColumn.title,
+        oldVal: (oldColumn || {}).title,
         newVal: newColumn.title,
+        issueModel: MODEL_NAME.epic,
+        issueId: epic._id,
       });
     }
     if (model.cardOrderIds) {
@@ -220,10 +233,12 @@ export default class EpicService {
         userId,
         target: "card in Epic",
         msg: "changed",
+        issueModel: MODEL_NAME.epic,
+        issueId: epic._id,
       });
     }
     if (taskLogs.length) {
-      await this.taskLogSchema.create([taskLogs], {
+      await this.taskLogSchema.create(taskLogs, {
         session,
       });
     }

@@ -12,7 +12,7 @@ const IssueLinkSchema = new mongoose.Schema(
       },
       issueId: {
         type: SCHEMA_TYPE,
-        refPath: "sourceIssueModel",
+        refPath: "sourceIssue.issueModel",
         required: [true, "IssueIdFrom is required"],
       },
     },
@@ -25,7 +25,7 @@ const IssueLinkSchema = new mongoose.Schema(
         },
         issueId: {
           type: SCHEMA_TYPE,
-          refPath: "targetIssueModel",
+          refPath: "targetIssue.issueId",
           required: [true, "IssueIdTo is required"],
         },
       },

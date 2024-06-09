@@ -80,9 +80,6 @@ export const isBoardMember = async (
   const checkOwner = board?.ownerIds.find((owner) => {
     return owner.toString() === memberId;
   });
-  // if (!checkMember && !checkOwner) {
-  //   return false;
-  // }
   return !!checkMember || !!checkOwner;
 };
 
