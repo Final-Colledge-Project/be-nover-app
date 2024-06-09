@@ -295,19 +295,15 @@ export default class CardService {
       throw new HttpException(StatusCodes.BAD_REQUEST, "Card not found");
     }
     const cloneCard = cloneDeep(card);
-    const updateCard = await this.cardSchema
-      .findByIdAndUpdate({ _id: cardId }, { ...model }, { new: true, session })
-      .exec();
-    if (!updateCard) {
-      throw new HttpException(StatusCodes.BAD_REQUEST, "Update card failed");
-    }
     const taskLogs: ITaskLog[] = [];
+    let isResolve = false;
     if (model.columnId) {
       const oldCol = await this.colSchema.findById(cloneCard.columnId).exec();
       const newCol = await this.colSchema.findById(model.columnId).exec();
       if (!newCol) {
         throw new HttpException(StatusCodes.BAD_REQUEST, "Column not found");
       }
+      isResolve = newCol.isResolved;
       taskLogs.push({
         userId: userId,
         target: "Status",
@@ -318,6 +314,17 @@ export default class CardService {
         issueId: card._id,
       });
     }
+    const updateCard = await this.cardSchema
+      .findByIdAndUpdate(
+        { _id: cardId },
+        { ...model, resolvedAt: isResolve ? Date.now() : null },
+        { new: true, session }
+      )
+      .exec();
+    if (!updateCard) {
+      throw new HttpException(StatusCodes.BAD_REQUEST, "Update card failed");
+    }
+
     if (model.title) {
       taskLogs.push({
         userId: userId,

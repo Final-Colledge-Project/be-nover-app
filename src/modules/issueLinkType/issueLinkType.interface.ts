@@ -4,7 +4,6 @@ export default interface IIssueLinkType {
   name: string;
   inwardName: string;
   outwardName: string;
-  direction: string;
   createdAt: Date;
   updatedAt: Date;
 }

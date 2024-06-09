@@ -27,11 +27,6 @@ const IssueLinkTypeSchema = new mongoose.Schema(
       minlength: [3, "Name must be at least 3 characters long"],
       maxlength: [50, "Name must be at most 50 characters long"],
     },
-    direction: {
-      type: String,
-      enum: Object.values(DIRECTION_TYPE),
-      required: [true, "Direction is required"],
-    },
   },
   { timestamps: true }
 );

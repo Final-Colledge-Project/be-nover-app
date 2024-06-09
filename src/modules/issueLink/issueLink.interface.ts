@@ -10,4 +10,5 @@ export default interface IIssueLink {
 export interface ILinkedIssue {
   issueId: string;
   issueModel: string;
+  direction: string;
 }

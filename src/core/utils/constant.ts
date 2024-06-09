@@ -88,7 +88,6 @@ export const SPRINT_DURATION = {
 };
 
 export const DIRECTION_TYPE = {
-  directed: "directed",
-  undirected: "undirected",
-  aggregation: "aggregation",
+  inward: "inward",
+  outward: "outward",
 };

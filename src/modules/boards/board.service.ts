@@ -318,28 +318,24 @@ export default class BoardService {
           name: "Blocker",
           inwardName: "is blocked by",
           outwardName: "blocks",
-          direction: DIRECTION_TYPE.directed,
         },
         {
           boardId: createdBoard[0]._id,
           name: "Duplicate",
           inwardName: "is duplicated by",
           outwardName: "duplicates",
-          direction: DIRECTION_TYPE.aggregation,
         },
         {
           boardId: createdBoard[0]._id,
           name: "Relates",
           inwardName: "is related to",
           outwardName: "relates to",
-          direction: DIRECTION_TYPE.undirected,
         },
         {
           boardId: createdBoard[0]._id,
           name: "Depends",
           inwardName: "depends on",
           outwardName: "is required for",
-          direction: DIRECTION_TYPE.directed,
         },
       ],
       {

@@ -1,4 +1,4 @@
-import { MODEL_NAME, SCHEMA_TYPE } from "@core/utils";
+import { DIRECTION_TYPE, MODEL_NAME, SCHEMA_TYPE } from "@core/utils";
 import mongoose, { Query } from "mongoose";
 import IIssueLink from "./issueLink.interface";
 
@@ -15,6 +15,11 @@ const IssueLinkSchema = new mongoose.Schema(
         refPath: "sourceIssue.issueModel",
         required: [true, "IssueIdFrom is required"],
       },
+      direction: {
+        type: String,
+        required: [true, "Direction is required"],
+        enum: Object.values(DIRECTION_TYPE),
+      },
     },
     targetIssue: [
       {
@@ -27,6 +32,11 @@ const IssueLinkSchema = new mongoose.Schema(
           type: SCHEMA_TYPE,
           refPath: "targetIssue.issueId",
           required: [true, "IssueIdTo is required"],
+        },
+        direction: {
+          type: String,
+          required: [true, "Direction is required"],
+          enum: Object.values(DIRECTION_TYPE),
         },
       },
     ],
