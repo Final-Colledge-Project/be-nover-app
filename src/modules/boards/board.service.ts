@@ -1,6 +1,5 @@
 import {
   BOARD_TEMPLATE,
-  DIRECTION_TYPE,
   MODEL_NAME,
   OBJECT_ID,
   ROLE,

@@ -4,6 +4,11 @@ import IIssueLink from "./issueLink.interface";
 
 const IssueLinkSchema = new mongoose.Schema(
   {
+    boardId: {
+      type: SCHEMA_TYPE,
+      ref: MODEL_NAME.board,
+      required: [true, "BoardId is required"],
+    },
     sourceIssue: {
       issueModel: {
         type: String,
