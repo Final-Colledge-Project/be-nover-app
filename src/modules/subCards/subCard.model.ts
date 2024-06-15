@@ -37,6 +37,10 @@ const SubCardSchema = new mongoose.Schema(
       type: Date,
       default: null,
     },
+    issueTypeId: {
+      type: SCHEMA_TYPE,
+      ref: MODEL_NAME.issueType,
+    },
     isActive: {
       type: Boolean,
       default: true,

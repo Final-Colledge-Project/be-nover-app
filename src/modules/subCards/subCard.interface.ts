@@ -3,7 +3,8 @@ export default interface ISubCard {
   cardId: string;
   name: string;
   status: string;
-  assignedTo: string | null
+  assignedTo: string | null;
+  issueTypeId: string;
   createdAt: Date;
   dueDate: Date;
   updatedAt: Date;

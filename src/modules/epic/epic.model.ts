@@ -116,6 +116,10 @@ const EpicSchema = new mongoose.Schema(
         },
       },
     ],
+    issueTypeId: {
+      type: SCHEMA_TYPE,
+      ref: MODEL_NAME.issueType,
+    },
     isActive: {
       type: Boolean,
       default: true,

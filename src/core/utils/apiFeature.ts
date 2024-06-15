@@ -1,3 +1,5 @@
+import { MAX_RESULT } from "./constant";
+
 type QueryString = {
   page?: number;
   sort?: string;
@@ -53,15 +55,15 @@ export default class APIFeatures {
 
   paginate() {
     if (!this.queryString.page || !this.queryString.limit) {
-      this.query = this.query.limit(100);
+      this.query = this.query.limit(MAX_RESULT);
       return this;
     }
     const page = this.queryString.page * 1 || 1;
-    const limit = this.queryString.limit * 1 || 100;
+    const limit = this.queryString.limit * 1 || MAX_RESULT;
     const skip = (page - 1) * limit;
 
     this.query = this.query.skip(skip).limit(limit);
 
     return this;
   }
-}
+ }

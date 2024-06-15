@@ -90,6 +90,13 @@ export default class CardService {
       throw new HttpException(StatusCodes.BAD_REQUEST, "IssueType not found");
     }
 
+    if (issueType.hierarchy !== 2) {
+      throw new HttpException(
+        StatusCodes.BAD_REQUEST,
+        "IssueType is suitable for issue"
+      );
+    }
+
     const lengthCardInBoard = await this.cardSchema.find({ boardId }).count();
     const newCard = await this.cardSchema.create(
       [
@@ -422,9 +429,18 @@ export default class CardService {
       const newIssueType = await this.issueTypeSchema
         .findById(model.issueTypeId)
         .exec();
+
       if (!newIssueType) {
         throw new HttpException(StatusCodes.BAD_REQUEST, "IssueType not found");
       }
+
+      if (newIssueType.hierarchy !== 2) {
+        throw new HttpException(
+          StatusCodes.BAD_REQUEST,
+          "IssueType is suitable for issue"
+        );
+      }
+
       taskLogs.push({
         userId: userId,
         target: "IssueType",

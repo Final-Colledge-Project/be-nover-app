@@ -91,3 +91,5 @@ export const DIRECTION_TYPE = {
   inward: "inward",
   outward: "outward",
 };
+
+export const MAX_RESULT = 100;
