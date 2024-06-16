@@ -22,6 +22,7 @@ import { EpicRoute } from "@modules/epic";
 import { TaskLogRoute } from "@modules/taskLog";
 import { IssueLinkRoute } from "@modules/issueLink";
 import { IssueLinkTypeRoute } from "@modules/issueLinkType";
+import { IssueTypeRoute } from "@modules/issueType";
 validateEnv();
 const routes = [
   new IndexRoute(),
@@ -45,6 +46,7 @@ const routes = [
   new TaskLogRoute(),
   new IssueLinkRoute(),
   new IssueLinkTypeRoute(),
+  new IssueTypeRoute(),
 ];
 const app = new App(routes);
 app.listen();

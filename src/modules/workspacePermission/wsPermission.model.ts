@@ -12,7 +12,6 @@ const WorkspacePermissionSchema = new mongoose.Schema(
     },
     description: {
       type: String,
-      minlength: [2, "Description must be at least 2 characters long"],
       maxlength: [255, "Description must be at most 255 characters long"],
     },
     workspaceId: {

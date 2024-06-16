@@ -2,6 +2,8 @@ import mongoose from "mongoose";
 import ICard from "./card.interface";
 import { MODEL_NAME, PRIORITY, SCHEMA_TYPE, SUBTASK_STATUS } from "@core/utils";
 import { Query } from "mongoose";
+import { max } from "lodash";
+import { maxLength } from "class-validator";
 
 const CardSchema = new mongoose.Schema(
   {
@@ -27,7 +29,7 @@ const CardSchema = new mongoose.Schema(
     },
     description: {
       type: String,
-      minlength: [2, "Description must be at least 2 characters long"],
+      maxLength: [500, "Description must be at most 500 characters long"],
       trim: true,
     },
     cover: {
@@ -164,6 +166,7 @@ const CardSchema = new mongoose.Schema(
     issueTypeId: {
       type: SCHEMA_TYPE,
       ref: MODEL_NAME.issueType,
+      required: [true, "IssueTypeId is required"],
     },
   },
   { timestamps: true }

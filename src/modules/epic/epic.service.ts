@@ -14,6 +14,7 @@ import dayjs from "dayjs";
 import { LabelSchema } from "@modules/labels";
 import { UserSchema } from "@modules/users";
 import { ColumnSchema } from "@modules/columns";
+import { IssueTypeSchema } from "@modules/issueType";
 
 export default class EpicService {
   private epicSchema = EpicSchema;
@@ -22,6 +23,7 @@ export default class EpicService {
   private labelSchema = LabelSchema;
   private userSchema = UserSchema;
   private columnSchema = ColumnSchema;
+  private issueTypeSchema = IssueTypeSchema;
   public async createEpic(
     model: CreateEpicDto,
     boardId: string,
@@ -46,6 +48,18 @@ export default class EpicService {
         `Column with title ${model.name} already exists`
       );
     }
+
+    const issueType = await this.issueTypeSchema.findById(model.issueTypeId);
+    if (!issueType) {
+      throw new HttpException(StatusCodes.BAD_REQUEST, "IssueType not found");
+    }
+    if (issueType.hierarchy !== 1) {
+      throw new HttpException(
+        StatusCodes.BAD_REQUEST,
+        "IssueType must be of type Epic"
+      );
+    }
+
     const newEpic = await this.epicSchema.create(
       [
         {
@@ -233,6 +247,32 @@ export default class EpicService {
         userId,
         target: "card in Epic",
         msg: "changed",
+        issueModel: MODEL_NAME.epic,
+        issueId: epic._id,
+      });
+    }
+    if (model.issueTypeId) {
+      const oldIssueType = await this.issueTypeSchema.findById(
+        cloneEpic.issueTypeId
+      );
+      const newIssueType = await this.issueTypeSchema.findById(
+        model.issueTypeId
+      );
+      if (!newIssueType) {
+        throw new HttpException(StatusCodes.BAD_REQUEST, "IssueType not found");
+      }
+      if (newIssueType.hierarchy !== 1) {
+        throw new HttpException(
+          StatusCodes.BAD_REQUEST,
+          "IssueType must be of type Epic"
+        );
+      }
+      taskLogs.push({
+        userId,
+        target: "Issue Type",
+        msg: "changed the",
+        oldVal: (oldIssueType || {}).name,
+        newVal: newIssueType.name,
         issueModel: MODEL_NAME.epic,
         issueId: epic._id,
       });

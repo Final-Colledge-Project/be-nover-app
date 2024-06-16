@@ -12,12 +12,11 @@ const IssueTypeSchema = new mongoose.Schema(
     name: {
       type: String,
       required: [true, "Name is required"],
-      minlength: [3, "Name must be at least 3 characters long"],
+      minlength: [2, "Name must be at least 2 characters long"],
       maxlength: [50, "Name must be at most 50 characters long"],
     },
     description: {
       type: String,
-      minlength: [3, "Description must be at least 3 characters long"],
       maxlength: [300, "Description must be at most 300 characters long"],
       trim: true,
       default: "",
@@ -28,7 +27,7 @@ const IssueTypeSchema = new mongoose.Schema(
     },
     hierarchy: {
       type: Number,
-      default: 0,
+      default: 2,
     },
     isActive: {
       type: Boolean,

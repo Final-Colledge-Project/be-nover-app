@@ -40,6 +40,7 @@ const SubCardSchema = new mongoose.Schema(
     issueTypeId: {
       type: SCHEMA_TYPE,
       ref: MODEL_NAME.issueType,
+      required: [true, "IssueTypeId is required"],
     },
     isActive: {
       type: Boolean,

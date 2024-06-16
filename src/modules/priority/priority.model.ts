@@ -17,7 +17,6 @@ const PrioritySchema = new mongoose.Schema(
     },
     description: {
       type: String,
-      minlength: [3, "Description must be at least 3 characters long"],
       maxlength: [300, "Description must be at most 300 characters long"],
       trim: true,
       default: "",

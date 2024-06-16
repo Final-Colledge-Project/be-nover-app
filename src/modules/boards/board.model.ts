@@ -32,7 +32,6 @@ const BoardSchema = new mongoose.Schema(
     description: {
       type: String,
       required: [true, "Description is required"],
-      minlength: [2, "Description must be at least 2 characters long"],
       maxlength: [100, "Description must be at most 100 characters long"],
       trim: true,
     },
