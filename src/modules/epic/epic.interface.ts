@@ -12,6 +12,7 @@ export default interface IEpic {
   columnId: string;
   assigneeId: string;
   labelId: string;
+  priorityId: string;
   comments: IComment[];
   attachments: IAttachment[];
   issueTypeId: string;

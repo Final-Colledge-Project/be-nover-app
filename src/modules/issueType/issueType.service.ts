@@ -67,10 +67,23 @@ export default class IssueTypeService {
         issueTypeId,
       })
       .exec();
+    const existIssueType = await this.issueTypeSchema.findById(issueTypeId);
+    if (!existIssueType) {
+      throw new HttpException(StatusCodes.BAD_REQUEST, "Issue type not found");
+    }
     if (existEpic) {
       throw new HttpException(
         StatusCodes.BAD_REQUEST,
         "Epic with this issue type exists"
+      );
+    }
+    const existHierarchy = await this.issueTypeSchema.find({
+      hierarchy: existIssueType.hierarchy,
+    });
+    if (existHierarchy.length === 0) {
+      throw new HttpException(
+        StatusCodes.BAD_REQUEST,
+        "Cannot delete the last issue type of this hierarchy"
       );
     }
     const existSubCard = await this.subCardSchema

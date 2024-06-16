@@ -35,7 +35,7 @@ import { UserSchema } from "@modules/users";
 import mongoose, { ClientSession } from "mongoose";
 import { WorkspacePermissionSchema } from "@modules/workspacePermission";
 import { PrioritySchema } from "@modules/priority";
-import { IssueTypeSchema } from "@modules/issueType";
+import { IIssueType, IssueTypeSchema } from "@modules/issueType";
 import { SprintSchema } from "@modules/sprint";
 import { IssueLinkSchema } from "@modules/issueLink";
 import { IssueLinkTypeSchema } from "@modules/issueLinkType";
@@ -224,9 +224,8 @@ export default class BoardService {
       },
       { session }
     );
-
     if (createdBoard[0].template === BOARD_TEMPLATE.scrum) {
-      await this.issueTypeSchema.create(
+      const issueTypes = await this.issueTypeSchema.create(
         [
           {
             boardId: createdBoard[0]._id,
@@ -281,7 +280,7 @@ export default class BoardService {
         { session }
       );
     } else {
-      await this.issueTypeSchema.create(
+      const issueTypes = await this.issueTypeSchema.create(
         [
           {
             boardId: createdBoard[0]._id,

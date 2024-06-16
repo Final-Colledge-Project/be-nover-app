@@ -120,6 +120,10 @@ const EpicSchema = new mongoose.Schema(
       required: [true, "IssueTypeId is required"],
       ref: MODEL_NAME.issueType,
     },
+    priorityId: {
+      type: SCHEMA_TYPE,
+      ref: MODEL_NAME.priority,
+    },
     isActive: {
       type: Boolean,
       default: true,
