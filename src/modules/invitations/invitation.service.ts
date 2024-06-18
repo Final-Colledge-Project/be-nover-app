@@ -12,11 +12,11 @@ import {
 import InvitationSchema from "./invitation.model";
 import { HttpException } from "@core/exceptions";
 import { UserSchema } from "@modules/users";
-import { TeamWorkspaceSchema } from "@modules/teamWorkspace";
+import { TeamWorkspaceSchema } from "@modules/teamWorkspaces";
 import IInvitationWorkspace from "./invitation.interface";
 import JoinGroupDto from "./dtos/joinGroupDto";
 import { StatusCodes } from "http-status-codes";
-import { WorkspacePermissionSchema } from "@modules/workspacePermission";
+import { WorkspacePermissionSchema } from "@modules/workspacePermissions";
 export default class InvitationService {
   private invitationSchema = InvitationSchema;
   private teamWorkspaceSchema = TeamWorkspaceSchema;

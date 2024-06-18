@@ -1,7 +1,7 @@
 import { BoardSchema } from "@modules/boards";
 import { IssueTypeSchema } from ".";
 import { CardSchema } from "@modules/cards";
-import { EpicSchema } from "@modules/epic";
+import { EpicSchema } from "@modules/epics";
 import { SubCardSchema } from "@modules/subCards";
 import CreateIssueTypeDto from "./dtos/createIssueTypeDto";
 import IIssueType from "./issueType.interface";

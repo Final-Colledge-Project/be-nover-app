@@ -1,10 +1,10 @@
 import { BoardSchema } from "@modules/boards";
 import { CardSchema } from "@modules/cards";
-import { TeamWorkspaceSchema } from "@modules/teamWorkspace";
+import { TeamWorkspaceSchema } from "@modules/teamWorkspaces";
 import {
   IMember,
   IWorkspaceAdmin,
-} from "@modules/teamWorkspace/teamWorkspace.interface";
+} from "@modules/teamWorkspaces/teamWorkspace.interface";
 import { MODE_ACCESS, ROLE } from "./constant";
 
 export const isWorkspaceAdmin = async (

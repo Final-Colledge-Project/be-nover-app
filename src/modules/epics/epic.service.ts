@@ -7,14 +7,14 @@ import { EpicSchema } from ".";
 import CreateEpicDto from "./dtos/createEpicDto";
 import IEpic from "./epic.interface";
 import { ClientSession } from "mongoose";
-import { ITaskLog, TaskLogSchema } from "@modules/taskLog";
+import { ITaskLog, TaskLogSchema } from "@modules/taskLogs";
 import UpdateEpicDto from "./dtos/updateEpicDto";
 import { cloneDeep } from "lodash";
 import dayjs from "dayjs";
 import { LabelSchema } from "@modules/labels";
 import { UserSchema } from "@modules/users";
 import { ColumnSchema } from "@modules/columns";
-import { IssueTypeSchema } from "@modules/issueType";
+import { IssueTypeSchema } from "@modules/issueTypes";
 
 export default class EpicService {
   private epicSchema = EpicSchema;

@@ -4,7 +4,7 @@ import OTPController from "./otp.controller";
 import { validationMiddleware } from "@core/middleware";
 import SendOtpDto from "./dtos/sendOtp.dto";
 import VerifyOtpDto from "./dtos/verifyOtp.dto";
-import SendEmailDto from "@modules/emailVerification/dtos/sendEmailDto";
+import SendEmailDto from "@modules/emailVerifications/dtos/sendEmailDto";
 
 export default class OTPRoute implements Route {
   public path = "/api/v1/authentication";

@@ -6,7 +6,7 @@ import { HttpException } from "@core/exceptions";
 import { StatusCodes } from "http-status-codes";
 import { BoardSchema } from "@modules/boards";
 import UpdatePriorityDto from "./dtos/updatePriorityDto";
-import { EpicSchema } from "@modules/epic";
+import { EpicSchema } from "@modules/epics";
 import { CardSchema } from "@modules/cards";
 import { SubCardSchema } from "@modules/subCards";
 import { Request } from "express";

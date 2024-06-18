@@ -1,4 +1,4 @@
-import { IIssueLinkType } from "@modules/issueLinkType";
+import { IIssueLinkType } from "@modules/issueLinkTypes";
 import { IUser } from "@modules/users";
 import dayjs from "dayjs";
 import { DIRECTION_TYPE } from "./constant";

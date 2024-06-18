@@ -5,14 +5,14 @@ import {
   isValidObjectId,
   viewWorkspacePermission,
 } from "@core/utils";
-import { BoardPermissionSchema } from "@modules/boardPermission";
+import { BoardPermissionSchema } from "@modules/boardPermissions";
 import { BoardSchema } from "@modules/boards";
-import { TeamWorkspaceSchema } from "@modules/teamWorkspace";
+import { TeamWorkspaceSchema } from "@modules/teamWorkspaces";
 import { UserSchema } from "@modules/users";
 import {
   IWorkspacePermission,
   WorkspacePermissionSchema,
-} from "@modules/workspacePermission";
+} from "@modules/workspacePermissions";
 import { NextFunction, Request, Response } from "express";
 import { StatusCodes } from "http-status-codes";
 import { isBoolean } from "lodash";

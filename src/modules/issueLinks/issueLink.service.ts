@@ -1,4 +1,4 @@
-import { IssueLinkTypeSchema } from "@modules/issueLinkType";
+import { IssueLinkTypeSchema } from "@modules/issueLinkTypes";
 import AddIssueLinkDto, { IssueDto } from "./dtos/addIssueLinkDto";
 import IIssueLink, { ICommonIssue } from "./issueLink.interface";
 import IssueLinkSchema from "./issueLink.model";
@@ -13,8 +13,8 @@ import {
   isJsonString,
   upperCaseFirstLetter,
 } from "@core/utils";
-import { ITaskLog, TaskLogSchema } from "@modules/taskLog";
-import { EpicSchema, IEpic } from "@modules/epic";
+import { ITaskLog, TaskLogSchema } from "@modules/taskLogs";
+import { EpicSchema, IEpic } from "@modules/epics";
 import { CardSchema } from "@modules/cards";
 import { SubCardSchema } from "@modules/subCards";
 import APIFeatures from "@core/utils/apiFeature";

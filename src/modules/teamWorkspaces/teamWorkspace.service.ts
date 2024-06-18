@@ -17,8 +17,8 @@ import { BoardSchema } from "@modules/boards";
 import { ColumnSchema } from "@modules/columns";
 import { CardSchema } from "@modules/cards";
 import { LabelSchema } from "@modules/labels";
-import AddWSPermissionDto from "@modules/workspacePermission/dtos/addWSPermissionDto";
-import { WorkspacePermissionSchema } from "@modules/workspacePermission";
+import AddWSPermissionDto from "@modules/workspacePermissions/dtos/addWSPermissionDto";
+import { WorkspacePermissionSchema } from "@modules/workspacePermissions";
 class TeamWorkspaceService {
   public teamWorkspaceSchema = TeamWorkspaceSchema;
   private wsPermissionSchema = WorkspacePermissionSchema;

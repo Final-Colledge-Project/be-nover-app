@@ -1,4 +1,4 @@
-import { ILinkedIssue } from "@modules/issueLink/issueLink.interface";
+import { ILinkedIssue } from "@modules/issueLinks/issueLink.interface";
 import {
   IsNotEmpty,
   IsNumber,

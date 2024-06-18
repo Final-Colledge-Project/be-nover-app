@@ -23,12 +23,12 @@ import { UserSchema } from "@modules/users";
 import PushNotificationDto from "@modules/notifications/dtos/pushNotificationDto";
 import { NotificationService } from "@modules/notifications";
 import { LabelSchema } from "@modules/labels";
-import { PrioritySchema } from "@modules/priority";
-import { SprintSchema } from "@modules/sprint";
-import { EpicSchema } from "@modules/epic";
-import { IssueLinkSchema } from "@modules/issueLink";
-import { ITaskLog, TaskLogSchema } from "@modules/taskLog";
-import { IssueTypeSchema } from "@modules/issueType";
+import { PrioritySchema } from "@modules/priorities";
+import { SprintSchema } from "@modules/sprints";
+import { EpicSchema } from "@modules/epics";
+import { IssueLinkSchema } from "@modules/issueLinks";
+import { ITaskLog, TaskLogSchema } from "@modules/taskLogs";
+import { IssueTypeSchema } from "@modules/issueTypes";
 import { ClientSession } from "mongoose";
 import { cloneDeep } from "lodash";
 export default class CardService {

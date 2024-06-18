@@ -6,7 +6,7 @@ import { isBoardMember, isEmptyObject } from "@core/utils";
 import { HttpException } from "@core/exceptions";
 import { StatusCodes } from "http-status-codes";
 import UpdateIssueLinkTypeDto from "./dtos/updateIssueLinkTypeDto";
-import { IssueLinkSchema } from "@modules/issueLink";
+import { IssueLinkSchema } from "@modules/issueLinks";
 import APIFeatures from "@core/utils/apiFeature";
 import { Request } from "express";
 export default class IssueLinkTypeService {

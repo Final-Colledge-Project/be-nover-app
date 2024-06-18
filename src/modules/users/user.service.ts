@@ -9,7 +9,7 @@ import UpdateUserDto from "./dtos/updateUser.dto";
 import ChangePasswordDto from "./dtos/changePasswordDto";
 import { Request, Response } from "express";
 import { StatusCodes } from "http-status-codes";
-import { EmailVerifySchema } from "@modules/emailVerification";
+import { EmailVerifySchema } from "@modules/emailVerifications";
 import UpdateTokenDto from "./dtos/updateTokenDto";
 
 class UserService {

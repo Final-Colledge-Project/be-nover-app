@@ -10,7 +10,7 @@ import WorkspacePermissionSchema from "./wsPermission.model";
 import AddWSPermissionDto from "./dtos/addWSPermissionDto";
 import UpdateWSPermissionDto from "./dtos/updateWSPermissionDto";
 import IWorkspacePermission from "./wsPermission.interface";
-import { TeamWorkspaceSchema } from "@modules/teamWorkspace";
+import { TeamWorkspaceSchema } from "@modules/teamWorkspaces";
 import { UserSchema } from "@modules/users";
 export default class WorkspacePermissionService {
   private wsPermissionSchema = WorkspacePermissionSchema;
