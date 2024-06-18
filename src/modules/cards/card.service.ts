@@ -96,7 +96,15 @@ export default class CardService {
         "IssueType is suitable for issue"
       );
     }
-
+    const sprint = await this.sprintSchema
+      .findOne({
+        boardId,
+        status: SPRINT_STATUS.backlog,
+      })
+      .exec();
+    if (!sprint && existBoard.template === BOARD_TEMPLATE.scrum) {
+      throw new HttpException(StatusCodes.BAD_REQUEST, "Backlog not found");
+    }
     const lengthCardInBoard = await this.cardSchema.find({ boardId }).count();
     const newCard = await this.cardSchema.create(
       [
@@ -124,21 +132,9 @@ export default class CardService {
       await sprint.save({ session });
     } else {
       if (existBoard.template === BOARD_TEMPLATE.scrum) {
-        const sprint = await this.sprintSchema
-          .findOne({
-            boardId,
-            status: SPRINT_STATUS.backlog,
-          })
-          .exec();
-        if (sprint) {
-          sprint.cardOrderIds.push(newCard[0]._id);
-          await sprint.save({ session });
-        } else {
-          throw new HttpException(
-            StatusCodes.BAD_REQUEST,
-            "Create card failed"
-          );
-        }
+        sprint?.cardOrderIds.push(newCard[0]._id);
+        model.sprintId = sprint?._id;
+        await sprint?.save({ session });
       }
     }
     if (model.columnId) {
@@ -190,7 +186,7 @@ export default class CardService {
     if (!existed) {
       throw new HttpException(StatusCodes.BAD_REQUEST, "Card not found");
     }
-
+    const existBoard = await this.boardSchema.findById(existed.boardId).exec();
     const isViewedBoard = await viewedBoardPermission(existed.boardId, userId);
     if (isViewedBoard === false) {
       throw new HttpException(
@@ -198,11 +194,126 @@ export default class CardService {
         "You are not member of this board"
       );
     }
+    let extendQuery: any[] = [];
+    if (existBoard?.template === BOARD_TEMPLATE.scrum) {
+      extendQuery = [
+        {
+          $lookup: {
+            from: "epics",
+            localField: "epicId",
+            foreignField: "_id",
+            as: "epic",
+            let: { epicId: "$epicId" },
+            pipeline: [
+              {
+                $match: {
+                  $expr: {
+                    $eq: ["$_id", "$$epicId"],
+                  },
+                },
+              },
+              {
+                $project: {
+                  _id: 1,
+                  name: 1,
+                  color: 1,
+                },
+              },
+            ],
+          },
+        },
+        {
+          $lookup: {
+            from: "sprints",
+            localField: "sprintId",
+            foreignField: "_id",
+            as: "sprint",
+            let: { sprintId: "$sprintId" },
+            pipeline: [
+              {
+                $match: {
+                  $expr: {
+                    $eq: ["$_id", "$$sprintId"],
+                  },
+                },
+              },
+              {
+                $project: {
+                  _id: 1,
+                  name: 1,
+                },
+              },
+            ],
+          },
+        },
+      ];
+    }
+    let extendPrj: any = {};
+    if (existBoard?.template === BOARD_TEMPLATE.scrum) {
+      extendPrj = {
+        epic: {
+          $arrayElemAt: ["$epic", 0],
+        },
+        sprint: {
+          $arrayElemAt: ["$sprint", 0],
+        },
+        storyPoint: 1,
+      };
+    }
     const card = await this.cardSchema
       .aggregate([
         {
           $match: {
             _id: new OBJECT_ID(cardId),
+          },
+        },
+        {
+          $lookup: {
+            from: "columns",
+            let: { columnId: "$columnId" },
+            localField: "columnId",
+            foreignField: "_id",
+            as: "column",
+            pipeline: [
+              {
+                $match: {
+                  $expr: {
+                    $eq: ["$_id", "$$columnId"],
+                  },
+                },
+              },
+              {
+                $project: {
+                  _id: 1,
+                  title: 1,
+                },
+              },
+            ],
+          },
+        },
+        {
+          $lookup: {
+            from: "users",
+            let: { memberIds: "$memberIds" },
+            localField: "memberIds",
+            foreignField: "_id",
+            as: "members",
+            pipeline: [
+              {
+                $match: {
+                  $expr: {
+                    $in: ["$_id", "$$memberIds"],
+                  },
+                },
+              },
+              {
+                $project: {
+                  _id: 1,
+                  fullName: { $concat: ["$firstName", " ", "$lastName"] },
+                  avatar: 1,
+                },
+              },
+            ],
           },
         },
         {
@@ -256,15 +367,71 @@ export default class CardService {
           },
         },
         {
+          $lookup: {
+            from: "priorities",
+            localField: "priorityId",
+            foreignField: "_id",
+            as: "priority",
+            let: { priorityId: "$priorityId" },
+            pipeline: [
+              {
+                $match: {
+                  $expr: {
+                    $eq: ["$_id", "$$priorityId"],
+                  },
+                },
+              },
+              {
+                $project: {
+                  _id: 1,
+                  name: 1,
+                  color: 1,
+                },
+              },
+            ],
+          },
+        },
+        {
+          $lookup: {
+            from: "issueTypes",
+            localField: "issueTypeId",
+            foreignField: "_id",
+            as: "issueType",
+            let: { issueTypeId: "$issueTypeId" },
+            pipeline: [
+              {
+                $match: {
+                  $expr: {
+                    $eq: ["$_id", "$$issueTypeId"],
+                  },
+                },
+              },
+              {
+                $project: {
+                  _id: 1,
+                  name: 1,
+                  icon: 1,
+                  hierarchy: 1,
+                },
+              },
+            ],
+          },
+        },
+        ...extendQuery,
+        {
           $project: {
             _id: 1,
             boardId: 1,
-            columnId: 1,
+            column: {
+              $arrayElemAt: ["$column", 0],
+            },
             cardId: 1,
             title: 1,
             description: 1,
+            member: {
+              $arrayElemAt: ["$members", 0],
+            },
             cover: 1,
-            attachments: 1,
             startDate: 1,
             dueDate: 1,
             createdAt: 1,
@@ -275,9 +442,23 @@ export default class CardService {
             label: {
               $arrayElemAt: ["$label", 0],
             },
-            priority: 1,
-            isOverdue: 1,
+            issueType: {
+              $arrayElemAt: ["$issueType", 0],
+            },
+            priority: {
+              $arrayElemAt: ["$priority", 0],
+            },
+            resolvedAt: 1,
             isActive: 1,
+            watcherIds: 1,
+            // epic: {
+            //   $arrayElemAt: ["$epic", 0],
+            // },
+            // sprint: {
+            //   $arrayElemAt: ["$sprint", 0],
+            // },
+            // storyPoint: 1,
+            ...extendPrj,
           },
         },
       ])
@@ -285,7 +466,6 @@ export default class CardService {
     if (!card) {
       throw new HttpException(409, "Card not found");
     }
-
     return card[0];
   }
   public async updateCard(

@@ -1,5 +1,3 @@
-import { IIssueLink } from "@modules/issueLink";
-
 export default interface ICard {
   _id: string;
   boardId: string;
@@ -25,7 +23,6 @@ export default interface ICard {
   deletedAt: Date;
   resolvedAt: Date;
   storyPoint: number;
-  issueLinks: IIssueLink[];
   watcherIds: string[];
   issueTypeId: string;
 }

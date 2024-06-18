@@ -1,9 +1,10 @@
-import { SPRINT_DURATION, formatDate } from "@core/utils";
+import { formatDate } from "@core/utils";
 import { Transform, TransformFnParams } from "class-transformer";
 import {
   IsDateString,
   IsEnum,
   IsNotEmpty,
+  IsNumber,
   IsOptional,
   IsString,
   MaxLength,
@@ -13,7 +14,7 @@ import {
 export default class CreateSprintDto {
   constructor(
     name: string,
-    duration: string,
+    duration: number,
     startDate: Date,
     endDate: Date,
     goal: string
@@ -35,15 +36,9 @@ export default class CreateSprintDto {
   public name: string;
 
   @IsOptional()
-  @IsString()
-  @IsEnum([
-    SPRINT_DURATION.oneWeek,
-    SPRINT_DURATION.twoWeeks,
-    SPRINT_DURATION.threeWeeks,
-    SPRINT_DURATION.fourWeeks,
-    SPRINT_DURATION.custom,
-  ])
-  public duration: string;
+  @IsNumber()
+  @IsEnum([0, 1, 2, 3, 4])
+  public duration: number;
   @Transform(({ value }: TransformFnParams) => formatDate(value))
   @IsDateString()
   public startDate: Date;

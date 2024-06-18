@@ -9,37 +9,49 @@ import { StatusCodes } from "http-status-codes";
 export default class SprintService {
   private boardSchema = BoardSchema;
   private sprintSchema = SprintSchema;
-  private isValidDuration(start: Date, end: Date, duration: string) {
+  private isValidDuration(start: Date, end: Date, duration: number) {
     const startDate = dayjs(start);
     const endDate = dayjs(end);
-    let durationNumber = 0;
-    switch (duration) {
-      case SPRINT_DURATION.oneWeek:
-        durationNumber = 1;
-        break;
-      case SPRINT_DURATION.twoWeeks:
-        durationNumber = 2;
-        break;
-      case SPRINT_DURATION.threeWeeks:
-        durationNumber = 3;
-        break;
-      case SPRINT_DURATION.fourWeeks:
-        durationNumber = 4;
-        break;
-      case SPRINT_DURATION.custom:
-        durationNumber = 0;
-        break;
-    }
-    if (durationNumber === 0) {
+    if (duration === 0) {
       if (startDate.isAfter(endDate)) {
-        return false;
-      }
-    } else {
-      if (startDate.add(durationNumber, "week").isAfter(endDate)) {
         return false;
       }
     }
     return true;
+  }
+  private formatDuration(duration: number): string {
+    let formatDuration = SPRINT_DURATION.custom;
+    switch (duration) {
+      case 0:
+        formatDuration = SPRINT_DURATION.custom;
+        break;
+      case 1:
+        formatDuration = SPRINT_DURATION.oneWeek;
+        break;
+      case 2:
+        formatDuration = SPRINT_DURATION.twoWeeks;
+        break;
+      case 3:
+        formatDuration = SPRINT_DURATION.threeWeeks;
+        break;
+      case 4:
+        formatDuration = SPRINT_DURATION.fourWeeks;
+        break;
+      default:
+        formatDuration = SPRINT_DURATION.custom;
+        break;
+    }
+    return formatDuration;
+  }
+  private calculateEndDate(startDay: Date, duration: number) {
+    let startDate = dayjs(startDay);
+    let endDate = startDate.add(duration * 7, "day");
+    //Skip weekend
+    while (endDate.day() === 0 || endDate.day() === 6) {
+      //0: Sunday, 6: Saturday
+      endDate = endDate.add(1, "day");
+    }
+    return endDate.toDate();
   }
   public async createSprint(
     model: CreateSprintDto,
@@ -66,10 +78,22 @@ export default class SprintService {
     if (!validDuration) {
       throw new HttpException(StatusCodes.BAD_REQUEST, "Invalid duration");
     }
+    let endDate: Date;
+    if (model.duration !== 0) {
+      endDate = dayjs(model.startDate).add(model.duration, "day").toDate();
+    } else {
+      endDate = dayjs(model.startDate).add(model.duration, "week").toDate();
+    }
+
     const data = {
       ...model,
       boardId,
       creatorId: userId,
+      duration: this.formatDuration(model.duration),
+      endDate:
+        model.duration === 0
+          ? endDate
+          : this.calculateEndDate(model.startDate, model.duration),
     };
     const sprint = await this.sprintSchema.create([data], { session });
     await session.commitTransaction();

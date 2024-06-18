@@ -144,19 +144,6 @@ const CardSchema = new mongoose.Schema(
       type: Number,
       default: null,
     },
-    issueLinks: [
-      {
-        linkType: {
-          type: SCHEMA_TYPE,
-          ref: MODEL_NAME.issueLink,
-        },
-        issueId: {
-          type: SCHEMA_TYPE,
-          ref: MODEL_NAME.card || MODEL_NAME.subCard || MODEL_NAME.epic,
-          level: Number,
-        },
-      },
-    ],
     watcherIds: [
       {
         type: SCHEMA_TYPE,
