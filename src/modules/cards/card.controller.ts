@@ -5,6 +5,7 @@ import UpdateCardDto from "./dtos/updateCardDto";
 import { StatusCodes } from "http-status-codes";
 import assignUserDto from "./dtos/assignUserDto";
 import { startSession } from "mongoose";
+import AddCommentDto from "./dtos/addCommentDto";
 export default class CardController {
   private cardService = new CardService();
   public createCard = async (
@@ -149,4 +150,51 @@ export default class CardController {
       message: "Get task assigned to me successfully",
     });
   });
+  public addCommentToCard = catchAsync(
+    async (req: Request, res: Response, next: NextFunction) => {
+      const userId = req.user.id;
+      const cardId = req.params.cardId;
+      const model: AddCommentDto = req.body;
+      await this.cardService.addCommentToCard(userId, model, cardId);
+      res
+        .status(StatusCodes.OK)
+        .json({ message: "Add comment to card successfully" });
+    }
+  );
+  public getCommentsInCard = catchAsync(async (req: Request, res: Response) => {
+    const cardId = req.params.cardId;
+    const comments = await this.cardService.getCommentsInCard(cardId);
+    res.status(StatusCodes.OK).json({
+      data: comments,
+      message: "Get comments in card successfully",
+    });
+  });
+  public updateCommentInCard = catchAsync(
+    async (req: Request, res: Response, next: NextFunction) => {
+      const userId = req.user.id;
+      const cardId = req.params.cardId;
+      const commentId = req.params.commentId;
+      const model: AddCommentDto = req.body;
+      await this.cardService.updateCommentInCard(
+        cardId,
+        userId,
+        model,
+        commentId
+      );
+      res
+        .status(StatusCodes.OK)
+        .json({ message: "Update comment in card successfully" });
+    }
+  );
+  public deleteCommentInCard = catchAsync(
+    async (req: Request, res: Response, next: NextFunction) => {
+      const userId = req.user.id;
+      const cardId = req.params.cardId;
+      const commentId = req.params.commentId;
+      await this.cardService.deleteCommentInCard(cardId, userId, commentId);
+      res
+        .status(StatusCodes.OK)
+        .json({ message: "Delete comment in card successfully" });
+    }
+  );
 }

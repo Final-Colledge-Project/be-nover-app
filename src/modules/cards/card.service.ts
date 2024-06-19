@@ -14,7 +14,7 @@ import CreateCardDto from "./dtos/createCardDto";
 import { HttpException } from "@core/exceptions";
 import { BoardSchema } from "@modules/boards";
 import { ColumnSchema } from "@modules/columns";
-import ICard from "./card.interface";
+import ICard, { IComment } from "./card.interface";
 import { generateCardId } from "@core/utils/helpers";
 import UpdateCardDto from "./dtos/updateCardDto";
 import { StatusCodes } from "http-status-codes";
@@ -31,6 +31,8 @@ import { ITaskLog, TaskLogSchema } from "@modules/taskLogs";
 import { IssueTypeSchema } from "@modules/issueTypes";
 import { ClientSession } from "mongoose";
 import { cloneDeep } from "lodash";
+import AddCommentDto from "./dtos/addCommentDto";
+import UpdateCommentDto from "./dtos/updateCommentDto";
 export default class CardService {
   private cardSchema = CardSchema;
   private notificationService = new NotificationService();
@@ -976,5 +978,86 @@ export default class CardService {
       ])
       .exec();
     return assignedToMe;
+  }
+  public async addCommentToCard(
+    userId: string,
+    model: AddCommentDto,
+    cardId: string
+  ) {
+    if (isEmptyObject(model)) {
+      throw new HttpException(StatusCodes.BAD_REQUEST, "Model is empty");
+    }
+    const card = await this.cardSchema.findById(cardId).exec();
+    if (!card) {
+      throw new HttpException(StatusCodes.BAD_REQUEST, "Card not found");
+    }
+    const comment: IComment = {
+      userId,
+      content: model.content,
+      icon: model.icon,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    card.comments.push(comment);
+    await card.save();
+  }
+  public async getCommentsInCard(cardId: string): Promise<IComment[]> {
+    const card = await this.cardSchema
+      .findById(cardId)
+      .populate("comments.userId", "firstName lastName avatar email")
+      .exec();
+    if (!card) {
+      throw new HttpException(StatusCodes.BAD_REQUEST, "Card not found");
+    }
+    return card.comments;
+  }
+  public async updateCommentInCard(
+    cardId: string,
+    userId: string,
+    model: AddCommentDto,
+    commentId: string
+  ): Promise<void> {
+    const card = await this.cardSchema.findById(cardId).exec();
+    if (!card) {
+      throw new HttpException(StatusCodes.BAD_REQUEST, "Card not found");
+    }
+    const comment = card.comments.find(
+      (c) => c?._id?.toString() === commentId
+    );
+    if (userId !== comment?.userId.toString()) {
+      throw new HttpException(
+        StatusCodes.FORBIDDEN,
+        "You are not owner of this comment"
+      );
+    }
+    if (model.content) {
+      comment.content = model.content;
+    }
+    if (model.icon) {
+      comment.icon = model.icon;
+    }
+    comment.updatedAt = new Date();
+    await card.save();
+  }
+  public async deleteCommentInCard(
+    cardId: string,
+    userId: string,
+    commentId: string
+  ): Promise<void> {
+    const card = await this.cardSchema.findById(cardId).exec();
+    if (!card) {
+      throw new HttpException(StatusCodes.BAD_REQUEST, "Card not found");
+    }
+    const comment = card.comments.find((c) => c?._id?.toString() === commentId);
+    if (userId !== comment?.userId.toString()) {
+      throw new HttpException(
+        StatusCodes.FORBIDDEN,
+        "You are not owner of this comment"
+      );
+    }
+    card.comments = card.comments.filter(
+      (c) => c?._id?.toString() !== commentId
+    );
+    await card.save();
   }
 }

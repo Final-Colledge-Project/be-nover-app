@@ -53,21 +53,9 @@ const CardSchema = new mongoose.Schema(
     ],
     comments: [
       {
-        user: {
+        userId: {
           type: mongoose.Schema.ObjectId,
           ref: MODEL_NAME.user,
-        },
-        email: {
-          type: String,
-          default: null,
-        },
-        avatar: {
-          type: String,
-          default: null,
-        },
-        displayName: {
-          type: String,
-          default: null,
         },
         content: {
           type: String,
@@ -75,9 +63,17 @@ const CardSchema = new mongoose.Schema(
           maxlength: [200, "Content must be at most 200 characters long"],
           trim: true,
         },
+        icon: {
+          type: String,
+          default: null,
+        },
         createdAt: {
           type: Date,
           default: Date.now,
+        },
+        updatedAt: {
+          type: Date,
+          default: null,
         },
       },
     ],

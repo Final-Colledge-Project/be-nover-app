@@ -27,12 +27,12 @@ export default interface ICard {
   issueTypeId: string;
 }
 export interface IComment {
-  user: string;
-  email: string;
-  avatar: string;
-  displayName: string;
+  _id?: string;
+  userId: string;
   content: string;
+  icon: string;
   createdAt: Date;
+  updatedAt: Date;
 }
 export interface IAttachment {
   fileName: string;
