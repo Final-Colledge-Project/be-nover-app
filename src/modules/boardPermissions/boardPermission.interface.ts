@@ -48,6 +48,9 @@ export default interface IBoardPermission {
     update: boolean;
     delete: boolean;
   };
+  report: {
+    create: boolean;
+  };
   createdAt: Date;
   updatedAt: Date;
   isActive: boolean;

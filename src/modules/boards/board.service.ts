@@ -142,6 +142,9 @@ export default class BoardService {
             update: true,
             delete: true,
           },
+          report: {
+            create: true,
+          },
           isAdmin: true,
           ...extendPerm,
         },

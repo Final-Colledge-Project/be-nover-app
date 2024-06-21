@@ -1,7 +1,10 @@
 import { IIssueLinkType } from "@modules/issueLinkTypes";
 import { IUser } from "@modules/users";
 import dayjs from "dayjs";
-import { DIRECTION_TYPE } from "./constant";
+import { AVERAGE_AGE_PERIOD, DIRECTION_TYPE } from "./constant";
+import ICard from "@modules/cards/card.interface";
+import { HttpException } from "@core/exceptions";
+import { StatusCodes } from "http-status-codes";
 export const isEmptyObject = (obj: Object): boolean => {
   return !Object.keys(obj).length;
 };
@@ -79,3 +82,4 @@ export const getMsgLogIssue = (
     direction === DIRECTION_TYPE.inward ? inwardName : outwardName
   } ${targetIssueName}`;
 };
+

@@ -23,6 +23,7 @@ import { TaskLogRoute } from "@modules/taskLogs";
 import { IssueLinkRoute } from "@modules/issueLinks";
 import { IssueLinkTypeRoute } from "@modules/issueLinkTypes";
 import { IssueTypeRoute } from "@modules/issueTypes";
+import { StatisticRoute } from "@modules/statistics";
 validateEnv();
 const routes = [
   new IndexRoute(),
@@ -47,6 +48,7 @@ const routes = [
   new IssueLinkRoute(),
   new IssueLinkTypeRoute(),
   new IssueTypeRoute(),
+  new StatisticRoute(),
 ];
 const app = new App(routes);
 app.listen();

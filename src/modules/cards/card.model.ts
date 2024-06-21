@@ -2,8 +2,6 @@ import mongoose from "mongoose";
 import ICard from "./card.interface";
 import { MODEL_NAME, PRIORITY, SCHEMA_TYPE, SUBTASK_STATUS } from "@core/utils";
 import { Query } from "mongoose";
-import { max } from "lodash";
-import { maxLength } from "class-validator";
 
 const CardSchema = new mongoose.Schema(
   {

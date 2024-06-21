@@ -93,3 +93,11 @@ export const DIRECTION_TYPE = {
 };
 
 export const MAX_RESULT = 100;
+
+export const AVERAGE_AGE_PERIOD = {
+  daily: "daily",
+  weekly: "weekly",
+  monthly: "monthly",
+  quarterly: "quarterly",
+  yearly: "yearly",
+};

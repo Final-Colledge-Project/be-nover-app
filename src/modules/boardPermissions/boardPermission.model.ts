@@ -154,6 +154,12 @@ const BoardPermissionSchema = new mongoose.Schema(
         default: false,
       },
     },
+    report: {
+      create: {
+        type: Boolean,
+        default: false,
+      },
+    },
     isAdmin: {
       type: Boolean,
       default: false,
