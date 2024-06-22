@@ -1,5 +1,5 @@
 import mongoose, { Query } from "mongoose";
-import { MODEL_NAME, SPRINT_DURATION, SPRINT_STATUS } from "@core/utils";
+import { MODEL_NAME, SCHEMA_TYPE, SPRINT_DURATION, SPRINT_STATUS } from "@core/utils";
 import ISprint from "./sprint.interface";
 
 const SprintSchema = new mongoose.Schema(
@@ -15,11 +15,12 @@ const SprintSchema = new mongoose.Schema(
       maxLength: [50, "Name sprint must be at most 50 characters long"],
       required: [true, "Name is required"],
     },
-    cardOrderIds: {
-      type: [String],
-      ref: MODEL_NAME.card,
-      default: [],
-    },
+    cardOrderIds: [
+      {
+        type: SCHEMA_TYPE,
+        ref: MODEL_NAME.card,
+      },
+    ],
     duration: {
       type: String,
       enum: [
@@ -56,10 +57,18 @@ const SprintSchema = new mongoose.Schema(
       type: Boolean,
       default: true,
     },
-    totalStoryPoint: {
-      type: Number,
-      default: 0,
-    },
+    dailyStoryPoints: [
+      {
+        date: {
+          type: Date,
+          default: Date.now,
+        },
+        storyPoints: {
+          type: Number,
+          default: 0,
+        },
+      },
+    ],
   },
   { timestamps: true }
 );

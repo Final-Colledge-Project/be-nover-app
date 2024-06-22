@@ -40,12 +40,6 @@ const filterTaskByPeriod = (
   }
 
   const overPreviousDay = dayjs().subtract(previousDay, "day");
-  console.log(
-    "~~~~~~~~>startDate",
-    startDate,
-    "overPreviousDay",
-    overPreviousDay
-  );
   return tasks.filter((task) => {
     const creation = dayjs(task.createdAt);
     return (

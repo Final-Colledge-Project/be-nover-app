@@ -9,8 +9,13 @@ export default interface ISprint {
   endDate: Date;
   goal: string;
   status: string;
+  dailyStoryPoints: IDailyStoryPoint[];
   createdAt: Date;
   updatedAt: Date;
   isActive: boolean;
-  totalStoryPoint: number;
+}
+
+export interface IDailyStoryPoint {
+  date?: Date;
+  storyPoints: number;
 }

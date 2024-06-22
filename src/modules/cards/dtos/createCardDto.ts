@@ -1,5 +1,6 @@
 import {
   IsNotEmpty,
+  IsNumber,
   IsOptional,
   IsString,
   MaxLength,
@@ -21,7 +22,8 @@ export default class CreateCardDto {
     assigneeId: string,
     sprintId: string,
     epicId: string,
-    issueTypeId: string
+    issueTypeId: string,
+    storyPoint: number
   ) {
     this.columnId = columnId;
     this.title = title;
@@ -33,6 +35,7 @@ export default class CreateCardDto {
     this.sprintId = sprintId;
     this.epicId = epicId;
     this.issueTypeId = issueTypeId;
+    this.storyPoint = storyPoint;
   }
   @IsOptional()
   @IsString()
@@ -76,4 +79,7 @@ export default class CreateCardDto {
   @IsNotEmpty()
   @IsString()
   public issueTypeId: string;
+  @IsNotEmpty()
+  @IsNumber()
+  public storyPoint: number;
 }
