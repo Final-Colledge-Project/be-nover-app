@@ -21,7 +21,7 @@ import ICard from "@modules/cards/card.interface";
 import { IResColumn } from "@modules/columns";
 import { TeamWorkspaceSchema } from "@modules/teamWorkspace";
 import UpdateBoardDto from "./dtos/updateBoardDto";
-import AddMemsToBoardDto from "./dtos/addMemsToBoard";
+import AddMemsToBoardDto, { IAddMem } from "./dtos/addMemsToBoard";
 import { StatusCodes } from "http-status-codes";
 import { NotificationService } from "@modules/notifications";
 import PushNotificationDto from "@modules/notifications/dtos/pushNotificationDto";
@@ -30,7 +30,7 @@ import { SubCardSchema } from "@modules/sub_cards";
 import { LabelSchema } from "@modules/labels";
 import { BoardPermissionSchema } from "@modules/boardPermission";
 import { UserSchema } from "@modules/users";
-import mongoose from "mongoose";
+import mongoose, { ClientSession } from "mongoose";
 import { WorkspacePermissionSchema } from "@modules/workspacePermission";
 export default class BoardService {
   private boardSchema = BoardSchema;
@@ -128,26 +128,30 @@ export default class BoardService {
   public async addMemberToBoard(
     userId: string,
     boardId: string,
-    memberIds: AddMemsToBoardDto,
-    session: any
+    inviteMems: AddMemsToBoardDto,
+    session: ClientSession
   ): Promise<IBoard> {
     const board = await this.boardSchema.findById(boardId).exec();
     if (!board) {
-      throw new HttpException(StatusCodes.CONFLICT, "Board not found");
+      throw new HttpException(StatusCodes.BAD_REQUEST, "Board not found");
     }
     const workspaceId = board.teamWorkspaceId;
     const workspace = await this.workspaceSchema.findById(workspaceId).exec();
     if (!workspace) {
-      throw new HttpException(StatusCodes.CONFLICT, "Workspace not found");
+      throw new HttpException(StatusCodes.BAD_REQUEST, "Workspace not found");
     }
-    const members = memberIds.memberIds;
+    //Add members to board
+    const members = inviteMems.members.map((mem: IAddMem) => mem.memberId);
+    if (members.length !== [...new Set(members)].length) {
+      throw new HttpException(StatusCodes.BAD_REQUEST, "Duplicate member");
+    }
     const objectIdArray = members.map((id) => new mongoose.Types.ObjectId(id));
     const users = await this.userSchema.find({
       _id: {
         $in: objectIdArray,
       },
     });
-    if (memberIds.memberIds.length !== users.length || !users) {
+    if (members.length !== users.length || !users) {
       throw new HttpException(StatusCodes.BAD_REQUEST, "User not found");
     }
     const isExistWSMember = workspace.workspaceMembers.some((mem) => {
@@ -168,16 +172,73 @@ export default class BoardService {
     const memberList = [...new Set([...board.memberIds, ...members])];
     board.memberIds = memberList;
     await board.save({ session });
-    await this.boardPermissionSchema.findOneAndUpdate(
-      {
-        boardId: boardId,
-        isViewer: true,
-      },
-      {
-        memberIds: memberList,
-      },
-      { session }
+    //Add permission for members
+    const permissions = inviteMems.members.map(
+      (mem: IAddMem) => mem.permissionId
     );
+    if (permissions.length !== inviteMems.members.length) {
+      throw new HttpException(StatusCodes.BAD_REQUEST, "Lack of permission");
+    }
+    const permissionArray = [...new Set(permissions)].map(
+      (id) => new mongoose.Types.ObjectId(id)
+    );
+    const boardPerms = await this.boardPermissionSchema.find({
+      _id: {
+        $in: permissionArray,
+      },
+    });
+    if (permissionArray.length !== boardPerms.length) {
+      throw new HttpException(StatusCodes.BAD_REQUEST, "Permission not found");
+    }
+    const isAdminPerm = await this.boardPermissionSchema
+      .findOne({
+        boardId: boardId,
+        isAdmin: true,
+        memberIds: {
+          $in: [userId],
+        },
+      })
+      .exec();
+    if (isAdminPerm) {
+      const groupMemByPerm: { [key: string]: string[] } =
+        inviteMems.members.reduce<{ [key: string]: string[] }>((acc, mem) => {
+          acc[mem.permissionId] = acc[mem.permissionId] || [];
+          acc[mem.permissionId].push(mem.memberId);
+          return acc;
+        }, {});
+      const permPromise = Object.keys(groupMemByPerm).map(async (permId) => {
+        const perm = boardPerms.find((perm) => perm._id.toString() === permId);
+        if (!perm) {
+          throw new HttpException(
+            StatusCodes.BAD_REQUEST,
+            "Permission not found"
+          );
+        }
+        perm.memberIds = [
+          ...new Set([...perm.memberIds, ...groupMemByPerm[permId]]),
+        ];
+        await perm.save({ session });
+      });
+      await Promise.all(permPromise);
+    } else {
+      const viewerPerm = await this.boardPermissionSchema
+        .findOne({
+          boardId: boardId,
+          isViewer: true,
+        })
+        .exec();
+      if (!viewerPerm) {
+        throw new HttpException(
+          StatusCodes.BAD_REQUEST,
+          "Viewer permission not found"
+        );
+      }
+      viewerPerm.memberIds = [
+        ...new Set([...viewerPerm.memberIds, ...members]),
+      ];
+      await viewerPerm.save({ session });
+    }
+
     await session.commitTransaction();
     session.endSession();
     //Send notification

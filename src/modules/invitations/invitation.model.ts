@@ -1,4 +1,4 @@
-import { INVITE_STATUS, MODEL_NAME, OBJECT_ID } from "@core/utils";
+import { INVITE_STATUS, MODEL_NAME, OBJECT_ID, SCHEMA_TYPE } from "@core/utils";
 import mongoose, { Query } from "mongoose";
 import IInvitationWorkspace from "./invitation.interface";
 
@@ -24,6 +24,11 @@ const InvitationWorkspaceSchema = new mongoose.Schema(
         INVITE_STATUS.rejected,
       ],
       default: INVITE_STATUS.pending,
+    },
+    wsPermissionId: {
+      type: SCHEMA_TYPE,
+      ref: MODEL_NAME.workspacePermission,
+      required: true,
     },
     isActive: {
       type: Boolean,
