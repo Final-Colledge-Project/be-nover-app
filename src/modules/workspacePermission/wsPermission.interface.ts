@@ -15,6 +15,6 @@ export default interface IWorkspacePermission {
   createdAt: Date;
   updatedAt: Date;
   isActive: boolean;
-  isAdmin: boolean;
+  isWSAdmin: boolean;
   isWSViewer: boolean;
 }

@@ -64,7 +64,6 @@ export const isBoardAdmin = async (
   const existBoard = await BoardSchema.findById(boardId).exec();
   console.log("🚀 ~ existBoard:", existBoard);
   if (!existBoard) return false;
-  console.log("~~~~~~>ownerIds", existBoard?.ownerIds, "adminId", adminId);
   const isAdmin = existBoard?.ownerIds.includes(adminId);
   return isAdmin;
 };

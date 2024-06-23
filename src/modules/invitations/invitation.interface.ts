@@ -1,10 +1,9 @@
-import { INVITE_STATUS } from "@core/utils";
-
 export default interface IInvitationWorkspace {
   _id: string;
   workspaceId: string;
   senderId: string;
   receiverId: string;
+  wsPermissionId: string;
   createAt: Date;
   updateAt: Date;
   status: InviteStatus;
@@ -12,11 +11,7 @@ export default interface IInvitationWorkspace {
 }
 
 enum InviteStatus {
-  pending = 'pending',
-  accepted = 'accepted',
-  rejected = 'rejected'
+  pending = "pending",
+  accepted = "accepted",
+  rejected = "rejected",
 }
-
-
-
-
