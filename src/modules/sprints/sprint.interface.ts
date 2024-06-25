@@ -13,6 +13,7 @@ export default interface ISprint {
   createdAt: Date;
   updatedAt: Date;
   isActive: boolean;
+  totalStoryPoint?: number;
 }
 
 export interface IDailyStoryPoint {

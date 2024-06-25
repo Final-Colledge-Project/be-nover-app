@@ -17,5 +17,11 @@ export default class StatisticRoute implements Route {
       authorizePermission("report:create", PERM_TYPE.board),
       this.statisticController.generateAverageAgeReport
     );
+    this.router.get(
+      this.path + "/burn-down/board/:boardId",
+      authMiddleware,
+      authorizePermission("report:create", PERM_TYPE.board),
+      this.statisticController.generateBurnDownReport
+    );
   }
 }

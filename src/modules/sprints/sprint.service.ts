@@ -1,7 +1,7 @@
 import { BoardSchema } from "@modules/boards";
 import CreateSprintDto from "./dtos/createSprintDto";
 import dayjs from "dayjs";
-import { BOARD_TEMPLATE, SPRINT_DURATION } from "@core/utils";
+import { BOARD_TEMPLATE, SPRINT_DURATION, isBoardMember } from "@core/utils";
 import SprintSchema from "./sprint.model";
 import ISprint from "./sprint.interface";
 import { HttpException } from "@core/exceptions";
@@ -133,5 +133,21 @@ export default class SprintService {
     await session.commitTransaction();
     session.endSession();
     return updateSprint;
+  }
+  public async getSprintById(
+    sprintId: string,
+    boardId: string,
+    userId: string
+  ): Promise<ISprint> {
+    const isMem = await isBoardMember(boardId, userId);
+    if (!isMem) {
+      throw new HttpException(StatusCodes.FORBIDDEN, "Permission denied");
+    }
+    const sprint = await this.sprintSchema.findById(sprintId);
+    if (!sprint) {
+      throw new HttpException(StatusCodes.BAD_REQUEST, "Sprint not found");
+    }
+    
+    return sprint;
   }
 }

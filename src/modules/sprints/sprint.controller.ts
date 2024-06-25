@@ -59,4 +59,26 @@ export default class SprintController {
       next(err);
     }
   };
+  public getSprintById = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      const sprintId = req.params.id;
+      const boardId = req.params.boardId;
+      const userId = req.user.id;
+      const sprint = await this.sprintService.getSprintById(
+        sprintId,
+        boardId,
+        userId
+      );
+      res.status(StatusCodes.OK).json({
+        data: sprint,
+        message: "Get sprint successfully",
+      });
+    } catch (err) {
+      next(err);
+    }
+  };
 }

@@ -25,4 +25,26 @@ export default class StatisticController {
       next(err);
     }
   };
+  public generateBurnDownReport = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      const sprintId = req.query.sprint as string;
+      const boardId = req.params.boardId;
+      const userId = req.user.id;
+      const report = await this.statisticService.generateBurnDownReport(
+        sprintId,
+        boardId,
+        userId
+      );
+      res.status(StatusCodes.OK).json({
+        data: report,
+        message: "Generate burn down report successfully",
+      });
+    } catch (err) {
+      next(err);
+    }
+  };
 }

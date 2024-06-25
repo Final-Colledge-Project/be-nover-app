@@ -31,5 +31,10 @@ export default class ScheduleRoute implements Route {
       authorizePermission("sprint:update", PERM_TYPE.board),
       this.sprintController.updateSprint
     );
+    this.router.get(
+      this.path + "/:id/board/:boardId",
+      authMiddleware,
+      this.sprintController.getSprintById
+    );
   }
 }
