@@ -34,5 +34,10 @@ export default class BoardPermissionRoute implements Route {
       authMiddleware,
       this.boardPermissionController.getBoardPermissionByBoardUser
     );
+    this.router.delete(
+      this.path + "/:id/board/:boardId",
+      authMiddleware,
+      this.boardPermissionController.deleteBoardPermission
+    );
   }
 }

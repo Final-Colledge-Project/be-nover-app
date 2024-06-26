@@ -22,21 +22,6 @@ export default class BoardPermissionController {
         .json({ message: "Create group permission successfully" });
     }
   );
-  // public updateBoardPermission = catchAsync(
-  //   async (req: Request, res: Response) => {
-  //     const userId = req.user.id;
-  //     const permissionId = req.params.id;
-  //     const model: UpdateBoardPermissionDto = req.body;
-  //     await this.boardPermissionService.updateBoardPermission(
-  //       userId,
-  //       permissionId,
-  //       model
-  //     );
-  //     res
-  //       .status(StatusCodes.OK)
-  //       .json({ message: "Update group permission successfully" });
-  //   }
-  // );
   public updateBoardPermission = async (
     req: Request,
     res: Response,
@@ -93,4 +78,30 @@ export default class BoardPermissionController {
       });
     }
   );
+  public deleteBoardPermission = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    const session = await startSession();
+    try {
+      const userId = req.user.id;
+      const permissionId = req.params.id;
+      const boardId = req.params.boardId;
+      session.startTransaction();
+      await this.boardPermissionService.deleteBoardPermission(
+        userId,
+        boardId,
+        permissionId,
+        session
+      );
+      res
+        .status(StatusCodes.OK)
+        .json({ message: "Delete group permission successfully" });
+    } catch (err) {
+      await session.abortTransaction();
+      session.endSession();
+      next(err);
+    }
+  };
 }
