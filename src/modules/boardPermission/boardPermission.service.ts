@@ -255,4 +255,59 @@ export default class BoardPermissionService {
     }
     return groupPermission;
   }
+  public deleteBoardPermission = async (
+    userId: string,
+    boardId: string,
+    permId: string,
+    session: ClientSession
+  ) => {
+    const adminBoardPerm = await this.boardPermissionSchema
+      .findOne({
+        boardId,
+        isAdmin: true,
+      })
+      .exec();
+    if (!adminBoardPerm) {
+      throw new HttpException(
+        StatusCodes.BAD_REQUEST,
+        "Admin permission not found"
+      );
+    }
+    const isInAdminPerm = adminBoardPerm.memberIds.includes(userId);
+    if (!isInAdminPerm) {
+      throw new HttpException(StatusCodes.FORBIDDEN, "Permission denied");
+    }
+    const perm = await this.boardPermissionSchema.findById(permId).exec();
+    if (!perm) {
+      throw new HttpException(StatusCodes.NOT_FOUND, "Permission not found");
+    }
+    if (perm.isAdmin || perm.isViewer) {
+      throw new HttpException(
+        StatusCodes.BAD_REQUEST,
+        "Cannot delete default permission"
+      );
+    }
+    if (perm.memberIds.length) {
+      const viewerPerm = await this.boardPermissionSchema.findOne({
+        boardId,
+        isViewer: true,
+      });
+      if (!viewerPerm) {
+        throw new HttpException(
+          StatusCodes.BAD_REQUEST,
+          "Viewer permission not found"
+        );
+      }
+      viewerPerm.memberIds = [
+        ...new Set([
+          ...viewerPerm.memberIds.map((i) => i.toString()),
+          ...perm.memberIds.map((i) => i.toString()),
+        ]),
+      ];
+      await viewerPerm.save({ session });
+    }
+    await this.boardPermissionSchema.findByIdAndDelete(permId, { session });
+    await session.commitTransaction();
+    session.endSession();
+  };
 }
