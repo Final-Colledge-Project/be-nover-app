@@ -8,8 +8,9 @@ import IBoardPermission from "./boardPermission.interface";
 import { UserSchema } from "@modules/users";
 import { BoardSchema } from "@modules/boards";
 import { ClientSession } from "mongoose";
-import { add, difference, intersection } from "lodash";
-import { TeamWorkspaceSchema } from "@modules/teamWorkspace";
+import { difference } from "lodash";
+import { TeamWorkspaceSchema } from "@modules/teamWorkspaces";
+import { IWorkspaceAdmin } from "@modules/teamWorkspaces/teamWorkspace.interface";
 export default class BoardPermissionService {
   private boardPermissionSchema = BoardPermissionSchema;
   private userSchema = UserSchema;
@@ -52,8 +53,8 @@ export default class BoardPermissionService {
         .findById(board?.teamWorkspaceId)
         .exec();
       const superAdmin = workspace?.workspaceAdmins
-        .filter((item) => item.role === "superAdmin")
-        .map((item) => item.user.toString())[0];
+        .filter((item: IWorkspaceAdmin) => item.role === "superAdmin")
+        .map((item: IWorkspaceAdmin) => item.user.toString())[0];
       const existedMember = (board?.memberIds || []).some((item) =>
         (model.memberIds || []).includes(item.toString())
       );
@@ -136,8 +137,8 @@ export default class BoardPermissionService {
         .findById(board?.teamWorkspaceId)
         .exec();
       const superAdmin = workspace?.workspaceAdmins
-        .filter((item) => item.role === "superAdmin")
-        .map((item) => item.user.toString())[0];
+        .filter((item: IWorkspaceAdmin) => item.role === "superAdmin")
+        .map((item: IWorkspaceAdmin) => item.user.toString())[0];
       if (!existedMember && (model.memberIds || []).length > 0 && !superAdmin) {
         throw new HttpException(
           StatusCodes.BAD_REQUEST,
@@ -255,4 +256,59 @@ export default class BoardPermissionService {
     }
     return groupPermission;
   }
+  public deleteBoardPermission = async (
+    userId: string,
+    boardId: string,
+    permId: string,
+    session: ClientSession
+  ) => {
+    const adminBoardPerm = await this.boardPermissionSchema
+      .findOne({
+        boardId,
+        isAdmin: true,
+      })
+      .exec();
+    if (!adminBoardPerm) {
+      throw new HttpException(
+        StatusCodes.BAD_REQUEST,
+        "Admin permission not found"
+      );
+    }
+    const isInAdminPerm = adminBoardPerm.memberIds.includes(userId);
+    if (!isInAdminPerm) {
+      throw new HttpException(StatusCodes.FORBIDDEN, "Permission denied");
+    }
+    const perm = await this.boardPermissionSchema.findById(permId).exec();
+    if (!perm) {
+      throw new HttpException(StatusCodes.NOT_FOUND, "Permission not found");
+    }
+    if (perm.isAdmin || perm.isViewer) {
+      throw new HttpException(
+        StatusCodes.BAD_REQUEST,
+        "Cannot delete default permission"
+      );
+    }
+    if (perm.memberIds.length) {
+      const viewerPerm = await this.boardPermissionSchema.findOne({
+        boardId,
+        isViewer: true,
+      });
+      if (!viewerPerm) {
+        throw new HttpException(
+          StatusCodes.BAD_REQUEST,
+          "Viewer permission not found"
+        );
+      }
+      viewerPerm.memberIds = [
+        ...new Set([
+          ...viewerPerm.memberIds.map((i) => i.toString()),
+          ...perm.memberIds.map((i) => i.toString()),
+        ]),
+      ];
+      await viewerPerm.save({ session });
+    }
+    await this.boardPermissionSchema.findByIdAndDelete(permId, { session });
+    await session.commitTransaction();
+    session.endSession();
+  };
 }
