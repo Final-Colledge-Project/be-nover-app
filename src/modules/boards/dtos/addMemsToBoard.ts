@@ -1,11 +1,23 @@
 import { MODE_ACCESS } from "@core/utils";
-import { IsArray, IsEnum, IsNotEmpty, IsString, MaxLength, MinLength } from "class-validator";
+import {
+  IsArray,
+  IsEnum,
+  IsNotEmpty,
+  IsString,
+  MaxLength,
+  MinLength,
+} from "class-validator";
+
+export interface IAddMem {
+  memberId: string;
+  permissionId: string;
+}
 
 export default class AddMemsToBoardDto {
-  constructor(memberIds: string[]){
-    this.memberIds = memberIds
+  constructor(members: IAddMem[]) {
+    this.members = members;
   }
   @IsNotEmpty()
   @IsArray()
-  public memberIds: string[];
+  public members: IAddMem[];
 }

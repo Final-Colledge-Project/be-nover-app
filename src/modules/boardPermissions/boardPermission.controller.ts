@@ -1,9 +1,10 @@
 import { catchAsync } from "@core/utils";
 import BoardPermissionService from "./boardPermission.service";
-import { Request, Response } from "express";
+import { NextFunction, Request, Response } from "express";
 import AddBoardPermissionDto from "./dtos/addBoardPermissionDto";
 import UpdateBoardPermissionDto from "./dtos/updateBoardPermissionDto";
 import { StatusCodes } from "http-status-codes";
+import { startSession } from "mongoose";
 export default class BoardPermissionController {
   private boardPermissionService = new BoardPermissionService();
   public createBoardPermission = catchAsync(
@@ -21,21 +22,47 @@ export default class BoardPermissionController {
         .json({ message: "Create group permission successfully" });
     }
   );
-  public updateBoardPermission = catchAsync(
-    async (req: Request, res: Response) => {
+  // public updateBoardPermission = catchAsync(
+  //   async (req: Request, res: Response) => {
+  //     const userId = req.user.id;
+  //     const permissionId = req.params.id;
+  //     const model: UpdateBoardPermissionDto = req.body;
+  //     await this.boardPermissionService.updateBoardPermission(
+  //       userId,
+  //       permissionId,
+  //       model
+  //     );
+  //     res
+  //       .status(StatusCodes.OK)
+  //       .json({ message: "Update group permission successfully" });
+  //   }
+  // );
+  public updateBoardPermission = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    const session = await startSession();
+    try {
       const userId = req.user.id;
       const permissionId = req.params.id;
       const model: UpdateBoardPermissionDto = req.body;
+      session.startTransaction();
       await this.boardPermissionService.updateBoardPermission(
         userId,
         permissionId,
-        model
+        model,
+        session
       );
       res
         .status(StatusCodes.OK)
         .json({ message: "Update group permission successfully" });
+    } catch (error) {
+      await session.abortTransaction();
+      session.endSession();
+      next(error);
     }
-  );
+  };
   public getBoardPermissionByBoardId = catchAsync(
     async (req: Request, res: Response) => {
       const userId = req.user.id;

@@ -25,6 +25,11 @@ const InvitationWorkspaceSchema = new mongoose.Schema(
       ],
       default: INVITE_STATUS.pending,
     },
+    wsPermissionId: {
+      type: SCHEMA_TYPE,
+      ref: MODEL_NAME.workspacePermission,
+      required: true,
+    },
     isActive: {
       type: Boolean,
       default: true,

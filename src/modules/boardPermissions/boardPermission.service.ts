@@ -7,10 +7,14 @@ import UpdateBoardPermissionDto from "./dtos/updateBoardPermissionDto";
 import IBoardPermission from "./boardPermission.interface";
 import { UserSchema } from "@modules/users";
 import { BoardSchema } from "@modules/boards";
+import { ClientSession } from "mongoose";
+import { add, difference, intersection } from "lodash";
+import { TeamWorkspaceSchema } from "@modules/teamWorkspace";
 export default class BoardPermissionService {
   private boardPermissionSchema = BoardPermissionSchema;
   private userSchema = UserSchema;
   private boardSchema = BoardSchema;
+  private workspaceSchema = TeamWorkspaceSchema;
   public async createBoardPermission(
     userId: string,
     boardId: string,
@@ -37,10 +41,23 @@ export default class BoardPermissionService {
     }
     const board = await this.boardSchema.findById(boardId);
     if (model.memberIds) {
+      const owner = board?.ownerIds[0].toString();
+      if (model.memberIds.includes(owner || "")) {
+        throw new HttpException(
+          StatusCodes.BAD_REQUEST,
+          "Owner must be in permission"
+        );
+      }
+      const workspace = await this.workspaceSchema
+        .findById(board?.teamWorkspaceId)
+        .exec();
+      const superAdmin = workspace?.workspaceAdmins
+        .filter((item) => item.role === "superAdmin")
+        .map((item) => item.user.toString())[0];
       const existedMember = (board?.memberIds || []).some((item) =>
         (model.memberIds || []).includes(item.toString())
       );
-      if (!existedMember && (model.memberIds || []).length > 0) {
+      if (!existedMember && (model.memberIds || []).length > 0 && !superAdmin) {
         throw new HttpException(
           StatusCodes.BAD_REQUEST,
           "Member not found in board"
@@ -70,7 +87,8 @@ export default class BoardPermissionService {
   public async updateBoardPermission(
     userId: string,
     permissionId: string,
-    model: UpdateBoardPermissionDto
+    model: UpdateBoardPermissionDto,
+    session: ClientSession
   ): Promise<void> {
     if (!userId) {
       throw new HttpException(StatusCodes.BAD_REQUEST, "UserId is required");
@@ -104,70 +122,95 @@ export default class BoardPermissionService {
     let updateModel = model;
     //Handle memberIds in perm
     if (model.memberIds) {
+      const owner = board?.ownerIds[0].toString();
+      if (model.memberIds.includes(owner || "")) {
+        throw new HttpException(
+          StatusCodes.BAD_REQUEST,
+          "Owner must be in permission"
+        );
+      }
       const existedMember = (board?.memberIds || []).some((item) =>
         (model.memberIds || []).includes(item.toString())
       );
-      if (!existedMember && (model.memberIds || []).length > 0) {
+      const workspace = await this.workspaceSchema
+        .findById(board?.teamWorkspaceId)
+        .exec();
+      const superAdmin = workspace?.workspaceAdmins
+        .filter((item) => item.role === "superAdmin")
+        .map((item) => item.user.toString())[0];
+      if (!existedMember && (model.memberIds || []).length > 0 && !superAdmin) {
         throw new HttpException(
           StatusCodes.BAD_REQUEST,
           "Member not found in board"
         );
       }
-      const exitMemInPerm = await this.boardPermissionSchema.findOne({
-        boardId: boardPermission.boardId,
-        memberIds: { $in: model.memberIds },
-      });
-      if (
-        exitMemInPerm &&
-        (model.memberIds || []).length > 0 &&
-        exitMemInPerm._id.toString() !== permissionId
-      ) {
-        const listPromise = model.memberIds.map((item) => {
-          if ((exitMemInPerm.memberIds || []).includes(item)) {
-            exitMemInPerm.memberIds = (exitMemInPerm.memberIds || []).filter(
-              (i: string) => i.toString() !== item
-            );
-            return exitMemInPerm.save();
-          }
-        });
-        await Promise.all(listPromise);
-      }
-      const removeIds: string[] = [];
-      (boardPermission.memberIds || []).forEach((item) => {
-        if (!(model.memberIds || []).includes(item))
-          removeIds.push(item.toString());
-      });
-      const viewerPerm = await this.boardPermissionSchema
-        .findOne({
-          boardId: boardPermission.boardId,
-          isViewer: true,
-        })
-        .exec();
-      let updateMemberIds: string[] = [];
-      if (viewerPerm && removeIds.length > 0) {
-        updateMemberIds = [
+      if (model.memberIds) {
+        const viewerPerm = await this.boardPermissionSchema
+          .findOne({
+            boardId: boardPermission.boardId,
+            isViewer: true,
+          })
+          .exec();
+        if (!viewerPerm) {
+          throw new HttpException(
+            StatusCodes.BAD_REQUEST,
+            "Viewer permission not found"
+          );
+        }
+        const memberInPerm = boardPermission.memberIds || [];
+        const addIds = difference(
+          model.memberIds,
+          memberInPerm.map((i) => i.toString()).filter((item) => item !== owner)
+        );
+        const removeIds = difference(
+          memberInPerm
+            .map((i) => i.toString())
+            .filter((item) => item !== owner),
+          model.memberIds
+        );
+
+        boardPermission.memberIds = [...new Set([...memberInPerm, ...addIds])];
+        if (viewerPerm && viewerPerm._id.toString() !== permissionId) {
+          boardPermission.memberIds = boardPermission.memberIds.filter(
+            (i: string) => !removeIds.includes(i.toString())
+          );
+        }
+        await boardPermission.save({ session });
+        viewerPerm.memberIds = [
           ...new Set([
-            ...viewerPerm.memberIds.map((item) => item.toString()),
+            ...viewerPerm?.memberIds.map((i) => i.toString()),
             ...removeIds,
           ]),
         ];
-        if (viewerPerm._id.toString() !== permissionId) {
-          viewerPerm.memberIds = updateMemberIds;
-          await viewerPerm.save();
+
+        await viewerPerm.save({ session });
+
+        //Remove member from other perm
+        const otherPerm = await this.boardPermissionSchema
+          .find({
+            boardId: boardPermission.boardId,
+            _id: { $ne: permissionId },
+          })
+          .exec();
+        if (otherPerm && addIds.length > 0) {
+          const listPromise = otherPerm.map((perm) => {
+            perm.memberIds = perm.memberIds.filter(
+              (i: string) => !addIds.includes(i.toString())
+            );
+            return perm.save({ session });
+          });
+          await Promise.all(listPromise);
         }
       }
-
-      if (boardPermission.isViewer && removeIds.length > 0) {
-        updateModel = {
-          ...model,
-          memberIds: updateMemberIds,
-        };
-      }
+    } else {
+      await this.boardPermissionSchema.findByIdAndUpdate(
+        permissionId,
+        updateModel,
+        { session }
+      );
     }
-    await this.boardPermissionSchema.findByIdAndUpdate(
-      permissionId,
-      updateModel
-    );
+    await session.commitTransaction();
+    session.endSession();
   }
   public async getBoardPermissionByBoardId(
     userId: string,

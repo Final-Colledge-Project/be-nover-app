@@ -16,6 +16,7 @@ import { TeamWorkspaceSchema } from "@modules/teamWorkspaces";
 import IInvitationWorkspace from "./invitation.interface";
 import JoinGroupDto from "./dtos/joinGroupDto";
 import { StatusCodes } from "http-status-codes";
+import { ClientSession } from "mongoose";
 import { WorkspacePermissionSchema } from "@modules/workspacePermissions";
 export default class InvitationService {
   private invitationSchema = InvitationSchema;
@@ -62,12 +63,30 @@ export default class InvitationService {
       workspaceId: new OBJECT_ID(workspaceId),
       receiverId: new OBJECT_ID(invitedUser.id),
     });
+    const wsPerm = await this.wsPermissionSchema.findById(model.permissionId);
+    if (!wsPerm) {
+      throw new HttpException(StatusCodes.BAD_REQUEST, "Permission not found");
+    }
+    const wsAdmin = await this.wsPermissionSchema
+      .findOne({
+        workspaceId: workspaceId,
+        memberIds: {
+          $in: [adminId],
+        },
+      })
+      .exec();
+    if (!wsAdmin?.isWSAdmin && !wsPerm.isWSViewer) {
+      throw new HttpException(
+        StatusCodes.BAD_REQUEST,
+        "Not have permission to invite member with this permission"
+      );
+    }
     let invitation: IInvitationWorkspace;
     if (existInvitation) {
       const updateInvitation = await this.invitationSchema
         .findByIdAndUpdate(
           existInvitation.id,
-          { status: INVITE_STATUS.pending },
+          { status: INVITE_STATUS.pending, wsPermissionId: model.permissionId },
           { new: true }
         )
         .exec();
@@ -84,6 +103,7 @@ export default class InvitationService {
         senderId: new OBJECT_ID(adminId),
         receiverId: new OBJECT_ID(invitedUser.id),
         status: INVITE_STATUS.pending,
+        wsPermissionId: model.permissionId,
       });
     }
     const url = `http://localhost:5173/u/invitation/${invitation._id}`;
@@ -98,7 +118,7 @@ export default class InvitationService {
     userId: string,
     workspaceId: string,
     status: string,
-    session: any
+    session: ClientSession
   ): Promise<void> {
     const teamWorkspace = await this.teamWorkspaceSchema
       .findById(workspaceId)
@@ -153,33 +173,51 @@ export default class InvitationService {
           { session }
         )
         .exec();
-      const viewerPermGroup = await this.wsPermissionSchema
-        .findOne({
-          workspaceId: workspaceId,
-          isWSViewer: true,
-        })
-        .session(session)
-        .exec();
-      console.log("🚀 ~ InvitationService ~ viewerPermGroup:", viewerPermGroup);
-      if (!viewerPermGroup) {
-        throw new HttpException(
-          StatusCodes.BAD_REQUEST,
-          "Viewer permission group not found"
-        );
-      }
-      await this.wsPermissionSchema
-        .findOneAndUpdate(
-          {
-            _id: viewerPermGroup.id,
-          },
-          {
-            $push: {
-              memberIds: userId,
+      const wsPermission = await this.wsPermissionSchema.findById(
+        existedInvitation.wsPermissionId
+      );
+      if (wsPermission) {
+        await this.wsPermissionSchema
+          .findOneAndUpdate(
+            {
+              _id: wsPermission.id,
             },
-          },
-          { session }
-        )
-        .exec();
+            {
+              $push: {
+                memberIds: userId,
+              },
+            },
+            { session }
+          )
+          .exec();
+      } else {
+        const viewerPermGroup = await this.wsPermissionSchema
+          .findOne({
+            workspaceId: workspaceId,
+            isWSViewer: true,
+          })
+          .session(session)
+          .exec();
+        if (!viewerPermGroup) {
+          throw new HttpException(
+            StatusCodes.CONFLICT,
+            "Viewer permission group not found"
+          );
+        }
+        await this.wsPermissionSchema
+          .findOneAndUpdate(
+            {
+              _id: viewerPermGroup.id,
+            },
+            {
+              $push: {
+                memberIds: userId,
+              },
+            },
+            { session }
+          )
+          .exec();
+      }
     }
     await session.commitTransaction();
     session.endSession();
@@ -389,6 +427,30 @@ export default class InvitationService {
           },
         },
         {
+          $lookup: {
+            from: "workspacepermissions",
+            let: { wsPermissionId: "$wsPermissionId" },
+            localField: "wsPermissionId",
+            foreignField: "_id",
+            as: "wsPermission",
+            pipeline: [
+              {
+                $match: {
+                  $expr: {
+                    $eq: ["$_id", "$$wsPermissionId"],
+                  },
+                },
+              },
+              {
+                $project: {
+                  _id: 1,
+                  name: 1,
+                },
+              },
+            ],
+          },
+        },
+        {
           $project: {
             _id: 1,
             createdAt: 1,
@@ -403,6 +465,9 @@ export default class InvitationService {
             },
             teamWorkspaceMember: {
               $arrayElemAt: ["$teamWorkspaceMember", 0],
+            },
+            wsPermission: {
+              $arrayElemAt: ["$wsPermission", 0],
             },
           },
         },
