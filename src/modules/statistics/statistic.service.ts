@@ -10,7 +10,7 @@ import { ISprint, SprintSchema } from "@modules/sprints";
 import { UserSchema } from "@modules/users";
 import { StatusCodes } from "http-status-codes";
 import { concat } from "lodash";
-import { IVelocityReport } from "./statistic.interface";
+import { ISprintReport, IVelocityReport } from "./statistic.interface";
 
 export default class StatisticService {
   private cardSchema = CardSchema;
@@ -35,13 +35,8 @@ export default class StatisticService {
   }
   public async generateBurnDownReport(
     sprintId: string,
-    boardId: string,
-    userId: string
+    boardId: string
   ): Promise<ISprint> {
-    const isMem = await isBoardMember(boardId, userId);
-    if (!isMem) {
-      throw new HttpException(StatusCodes.FORBIDDEN, "Permission denied");
-    }
     const sprint = await this.sprintSchema.findById(sprintId).exec();
     if (!sprint) {
       throw new HttpException(StatusCodes.BAD_REQUEST, "Sprint not found");
@@ -104,5 +99,61 @@ export default class StatisticService {
       };
     });
     return await Promise.all(totalStoryPointInSprint);
+  }
+  public async generateSprintReport(
+    boardId: string,
+    sprintId: string
+  ): Promise<ISprintReport> {
+    const sprint = await this.sprintSchema.findById(sprintId).exec();
+    if (!sprint) {
+      throw new HttpException(StatusCodes.BAD_REQUEST, "Sprint not found");
+    }
+    const cardsInSprints = await this.cardSchema
+      .find({
+        boardId,
+        sprintId,
+        isActive: { $ne: false },
+      })
+      .exec();
+    const totalStoryPoint = cardsInSprints.reduce((total, card) => {
+      return total + card.storyPoint;
+    }, 0);
+    const resolveColumn = await this.columnSchema
+      .find({
+        boardId,
+        isResolved: true,
+      })
+      .exec();
+    const completedTasks = cardsInSprints
+      .filter((card) => {
+        return resolveColumn.some((column) => {
+          return column._id.toString() === card.columnId.toString();
+        });
+      })
+      .map((item) => {
+        return {
+          _id: item._id,
+          title: item.title,
+          storyPoint: item.storyPoint,
+          assignees: item.memberIds[0],
+          priority: item.priorityId,
+          issueTypeId: item.issueTypeId,
+        };
+      });
+    const completedStoryPoint = completedTasks.reduce((total, card) => {
+      return total + card.storyPoint;
+    }, 0);
+    const res = {
+      _id: sprint._id,
+      name: sprint.name,
+      startDate: sprint.startDate,
+      endDate: sprint.endDate,
+      creatorId: sprint.creatorId,
+      status: sprint.status,
+      totalStoryPoint,
+      completedStoryPoint,
+      completedTasks,
+    };
+    return res;
   }
 }

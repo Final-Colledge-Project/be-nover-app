@@ -34,11 +34,9 @@ export default class StatisticController {
     try {
       const sprintId = req.query.sprint as string;
       const boardId = req.params.boardId;
-      const userId = req.user.id;
       const report = await this.statisticService.generateBurnDownReport(
         sprintId,
-        boardId,
-        userId
+        boardId
       );
       res.status(StatusCodes.OK).json({
         data: report,
@@ -60,6 +58,26 @@ export default class StatisticController {
       res.status(StatusCodes.OK).json({
         data: report,
         message: "Generate velocity report successfully",
+      });
+    } catch (err) {
+      next(err);
+    }
+  };
+  public generateSprintReport = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      const sprintId = req.query.sprint as string;
+      const boardId = req.params.boardId;
+      const report = await this.statisticService.generateSprintReport(
+        boardId,
+        sprintId
+      );
+      res.status(StatusCodes.OK).json({
+        data: report,
+        message: "Generate sprint report successfully",
       });
     } catch (err) {
       next(err);

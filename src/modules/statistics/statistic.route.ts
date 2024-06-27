@@ -29,5 +29,11 @@ export default class StatisticRoute implements Route {
       authorizePermission("report:create", PERM_TYPE.board),
       this.statisticController.generateVelocityReport
     );
+    this.router.get(
+      this.path + "/sprint-report/board/:boardId",
+      authMiddleware,
+      authorizePermission("report:create", PERM_TYPE.board),
+      this.statisticController.generateSprintReport
+    );
   }
 }
