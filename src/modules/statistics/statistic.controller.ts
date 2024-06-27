@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import StatisticService from "./statistic.service";
 import { StatusCodes } from "http-status-codes";
+import { IVelocityReport } from "./statistic.interface";
 export default class StatisticController {
   private statisticService = new StatisticService();
   public generateAverageAgeReport = async (
@@ -42,6 +43,23 @@ export default class StatisticController {
       res.status(StatusCodes.OK).json({
         data: report,
         message: "Generate burn down report successfully",
+      });
+    } catch (err) {
+      next(err);
+    }
+  };
+  public generateVelocityReport = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      const boardId = req.params.boardId;
+      const report: IVelocityReport[] =
+        await this.statisticService.generateVelocityReport(boardId);
+      res.status(StatusCodes.OK).json({
+        data: report,
+        message: "Generate velocity report successfully",
       });
     } catch (err) {
       next(err);
