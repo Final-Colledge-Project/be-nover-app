@@ -17,12 +17,12 @@ export const isWorkspaceAdmin = async (
     teamWorkspaceId
   ).exec();
   if (!teamWorkspace) return false;
-  const adminPermission = WorkspacePermissionSchema.findOne({
+  const adminPermission = await WorkspacePermissionSchema.findOne({
     workspaceId: teamWorkspaceId,
-    userId: adminId,
     isWSAdmin: true,
   }).exec();
-  if (!adminPermission) return false;
+  const isInPerm = adminPermission?.memberIds.find((mem) => mem.toString() === adminId.toString());
+  if (!isInPerm) return false;
   return true;
 };
 
@@ -62,10 +62,10 @@ export const isBoardAdmin = async (
   if (!existBoard) return false;
   const adminPermission = await BoardPermissionSchema.findOne({
     boardId: boardId,
-    userId: adminId,
     isAdmin: true,
   }).exec();
-  if (!adminPermission) return false;
+  const isInPerm = adminPermission?.memberIds.find((mem) => mem.toString() === adminId.toString());
+  if (!isInPerm) return false;
   return true;
 };
 
