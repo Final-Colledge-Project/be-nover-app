@@ -1,6 +1,7 @@
 import { HttpException } from "@core/exceptions";
 import { StatusCodes } from "http-status-codes";
 import {
+  ROLE,
   isBoardAdmin,
   isEmptyObject,
   isSuperAdmin,
@@ -12,6 +13,9 @@ import UpdateWSPermissionDto from "./dtos/updateWSPermissionDto";
 import IWorkspacePermission from "./wsPermission.interface";
 import { TeamWorkspaceSchema } from "@modules/teamWorkspaces";
 import { UserSchema } from "@modules/users";
+import { difference } from "lodash";
+import { ClientSession } from "mongoose";
+import { isVariableWidth } from "class-validator";
 export default class WorkspacePermissionService {
   private wsPermissionSchema = WorkspacePermissionSchema;
   private teamWorkspaceSchema = TeamWorkspaceSchema;
@@ -42,7 +46,16 @@ export default class WorkspacePermissionService {
       throw new HttpException(StatusCodes.BAD_REQUEST, "User not found");
     }
     //Handle members in perm
-    if (model.memberIds) {
+    if (model.memberIds && model.memberIds.length) {
+      const owner = workspace.workspaceAdmins.filter((item) => {
+        item.role === ROLE.superAdmin;
+      })[0];
+      if (model.memberIds.includes(owner.user.toString())) {
+        throw new HttpException(
+          StatusCodes.BAD_REQUEST,
+          "Owner cannot be added to permission group"
+        );
+      }
       const existedMember = (workspace.workspaceMembers || []).some((item) =>
         (model.memberIds || []).includes(item.user.toString())
       );
@@ -82,7 +95,8 @@ export default class WorkspacePermissionService {
   public async updateWSPermission(
     userId: string,
     permissionId: string,
-    model: UpdateWSPermissionDto
+    model: UpdateWSPermissionDto,
+    session: ClientSession
   ): Promise<void> {
     if (!userId) {
       throw new HttpException(StatusCodes.BAD_REQUEST, "UserId is required");
@@ -98,7 +112,21 @@ export default class WorkspacePermissionService {
       );
     }
 
-    const wsSuperAdmin = await isSuperAdmin(wsPermission.workspaceId, userId);
+    if (wsPermission.isWSAdmin || wsPermission.isWSViewer) {
+      if (
+        difference(Object.keys(model), ["memberIds", "description"]).length > 0
+      ) {
+        throw new HttpException(
+          StatusCodes.BAD_REQUEST,
+          "Cannot update other fields except members"
+        );
+      }
+    }
+
+    const wsSuperAdmin = await isWorkspaceAdmin(
+      wsPermission.workspaceId,
+      userId
+    );
     if (!wsSuperAdmin) {
       throw new HttpException(StatusCodes.FORBIDDEN, "Permission denied");
     }
@@ -117,69 +145,98 @@ export default class WorkspacePermissionService {
     ) {
       throw new HttpException(StatusCodes.BAD_REQUEST, "User not found");
     }
-    const existedMember = (workspace.workspaceMembers || []).some((item) =>
-      (model.memberIds || []).includes(item.user.toString())
-    );
+
     let updateModel = model;
     if (model.memberIds) {
+      const owner = workspace.workspaceAdmins.filter((item) => {
+        item.role === ROLE.superAdmin;
+      })[0];
+      if (model.memberIds.includes(owner.user.toString())) {
+        throw new HttpException(
+          StatusCodes.BAD_REQUEST,
+          "Owner cannot be added to permission group"
+        );
+      }
+      const existedMember = (workspace.workspaceMembers || []).some((item) =>
+        (model.memberIds || []).includes(item.user.toString())
+      );
       if (!existedMember) {
         throw new HttpException(
           StatusCodes.BAD_REQUEST,
           "Member not found in workspace"
         );
       }
-      const exitMemInPerm = await this.wsPermissionSchema.findOne({
-        workspaceId: wsPermission.workspaceId,
-        memberIds: { $in: model.memberIds },
-      });
-      if (
-        exitMemInPerm &&
-        (model.memberIds || []).length > 0 &&
-        exitMemInPerm._id.toString() !== permissionId
-      ) {
-        const listPromise = (model.memberIds || []).map((item) => {
-          if ((exitMemInPerm.memberIds || []).includes(item)) {
-            exitMemInPerm.memberIds = (exitMemInPerm.memberIds || []).filter(
-              (i: string) => i.toString() !== item
-            );
-            return exitMemInPerm.save();
-          }
-        });
-        await Promise.all(listPromise);
-      }
-      const removeIds: string[] = [];
-      (wsPermission.memberIds || []).forEach((item) => {
-        if (!(model.memberIds || []).includes(item))
-          removeIds.push(item.toString());
-      });
+
       const viewerPerm = await this.wsPermissionSchema
         .findOne({
           workspaceId: wsPermission.workspaceId,
           isWSViewer: true,
         })
         .exec();
-      let updateMemberIds: string[] = [];
-      if (viewerPerm && removeIds.length > 0) {
-        updateMemberIds = [
-          ...new Set([
-            ...viewerPerm.memberIds.map((item) => item.toString()),
-            ...removeIds,
-          ]),
-        ];
-        if (viewerPerm._id.toString() !== permissionId) {
-          viewerPerm.memberIds = updateMemberIds;
-          await viewerPerm.save();
-        }
+      if (!viewerPerm) {
+        throw new HttpException(
+          StatusCodes.BAD_REQUEST,
+          "Viewer permission not found"
+        );
       }
-
-      if (wsPermission.isWSViewer && removeIds.length > 0) {
-        updateModel = {
-          ...model,
-          memberIds: updateMemberIds,
-        };
+      const memberInPerm = wsPermission.memberIds || [];
+      const addIds = difference(
+        model.memberIds,
+        memberInPerm
+          .map((i) => i.toString())
+          .filter((item) => item !== owner.user)
+      );
+      const removeIds = difference(
+        memberInPerm
+          .map((i) => i.toString())
+          .filter((item) => item !== owner.user),
+        model.memberIds
+      );
+      wsPermission.memberIds = [...new Set([...memberInPerm, ...addIds])];
+      if (viewerPerm && viewerPerm._id.toString() !== permissionId) {
+        wsPermission.memberIds = wsPermission.memberIds.filter(
+          (i: string) => !removeIds.includes(i.toString())
+        );
       }
+      await wsPermission.save({ session });
+      viewerPerm.memberIds = [
+        ...new Set([
+          ...viewerPerm?.memberIds.map((i) => i.toString()),
+          ...removeIds,
+        ]),
+      ];
+      await viewerPerm.save({ session });
+      //Remove member from other perm
+      const otherPerm = await this.wsPermissionSchema
+        .find({
+          workspaceId: wsPermission.workspaceId,
+          _id: { $ne: permissionId },
+        })
+        .exec();
+      if (otherPerm && addIds.length > 0) {
+        const listPromise = otherPerm.map((perm) => {
+          perm.memberIds = perm.memberIds.filter(
+            (i: string) => !addIds.includes(i.toString())
+          );
+          return perm.save({ session });
+        });
+        await Promise.all(listPromise);
+      }
+    } 
+    if (updateModel && updateModel.hasOwnProperty('memberIds')) {
+      const { memberIds, ...otherProps } = updateModel;
+      updateModel = {
+        ...otherProps,
+      };
     }
-    await this.wsPermissionSchema.findByIdAndUpdate(permissionId, updateModel);
+      await this.wsPermissionSchema.findByIdAndUpdate(
+        permissionId,
+        updateModel,
+        { session }
+      );
+    
+    await session.commitTransaction();
+    session.endSession();
   }
   public async getWSPermissionByWSId(
     userId: string,
@@ -227,4 +284,47 @@ export default class WorkspacePermissionService {
     }
     return groupPermission;
   }
+  public deleteWSPermission = async (
+    userId: string,
+    workspaceId: string,
+    permId: string,
+    session: ClientSession
+  ) => {
+    const isAdmin = isWorkspaceAdmin(workspaceId, userId);
+    if (!isAdmin) {
+      throw new HttpException(StatusCodes.FORBIDDEN, "Permission denied");
+    }
+    const perm = await this.wsPermissionSchema.findById(permId).exec();
+    if (!perm) {
+      throw new HttpException(StatusCodes.NOT_FOUND, "Permission not found");
+    }
+    if (perm.isWSAdmin || perm.isWSViewer) {
+      throw new HttpException(
+        StatusCodes.BAD_REQUEST,
+        "Cannot delete default permission"
+      );
+    }
+    if (perm.memberIds.length) {
+      const viewerPerm = await this.wsPermissionSchema.findOne({
+        workspaceId: workspaceId,
+        isViewer: true,
+      });
+      if (!viewerPerm) {
+        throw new HttpException(
+          StatusCodes.BAD_REQUEST,
+          "Viewer permission not found"
+        );
+      }
+      viewerPerm.memberIds = [
+        ...new Set([
+          ...viewerPerm.memberIds.map((i) => i.toString()),
+          ...perm.memberIds.map((i) => i.toString()),
+        ]),
+      ];
+      await viewerPerm.save({ session });
+    }
+    await this.wsPermissionSchema.findByIdAndDelete(permId, { session });
+    await session.commitTransaction();
+    session.endSession();
+  };
 }

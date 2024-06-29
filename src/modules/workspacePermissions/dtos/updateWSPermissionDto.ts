@@ -46,7 +46,7 @@ export default class UpdateWSPermissionDto {
   @IsHexColor()
   public color: string;
   @IsArray()
-  public memberIds: string[];
+  public memberIds?: string[];
   @IsOptional()
   @IsObject()
   public board: { create: boolean };

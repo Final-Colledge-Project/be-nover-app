@@ -364,7 +364,7 @@ export default class BoardService {
       throw new HttpException(StatusCodes.BAD_REQUEST, "Workspace not found");
     }
     //Add members to board
-    const members = inviteMems.members.map((mem: IAddMem) => mem.memberId);
+    const members = (inviteMems.members || []).map((mem: IAddMem) => mem.memberId);
     if (members.length !== [...new Set(members)].length) {
       throw new HttpException(StatusCodes.BAD_REQUEST, "Duplicate member");
     }
@@ -429,7 +429,7 @@ export default class BoardService {
           acc[mem.permissionId].push(mem.memberId);
           return acc;
         }, {});
-      const permPromise = Object.keys(groupMemByPerm).map(async (permId) => {
+      const permPromise =( Object.keys(groupMemByPerm) || []).map(async (permId) => {
         const perm = boardPerms.find((perm) => perm._id.toString() === permId);
         if (!perm) {
           throw new HttpException(
