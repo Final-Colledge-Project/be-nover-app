@@ -34,5 +34,10 @@ export default class WorkspacePermissionRoute implements Route {
       authMiddleware,
       this.wsPermissionController.getWSPermissionByUser
     );
+    this.router.delete(
+      this.path + "/:id/workspace/:wsId",
+      authMiddleware,
+      this.wsPermissionController.deleteWSPermission
+    );
   }
 }

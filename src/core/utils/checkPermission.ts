@@ -6,6 +6,8 @@ import {
   IWorkspaceAdmin,
 } from "@modules/teamWorkspace/teamWorkspace.interface";
 import { MODE_ACCESS, ROLE } from "./constant";
+import { BoardPermissionSchema } from "@modules/boardPermission";
+import { WorkspacePermissionSchema } from "@modules/workspacePermission";
 
 export const isWorkspaceAdmin = async (
   teamWorkspaceId: string,
@@ -14,18 +16,14 @@ export const isWorkspaceAdmin = async (
   const teamWorkspace = await TeamWorkspaceSchema.findById(
     teamWorkspaceId
   ).exec();
-
-  const wsAdmin = teamWorkspace?.workspaceAdmins.find(
-    (admin: IWorkspaceAdmin) => {
-      return admin.user.toString() === adminId;
-    }
-  );
-
-  if (!wsAdmin) {
-    return false;
-  }
-
-  return wsAdmin?.role === ROLE.admin || wsAdmin?.role === ROLE.superAdmin;
+  if (!teamWorkspace) return false;
+  const adminPermission = WorkspacePermissionSchema.findOne({
+    workspaceId: teamWorkspaceId,
+    userId: adminId,
+    isWSAdmin: true,
+  }).exec();
+  if (!adminPermission) return false;
+  return true;
 };
 
 export const isWorkspaceMember = async (
@@ -62,8 +60,13 @@ export const isBoardAdmin = async (
 ): Promise<Boolean> => {
   const existBoard = await BoardSchema.findById(boardId).exec();
   if (!existBoard) return false;
-  const isAdmin = existBoard?.ownerIds.includes(adminId);
-  return isAdmin;
+  const adminPermission = await BoardPermissionSchema.findOne({
+    boardId: boardId,
+    userId: adminId,
+    isAdmin: true,
+  }).exec();
+  if (!adminPermission) return false;
+  return true;
 };
 
 export const isBoardMember = async (
