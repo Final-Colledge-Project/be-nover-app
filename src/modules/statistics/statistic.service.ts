@@ -136,7 +136,7 @@ export default class StatisticService {
           title: item.title,
           storyPoint: item.storyPoint,
           assignees: item.memberIds[0],
-          priority: item.priorityId,
+          priorityId: item.priorityId,
           issueTypeId: item.issueTypeId,
         };
       });

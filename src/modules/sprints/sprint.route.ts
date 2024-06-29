@@ -36,5 +36,10 @@ export default class ScheduleRoute implements Route {
       authMiddleware,
       this.sprintController.getSprintById
     );
+    this.router.get(
+      this.path + "/board/:boardId",
+      authMiddleware,
+      this.sprintController.getAllSprintsByBoard
+    );
   }
 }

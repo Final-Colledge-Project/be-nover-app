@@ -64,6 +64,7 @@ export const isValidObjectId = (id: string) => {
 };
 
 export const upperCaseFirstLetter = (str: string) => {
+  if (!str) return str;
   return str.charAt(0).toUpperCase() + str.slice(1);
 };
 

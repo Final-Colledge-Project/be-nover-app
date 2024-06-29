@@ -81,4 +81,24 @@ export default class SprintController {
       next(err);
     }
   };
+  public getAllSprintsByBoard = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      const boardId = req.params.boardId;
+      const userId = req.user.id;
+      const sprints = await this.sprintService.getSprintsByBoardId(
+        boardId,
+        userId
+      );
+      res.status(StatusCodes.OK).json({
+        data: sprints,
+        message: "Get all sprints successfully",
+      });
+    } catch (err) {
+      next(err);
+    }
+  };
 }

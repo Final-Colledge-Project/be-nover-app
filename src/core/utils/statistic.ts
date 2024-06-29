@@ -71,6 +71,7 @@ export const calculateAverageAgeReport = (
       name: task.title,
       createDate: task.createdAt,
       age: calculateTaskAge(task.createdAt),
+      status: task.columnId,
     };
   });
   return { averageAge, averageEachTask };

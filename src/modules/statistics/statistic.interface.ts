@@ -14,11 +14,11 @@ export interface ISprintReport {
   totalStoryPoint: number;
   completedStoryPoint: number;
   completedTasks: {
-    _id: any;
+    _id: string;
     title: string;
     storyPoint: number;
     assignees: string;
-    priority: string;
+    priorityId: string;
     issueTypeId: string;
   }[];
 }

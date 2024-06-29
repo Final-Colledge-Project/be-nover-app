@@ -24,6 +24,7 @@ import { IssueLinkRoute } from "@modules/issueLinks";
 import { IssueLinkTypeRoute } from "@modules/issueLinkTypes";
 import { IssueTypeRoute } from "@modules/issueTypes";
 import { StatisticRoute } from "@modules/statistics";
+import { PriorityRoute } from "@modules/priorities";
 validateEnv();
 const routes = [
   new IndexRoute(),
@@ -49,6 +50,7 @@ const routes = [
   new IssueLinkTypeRoute(),
   new IssueTypeRoute(),
   new StatisticRoute(),
+  new PriorityRoute(),
 ];
 const app = new App(routes);
 app.listen();

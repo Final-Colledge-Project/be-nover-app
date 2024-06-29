@@ -147,7 +147,20 @@ export default class SprintService {
     if (!sprint) {
       throw new HttpException(StatusCodes.BAD_REQUEST, "Sprint not found");
     }
-    
+
     return sprint;
+  }
+  public async getSprintsByBoardId(
+    boardId: string,
+    userId: string
+  ): Promise<ISprint[]> {
+    const isMem = await isBoardMember(boardId, userId);
+    if (!isMem) {
+      throw new HttpException(StatusCodes.FORBIDDEN, "Permission denied");
+    }
+    const sprints = await this.sprintSchema
+      .find({ boardId })
+      .sort({ startDate: "asc" });
+    return sprints;
   }
 }
