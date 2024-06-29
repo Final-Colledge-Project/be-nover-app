@@ -222,13 +222,19 @@ export default class WorkspacePermissionService {
         });
         await Promise.all(listPromise);
       }
-    } else {
+    } 
+    if (updateModel && updateModel.hasOwnProperty('memberIds')) {
+      const { memberIds, ...otherProps } = updateModel;
+      updateModel = {
+        ...otherProps,
+      };
+    }
       await this.wsPermissionSchema.findByIdAndUpdate(
         permissionId,
         updateModel,
         { session }
       );
-    }
+    
     await session.commitTransaction();
     session.endSession();
   }

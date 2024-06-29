@@ -129,7 +129,7 @@ export default class BoardPermissionService {
       throw new HttpException(StatusCodes.BAD_REQUEST, "User not found");
     }
     const board = await this.boardSchema.findById(boardPermission.boardId);
-    let updateModel = model;
+    let updateModel = {};
     //Handle memberIds in perm
     if (model.memberIds && model.memberIds.length > 0) {
       const owner = board?.ownerIds[0].toString();
@@ -208,13 +208,18 @@ export default class BoardPermissionService {
         });
         await Promise.all(listPromise);
       }
-    } else {
-      await this.boardPermissionSchema.findByIdAndUpdate(
-        permissionId,
-        updateModel,
-        { session }
-      );
+    } 
+    if (model && model.hasOwnProperty('memberIds')) {
+      const { memberIds, ...otherProps } = model;
+      updateModel = {
+        ...otherProps,
+      };
     }
+    await this.boardPermissionSchema.findByIdAndUpdate(
+      permissionId,
+      updateModel,
+      { session }
+    );
     await session.commitTransaction();
     session.endSession();
   }
