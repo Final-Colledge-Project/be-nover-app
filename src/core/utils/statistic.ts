@@ -67,7 +67,8 @@ export const calculateAverageAgeReport = (
   const averageAge = calculateAverageAge(filterTasks);
   const averageEachTask = filterTasks.map((task) => {
     return {
-      taskId: task._id,
+      _id: task._id,
+      taskId: task.cardId,
       name: task.title,
       createDate: task.createdAt,
       age: calculateTaskAge(task.createdAt),

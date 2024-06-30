@@ -133,6 +133,7 @@ export default class StatisticService {
       .map((item) => {
         return {
           _id: item._id,
+          cardId: item.cardId,
           title: item.title,
           storyPoint: item.storyPoint,
           assignees: item.memberIds[0],

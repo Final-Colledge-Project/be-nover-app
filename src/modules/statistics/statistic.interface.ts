@@ -15,6 +15,7 @@ export interface ISprintReport {
   completedStoryPoint: number;
   completedTasks: {
     _id: string;
+    cardId: string;
     title: string;
     storyPoint: number;
     assignees: string;
