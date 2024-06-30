@@ -34,6 +34,14 @@ export const MODEL_NAME = {
   schedule: "Schedule",
   boardPermission: "BoardPermission",
   workspacePermission: "WorkspacePermission",
+  sprint: "Sprint",
+  columnStatus: "ColumnStatus",
+  issueType: "IssueType",
+  priority: "Priority",
+  taskLog: "TaskLog",
+  issueLink: "IssueLink",
+  epic: "Epic",
+  issueLinkType: "IssueLinkType",
 };
 export const SUBTASK_STATUS = {
   todo: "todo",
@@ -57,4 +65,39 @@ export const SCHEDULE_TYPE = {
 export const PERM_TYPE = {
   board: "board",
   workspace: "workspace",
+};
+
+export const BOARD_TEMPLATE = {
+  kanban: "kanban",
+  scrum: "scrum",
+};
+
+export const SPRINT_STATUS = {
+  pending: "pending",
+  active: "active",
+  completed: "completed",
+  backlog: "backlog",
+};
+
+export const SPRINT_DURATION = {
+  oneWeek: "1 week",
+  twoWeeks: "2 weeks",
+  threeWeeks: "3 weeks",
+  fourWeeks: "4 weeks",
+  custom: "custom",
+};
+
+export const DIRECTION_TYPE = {
+  inward: "inward",
+  outward: "outward",
+};
+
+export const MAX_RESULT = 100;
+
+export const AVERAGE_AGE_PERIOD = {
+  daily: "daily",
+  weekly: "weekly",
+  monthly: "monthly",
+  quarterly: "quarterly",
+  yearly: "yearly",
 };

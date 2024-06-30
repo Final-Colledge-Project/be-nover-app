@@ -18,7 +18,6 @@ export default class ColumnService {
   private boardSchema = BoardSchema;
   public async createColumn(
     model: CreateColumnDto,
-    userId: string,
     boardId: string
   ): Promise<IColumn> {
     if (isEmptyObject(model)) {
@@ -26,7 +25,7 @@ export default class ColumnService {
     }
     const board = await this.boardSchema.findById(boardId).exec();
     if (!board) {
-      throw new HttpException(StatusCodes.CONFLICT, "Board not found");
+      throw new HttpException(StatusCodes.BAD_REQUEST, "Board not found");
     }
     const existColumn = await this.columnSchema.findOne({
       title: model.title,
@@ -35,13 +34,16 @@ export default class ColumnService {
 
     if (existColumn) {
       throw new HttpException(
-        StatusCodes.CONFLICT,
+        StatusCodes.BAD_REQUEST,
         `Column with title ${model.title} already exists`
       );
     }
-    const newColumn = await this.columnSchema.create({ ...model, boardId });
+    const newColumn = await this.columnSchema.create({
+      ...model,
+      boardId,
+    });
     if (!newColumn) {
-      throw new HttpException(StatusCodes.CONFLICT, "Column not created");
+      throw new HttpException(StatusCodes.BAD_REQUEST, "Column not created");
     }
     await BoardSchema.findByIdAndUpdate(
       { _id: new OBJECT_ID(newColumn.boardId) },
@@ -53,7 +55,7 @@ export default class ColumnService {
   public async getColumnById(columnId: string): Promise<IColumn> {
     const column = await this.columnSchema.findById(columnId).exec();
     if (!column) {
-      throw new HttpException(StatusCodes.CONFLICT, "Column not found");
+      throw new HttpException(StatusCodes.BAD_REQUEST, "Column not found");
     }
     return column;
   }
@@ -72,21 +74,20 @@ export default class ColumnService {
       .select("-__v")
       .exec();
     if (!columns) {
-      throw new HttpException(StatusCodes.CONFLICT, "Columns not found");
+      throw new HttpException(StatusCodes.BAD_REQUEST, "Columns not found");
     }
     return columns;
   }
   public async updateColumn(
     model: UpdateColumnDto,
-    columnId: string,
-    userId: string
+    columnId: string
   ): Promise<IColumn> {
     if (isEmptyObject(model)) {
       throw new HttpException(StatusCodes.BAD_REQUEST, "Model is empty");
     }
     const existColumn = await this.columnSchema.findById(columnId).exec();
     if (!existColumn) {
-      throw new HttpException(StatusCodes.CONFLICT, "Column not found");
+      throw new HttpException(StatusCodes.BAD_REQUEST, "Column not found");
     }
 
     if (model.title) {
@@ -95,7 +96,7 @@ export default class ColumnService {
         .exec();
       if (existTitle) {
         throw new HttpException(
-          StatusCodes.CONFLICT,
+          StatusCodes.BAD_REQUEST,
           `Column with title ${model.title} already exists`
         );
       }
@@ -110,26 +111,23 @@ export default class ColumnService {
       )
       .exec();
     if (!updatedColumn) {
-      throw new HttpException(StatusCodes.CONFLICT, "Column not updated");
+      throw new HttpException(StatusCodes.BAD_REQUEST, "Column not updated");
     }
     return updatedColumn;
   }
-  public async deleteColumn(
-    columnId: string,
-    userId: string
-  ): Promise<IColumn> {
+  public async deleteColumn(columnId: string): Promise<IColumn> {
     const column = await this.columnSchema.findById(columnId).exec();
     if (!column) {
-      throw new HttpException(StatusCodes.CONFLICT, "Column not found");
+      throw new HttpException(StatusCodes.BAD_REQUEST, "Column not found");
     }
     if (column.cardOrderIds.length > 0) {
-      throw new HttpException(StatusCodes.CONFLICT, "Column not empty");
+      throw new HttpException(StatusCodes.BAD_REQUEST, "Column not empty");
     }
     const deletedColumn = await this.columnSchema
       .findByIdAndDelete(columnId)
       .exec();
     if (!deletedColumn) {
-      throw new HttpException(StatusCodes.CONFLICT, "Column not deleted");
+      throw new HttpException(StatusCodes.BAD_REQUEST, "Column not deleted");
     }
     await BoardSchema.findByIdAndUpdate(
       { _id: new OBJECT_ID(deletedColumn.boardId) },

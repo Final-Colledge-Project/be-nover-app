@@ -14,6 +14,7 @@ const CardSchema = new mongoose.Schema(
       ref: MODEL_NAME.column,
     },
     cardId: {
+      //key
       type: String,
       default: null,
     },
@@ -26,8 +27,7 @@ const CardSchema = new mongoose.Schema(
     },
     description: {
       type: String,
-      minlength: [2, "Description must be at least 2 characters long"],
-      maxlength: [200, "Description must be at most 200 characters long"],
+      maxLength: [500, "Description must be at most 500 characters long"],
       trim: true,
     },
     cover: {
@@ -36,7 +36,7 @@ const CardSchema = new mongoose.Schema(
     },
     startDate: {
       type: Date,
-      default: Date.now,
+      default: null,
     },
     dueDate: {
       type: Date,
@@ -51,21 +51,9 @@ const CardSchema = new mongoose.Schema(
     ],
     comments: [
       {
-        user: {
+        userId: {
           type: mongoose.Schema.ObjectId,
           ref: MODEL_NAME.user,
-        },
-        email: {
-          type: String,
-          default: null,
-        },
-        avatar: {
-          type: String,
-          default: null,
-        },
-        displayName: {
-          type: String,
-          default: null,
         },
         content: {
           type: String,
@@ -73,13 +61,21 @@ const CardSchema = new mongoose.Schema(
           maxlength: [200, "Content must be at most 200 characters long"],
           trim: true,
         },
+        icon: {
+          type: String,
+          default: null,
+        },
         createdAt: {
           type: Date,
           default: Date.now,
         },
+        updatedAt: {
+          type: Date,
+          default: null,
+        },
       },
     ],
-    subCards: [
+    subCardIds: [
       {
         type: SCHEMA_TYPE,
         ref: MODEL_NAME.subCard,
@@ -113,25 +109,45 @@ const CardSchema = new mongoose.Schema(
       type: SCHEMA_TYPE,
       ref: MODEL_NAME.label,
     },
-    priority: {
-      type: String,
-      enum: [
-        PRIORITY.lowest,
-        PRIORITY.low,
-        PRIORITY.medium,
-        PRIORITY.high,
-        PRIORITY.highest,
-      ],
-      default: PRIORITY.medium,
-    },
-    isOverdue: {
-      type: Boolean,
-      default: false,
+    priorityId: {
+      type: SCHEMA_TYPE,
+      ref: MODEL_NAME.priority,
     },
     isActive: {
       type: Boolean,
       default: true,
       select: false,
+    },
+    epicId: {
+      type: SCHEMA_TYPE,
+      ref: MODEL_NAME.epic,
+    },
+    sprintId: {
+      type: SCHEMA_TYPE,
+      ref: MODEL_NAME.sprint,
+    },
+    deletedAt: {
+      type: Date,
+      default: null,
+    },
+    resolvedAt: {
+      type: Date,
+      default: null,
+    },
+    storyPoint: {
+      type: Number,
+      default: null,
+    },
+    watcherIds: [
+      {
+        type: SCHEMA_TYPE,
+        ref: MODEL_NAME.user,
+      },
+    ],
+    issueTypeId: {
+      type: SCHEMA_TYPE,
+      ref: MODEL_NAME.issueType,
+      required: [true, "IssueTypeId is required"],
     },
   },
   { timestamps: true }

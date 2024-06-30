@@ -5,15 +5,15 @@ import IInvitationWorkspace from "./invitation.interface";
 const InvitationWorkspaceSchema = new mongoose.Schema(
   {
     workspaceId: {
-      type: OBJECT_ID,
+      type: SCHEMA_TYPE,
       ref: MODEL_NAME.teamWorkspace,
     },
     senderId: {
-      type: OBJECT_ID,
+      type: SCHEMA_TYPE,
       ref: MODEL_NAME.user,
     },
     receiverId: {
-      type: OBJECT_ID,
+      type: SCHEMA_TYPE,
       ref: MODEL_NAME.user,
     },
     status: {

@@ -5,14 +5,14 @@ import {
   isValidObjectId,
   viewWorkspacePermission,
 } from "@core/utils";
-import { BoardPermissionSchema } from "@modules/boardPermission";
+import { BoardPermissionSchema } from "@modules/boardPermissions";
 import { BoardSchema } from "@modules/boards";
-import { TeamWorkspaceSchema } from "@modules/teamWorkspace";
+import { TeamWorkspaceSchema } from "@modules/teamWorkspaces";
 import { UserSchema } from "@modules/users";
 import {
   IWorkspacePermission,
   WorkspacePermissionSchema,
-} from "@modules/workspacePermission";
+} from "@modules/workspacePermissions";
 import { NextFunction, Request, Response } from "express";
 import { StatusCodes } from "http-status-codes";
 import { isBoolean } from "lodash";
@@ -52,13 +52,13 @@ export const authorizePermission = (roles: string, permType: string) => {
       case PERM_TYPE.workspace: {
         if (!isValidObjectId(req.params.wsId)) {
           return next(
-            new HttpException(StatusCodes.NOT_FOUND, "Workspace not found")
+            new HttpException(StatusCodes.BAD_REQUEST, "Workspace not found")
           );
         }
         const existedWS = await TeamWorkspaceSchema.findById(req.params.wsId);
         if (!existedWS) {
           return next(
-            new HttpException(StatusCodes.NOT_FOUND, "Workspace not found")
+            new HttpException(StatusCodes.BAD_REQUEST, "Workspace not found")
           );
         }
         const wsPermGroup = await WorkspacePermissionSchema.findOne({
@@ -98,7 +98,7 @@ export const authorizePermission = (roles: string, permType: string) => {
         const existedBoard = await BoardSchema.findById(req.params.boardId);
         if (!existedBoard) {
           return next(
-            new HttpException(StatusCodes.NOT_FOUND, "Board not found")
+            new HttpException(StatusCodes.BAD_REQUEST, "Board not found")
           );
         }
         const boardPermGroup = await BoardPermissionSchema.findOne({
