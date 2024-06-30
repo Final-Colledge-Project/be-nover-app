@@ -215,6 +215,11 @@ export default class BoardPermissionService {
         ...otherProps,
       };
     }
+    else {
+      updateModel = {
+        ...model,
+      };
+    }
     await this.boardPermissionSchema.findByIdAndUpdate(
       permissionId,
       updateModel,

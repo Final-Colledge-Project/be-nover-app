@@ -229,6 +229,11 @@ export default class WorkspacePermissionService {
         ...otherProps,
       };
     }
+    else {
+      updateModel = {
+        ...model,
+      };
+    }
       await this.wsPermissionSchema.findByIdAndUpdate(
         permissionId,
         updateModel,

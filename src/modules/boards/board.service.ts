@@ -154,9 +154,15 @@ export default class BoardService {
     if (members.length !== users.length || !users) {
       throw new HttpException(StatusCodes.BAD_REQUEST, "User not found");
     }
-    const isExistWSMember = workspace.workspaceMembers.some((mem) => {
-      return members.includes(mem.user.toString());
-    });
+    // const isExistWSMember = workspace.workspaceMembers.some((mem) => {
+    //   return members.map(mem => mem.toString()).includes(mem.user.toString());
+    // });
+    
+    console.log('~~~~>members', members, workspace.workspaceMembers)
+
+    const isExistWSMember = members.some((mem) => {
+      return workspace.workspaceMembers.map(item => item.user.toString()).includes(mem.toString());
+    })
     if (!isExistWSMember) {
       throw new HttpException(
         StatusCodes.BAD_REQUEST,
