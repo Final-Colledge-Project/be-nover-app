@@ -154,21 +154,43 @@ export default class BoardController {
       .status(200)
       .json({ data: boardCover, message: "Upload board cover successfully" });
   });
-  public deleteMemberFromBoard = catchAsync(
-    async (req: Request, res: Response) => {
+  public deleteMemberFromBoard = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    const session = await startSession();
+    try {
       const userId = req.user.id;
       const boardId = req.params.id;
       const memberId = req.params.memberId;
-      await this.boardService.deleteMemberFromBoard(userId, boardId, memberId);
+      session.startTransaction();
+      await this.boardService.deleteMemberFromBoard(userId, boardId, memberId, session);
       res
         .status(StatusCodes.OK)
         .json({ message: "Delete member from board successfully" });
+    } catch (error) {
+      next(error);
+      await session.abortTransaction();
+      session.endSession();
     }
-  );
-  public deleteBoard = catchAsync(async (req: Request, res: Response) => {
-    const userId = req.user.id;
-    const boardId = req.params.id;
-    await this.boardService.deleteBoard(boardId, userId);
-    res.status(StatusCodes.OK).json({ message: "Delete board successfully" });
-  });
+  };
+  public deleteBoard = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    const session = await startSession();
+    try {
+      const userId = req.user.id;
+      const boardId = req.params.id;
+      session.startTransaction();
+      await this.boardService.deleteBoard(boardId, userId, session);
+      res.status(StatusCodes.OK).json({ message: "Delete board successfully" });
+    } catch (error) {
+      await session.abortTransaction();
+      session.endSession();
+      next(error);
+    }
+  };
 }
