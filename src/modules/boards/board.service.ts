@@ -141,7 +141,9 @@ export default class BoardService {
       throw new HttpException(StatusCodes.BAD_REQUEST, "Workspace not found");
     }
     //Add members to board
-    const members = (inviteMems.members || []).map((mem: IAddMem) => mem.memberId);
+    const members = (inviteMems.members || []).map(
+      (mem: IAddMem) => mem.memberId
+    );
     if (members.length !== [...new Set(members)].length) {
       throw new HttpException(StatusCodes.BAD_REQUEST, "Duplicate member");
     }
@@ -157,12 +159,14 @@ export default class BoardService {
     // const isExistWSMember = workspace.workspaceMembers.some((mem) => {
     //   return members.map(mem => mem.toString()).includes(mem.user.toString());
     // });
-    
-    console.log('~~~~>members', members, workspace.workspaceMembers)
+
+    console.log("~~~~>members", members, workspace.workspaceMembers);
 
     const isExistWSMember = members.some((mem) => {
-      return workspace.workspaceMembers.map(item => item.user.toString()).includes(mem.toString());
-    })
+      return workspace.workspaceMembers
+        .map((item) => item.user.toString())
+        .includes(mem.toString());
+    });
     if (!isExistWSMember) {
       throw new HttpException(
         StatusCodes.BAD_REQUEST,
@@ -212,19 +216,23 @@ export default class BoardService {
           acc[mem.permissionId].push(mem.memberId);
           return acc;
         }, {});
-      const permPromise =( Object.keys(groupMemByPerm) || []).map(async (permId) => {
-        const perm = boardPerms.find((perm) => perm._id.toString() === permId);
-        if (!perm) {
-          throw new HttpException(
-            StatusCodes.BAD_REQUEST,
-            "Permission not found"
+      const permPromise = (Object.keys(groupMemByPerm) || []).map(
+        async (permId) => {
+          const perm = boardPerms.find(
+            (perm) => perm._id.toString() === permId
           );
+          if (!perm) {
+            throw new HttpException(
+              StatusCodes.BAD_REQUEST,
+              "Permission not found"
+            );
+          }
+          perm.memberIds = [
+            ...new Set([...perm.memberIds, ...groupMemByPerm[permId]]),
+          ];
+          await perm.save({ session });
         }
-        perm.memberIds = [
-          ...new Set([...perm.memberIds, ...groupMemByPerm[permId]]),
-        ];
-        await perm.save({ session });
-      });
+      );
       await Promise.all(permPromise);
     } else {
       const viewerPerm = await this.boardPermissionSchema
@@ -718,24 +726,29 @@ export default class BoardService {
   public async deleteMemberFromBoard(
     userId: string,
     boardId: string,
-    memberId: string
+    memberId: string,
+    session: ClientSession
   ): Promise<void> {
     const board = await this.boardSchema.findById(boardId).exec();
     if (!board) {
       throw new HttpException(StatusCodes.CONFLICT, "Board not found");
     }
-    const checkPermissionBoard = await permissionBoard(boardId, userId);
-    if (!checkPermissionBoard) {
-      throw new HttpException(
-        StatusCodes.FORBIDDEN,
-        "You have not permission to delete member from board"
-      );
+    const adminBoardPerm = await isBoardAdmin(boardId, userId);
+    if (!adminBoardPerm) {
+      throw new HttpException(StatusCodes.FORBIDDEN, "Permission denied");
     }
     const checkBoardMember = await isBoardMember(boardId, memberId);
     if (!checkBoardMember) {
       throw new HttpException(
         StatusCodes.CONFLICT,
         "This member is not member of this board"
+      );
+    }
+    const isOwner = board.ownerIds.some((e) => e.toString() === memberId);
+    if (isOwner) {
+      throw new HttpException(
+        StatusCodes.CONFLICT,
+        "You can not delete owner of this board"
       );
     }
     board.memberIds = board.memberIds.filter(
@@ -751,7 +764,7 @@ export default class BoardService {
         card.memberIds = card.memberIds.filter(
           (mem: any) => mem.toString() !== memberId
         );
-        await card.save();
+        await card.save({ session });
       }
     }
     const assignedSubCard = await SubCardSchema.find({
@@ -761,11 +774,29 @@ export default class BoardService {
     if (assignedSubCard.length > 0) {
       for (const card of assignedSubCard) {
         card.assignedTo = null;
-        await card.save();
+        await card.save({ session });
       }
     }
+    const memInPerm = await this.boardPermissionSchema
+      .findOneAndReplace({
+        boardId: boardId,
+        memberIds: memberId,
+      })
+      .exec();
+    if (memInPerm) {
+      memInPerm.memberIds = memInPerm.memberIds.filter(
+        (mem: any) => mem.toString() !== memberId
+      );
+      await memInPerm.save({ session });
+    }
+    await session.commitTransaction();
+    session.endSession();
   }
-  public async deleteBoard(boardId: string, userId: string): Promise<void> {
+  public async deleteBoard(
+    boardId: string,
+    userId: string,
+    session: ClientSession
+  ): Promise<void> {
     const board = await this.boardSchema.findById(boardId).exec();
     if (!board) {
       throw new HttpException(StatusCodes.CONFLICT, "Board not found");
@@ -790,5 +821,7 @@ export default class BoardService {
     };
     await CardSchema.updateMany(filter, updateOperation).exec();
     await LabelSchema.updateMany(filter, updateOperation).exec();
+    await session.commitTransaction();
+    session.endSession();
   }
 }
