@@ -6,8 +6,8 @@ import {
   IWorkspaceAdmin,
 } from "@modules/teamWorkspaces/teamWorkspace.interface";
 import { MODE_ACCESS, ROLE } from "./constant";
-import { BoardPermissionSchema } from "@modules/boardPermission";
-import { WorkspacePermissionSchema } from "@modules/workspacePermission";
+import { WorkspacePermissionSchema } from "@modules/workspacePermissions";
+import { BoardPermissionSchema } from "@modules/boardPermissions";
 
 export const isWorkspaceAdmin = async (
   teamWorkspaceId: string,
@@ -21,7 +21,9 @@ export const isWorkspaceAdmin = async (
     workspaceId: teamWorkspaceId,
     isWSAdmin: true,
   }).exec();
-  const isInPerm = adminPermission?.memberIds.find((mem) => mem.toString() === adminId.toString());
+  const isInPerm = adminPermission?.memberIds.find(
+    (mem: any) => mem.toString() === adminId.toString()
+  );
   if (!isInPerm) return false;
   return true;
 };
@@ -64,7 +66,9 @@ export const isBoardAdmin = async (
     boardId: boardId,
     isAdmin: true,
   }).exec();
-  const isInPerm = adminPermission?.memberIds.find((mem) => mem.toString() === adminId.toString());
+  const isInPerm = adminPermission?.memberIds.find(
+    (mem: any) => mem.toString() === adminId.toString()
+  );
   if (!isInPerm) return false;
   return true;
 };
