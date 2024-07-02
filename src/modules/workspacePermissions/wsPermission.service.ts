@@ -222,24 +222,21 @@ export default class WorkspacePermissionService {
         });
         await Promise.all(listPromise);
       }
-    } 
-    if (updateModel && updateModel.hasOwnProperty('memberIds')) {
+    }
+    if (updateModel && updateModel.hasOwnProperty("memberIds")) {
       const { memberIds, ...otherProps } = updateModel;
       updateModel = {
         ...otherProps,
       };
-    }
-    else {
+    } else {
       updateModel = {
         ...model,
       };
     }
-      await this.wsPermissionSchema.findByIdAndUpdate(
-        permissionId,
-        updateModel,
-        { session }
-      );
-    
+    await this.wsPermissionSchema.findByIdAndUpdate(permissionId, updateModel, {
+      session,
+    });
+
     await session.commitTransaction();
     session.endSession();
   }
@@ -249,10 +246,6 @@ export default class WorkspacePermissionService {
   ): Promise<IWorkspacePermission[]> {
     if (!userId) {
       throw new HttpException(StatusCodes.BAD_REQUEST, "UserId is required");
-    }
-    const wsSuperAdmin = await isSuperAdmin(wsId, userId);
-    if (!wsSuperAdmin) {
-      throw new HttpException(StatusCodes.FORBIDDEN, "Permission denied");
     }
     const groupPermission = await this.wsPermissionSchema.find({
       workspaceId: wsId,
