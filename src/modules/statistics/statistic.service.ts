@@ -25,12 +25,25 @@ export default class StatisticService {
     period: string,
     previousDay: number
   ): Promise<object> {
+    const notResolveColumn = await this.columnSchema
+      .find({
+        boardId,
+        isResolved: false,
+      })
+      .exec();
     const cards = await this.cardSchema
       .find({
         boardId,
         isActive: { $ne: false },
       })
-      .exec();
+      .exec()
+      .then((cards) => {
+        return cards.filter((card) => {
+          return notResolveColumn.some((column) => {
+            return column._id.toString() === card.columnId.toString();
+          });
+        });
+      });
     return calculateAverageAgeReport(cards, period, previousDay);
   }
   public async generateBurnDownReport(

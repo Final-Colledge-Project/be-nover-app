@@ -1,0 +1,262 @@
+[
+  {
+    "_id": "60c72b2f9b1e8b2a3c9d7e20",
+    "firstName": "John",
+    "lastName": "Doe",
+    "email": "john.doe@gmail.com",
+    "password": "$2b$10$3GQZzl2JZcR4X2uv4ISkZOaIB58Bho7Rr.0FSG2yaEKvZ8NB7RFuW",
+    "phone": "+1234567800",
+    "birthDate": "1990-01-01T00:00:00Z",
+    "address": "123 Main St, Anytown, USA",
+    "avatar": "https://firebasestorage.googleapis.com/v0/b/nover-task-b511e.appspot.com/o/avatar-default.png?alt=media&token=80691c07-1acd-42f2-9e2b-de82476a09c6",
+    "createdAt": "2024-01-12T17:11:36.387586",
+    "passwordChangedAt": "2024-01-12T17:11:36.387586",
+    "role": "user",
+    "refreshToken": [],
+    "profileLogin": {
+      "id": null,
+      "provider": "local",
+      "tokenLogin": null
+    },
+    "providerToken": {
+      "accessToken": null,
+      "refreshToken": null
+    },
+    "active": true,
+    "updatedAt": "2024-01-12T17:11:36.387586"
+  },
+  {
+    "_id": "60c72b2f9b1e8b2a3c9d7e21",
+    "firstName": "Jane",
+    "lastName": "Smith",
+    "email": "jane.smith@gmail.com",
+    "password": "$2b$10$3GQZzl2JZcR4X2uv4ISkZOaIB58Bho7Rr.0FSG2yaEKvZ8NB7RFuW",
+    "phone": "+1234567801",
+    "birthDate": "1995-10-12T00:00:00Z",
+    "address": "123 Main St, Anytown, USA",
+    "avatar": "https://firebasestorage.googleapis.com/v0/b/nover-task-b511e.appspot.com/o/avatar-default.png?alt=media&token=80691c07-1acd-42f2-9e2b-de82476a09c6",
+    "createdAt": "2024-01-23T17:11:36.387600",
+    "passwordChangedAt": "2024-01-23T17:11:36.387600",
+    "role": "user",
+    "refreshToken": [],
+    "profileLogin": {
+      "id": null,
+      "provider": "local",
+      "tokenLogin": null
+    },
+    "providerToken": {
+      "accessToken": null,
+      "refreshToken": null
+    },
+    "active": true,
+    "updatedAt": "2024-01-23T17:11:36.387600"
+  },
+  {
+    "_id": "60c72b2f9b1e8b2a3c9d7e22",
+    "firstName": "Alice",
+    "lastName": "Johnson",
+    "email": "alice.johnson@gmail.com",
+    "password": "$2b$10$3GQZzl2JZcR4X2uv4ISkZOaIB58Bho7Rr.0FSG2yaEKvZ8NB7RFuW",
+    "phone": "+1234567802",
+    "birthDate": "1998-12-23T00:00:00Z",
+    "address": "123 Main St, Anytown, USA",
+    "avatar": "https://firebasestorage.googleapis.com/v0/b/nover-task-b511e.appspot.com/o/avatar-default.png?alt=media&token=80691c07-1acd-42f2-9e2b-de82476a09c6",
+    "createdAt": "2023-12-23T17:11:36.387608",
+    "passwordChangedAt": "2023-12-23T17:11:36.387608",
+    "role": "user",
+    "refreshToken": [],
+    "profileLogin": {
+      "id": null,
+      "provider": "local",
+      "tokenLogin": null
+    },
+    "providerToken": {
+      "accessToken": null,
+      "refreshToken": null
+    },
+    "active": true,
+    "updatedAt": "2023-12-23T17:11:36.387608"
+  },
+  {
+    "_id": "60c72b2f9b1e8b2a3c9d7e23",
+    "firstName": "Bob",
+    "lastName": "Williams",
+    "email": "bob.williams@example.com",
+    "password": "$2b$10$3GQZzl2JZcR4X2uv4ISkZOaIB58Bho7Rr.0FSG2yaEKvZ8NB7RFuW",
+    "phone": "+1234567803",
+    "birthDate": "1990-01-01T00:00:00Z",
+    "address": "123 Main St, Anytown, USA",
+    "avatar": "https://firebasestorage.googleapis.com/v0/b/nover-task-b511e.appspot.com/o/avatar-default.png?alt=media&token=80691c07-1acd-42f2-9e2b-de82476a09c6",
+    "createdAt": "2024-07-01T17:11:36.387616",
+    "passwordChangedAt": "2024-01-01T00:00:00Z",
+    "role": "user",
+    "refreshToken": [],
+    "profileLogin": {
+      "id": null,
+      "provider": "local",
+      "tokenLogin": null
+    },
+    "providerToken": {
+      "accessToken": null,
+      "refreshToken": null
+    },
+    "active": true,
+    "updatedAt": "2024-07-01T17:11:36.387619"
+  },
+  {
+    "_id": "60c72b2f9b1e8b2a3c9d7e24",
+    "firstName": "Charlie",
+    "lastName": "Brown",
+    "email": "charlie.brown@example.com",
+    "password": "$2b$10$3GQZzl2JZcR4X2uv4ISkZOaIB58Bho7Rr.0FSG2yaEKvZ8NB7RFuW",
+    "phone": "+1234567804",
+    "birthDate": "1990-01-01T00:00:00Z",
+    "address": "123 Main St, Anytown, USA",
+    "avatar": "https://firebasestorage.googleapis.com/v0/b/nover-task-b511e.appspot.com/o/avatar-default.png?alt=media&token=80691c07-1acd-42f2-9e2b-de82476a09c6",
+    "createdAt": "2024-07-01T17:11:36.387623",
+    "passwordChangedAt": "2024-01-01T00:00:00Z",
+    "role": "user",
+    "refreshToken": [],
+    "profileLogin": {
+      "id": null,
+      "provider": "local",
+      "tokenLogin": null
+    },
+    "providerToken": {
+      "accessToken": null,
+      "refreshToken": null
+    },
+    "active": true,
+    "updatedAt": "2024-07-01T17:11:36.387626"
+  },
+  {
+    "_id": "60c72b2f9b1e8b2a3c9d7e25",
+    "firstName": "Dana",
+    "lastName": "Jones",
+    "email": "dana.jones@example.com",
+    "password": "$2b$10$3GQZzl2JZcR4X2uv4ISkZOaIB58Bho7Rr.0FSG2yaEKvZ8NB7RFuW",
+    "phone": "+1234567805",
+    "birthDate": "1990-01-01T00:00:00Z",
+    "address": "123 Main St, Anytown, USA 5",
+    "avatar": "https://firebasestorage.googleapis.com/v0/b/nover-task-b511e.appspot.com/o/avatar-default.png?alt=media&token=80691c07-1acd-42f2-9e2b-de82476a09c6",
+    "createdAt": "2024-07-01T17:11:36.387630",
+    "passwordChangedAt": "2024-01-01T00:00:00Z",
+    "role": "user",
+    "refreshToken": [],
+    "profileLogin": {
+      "id": null,
+      "provider": "local",
+      "tokenLogin": null
+    },
+    "providerToken": {
+      "accessToken": null,
+      "refreshToken": null
+    },
+    "active": true,
+    "updatedAt": "2024-07-01T17:11:36.387634"
+  },
+  {
+    "_id": "60c72b2f9b1e8b2a3c9d7e26",
+    "firstName": "Eve",
+    "lastName": "Garcia",
+    "email": "eve.garcia@example.com",
+    "password": "$2b$10$3GQZzl2JZcR4X2uv4ISkZOaIB58Bho7Rr.0FSG2yaEKvZ8NB7RFuW",
+    "phone": "+1234567806",
+    "birthDate": "1990-01-01T00:00:00Z",
+    "address": "123 Main St, Anytown, USA",
+    "avatar": "https://firebasestorage.googleapis.com/v0/b/nover-task-b511e.appspot.com/o/avatar-default.png?alt=media&token=80691c07-1acd-42f2-9e2b-de82476a09c6",
+    "createdAt": "2024-07-01T17:11:36.387641",
+    "passwordChangedAt": "2024-01-01T00:00:00Z",
+    "role": "user",
+    "refreshToken": [],
+    "profileLogin": {
+      "id": null,
+      "provider": "local",
+      "tokenLogin": null
+    },
+    "providerToken": {
+      "accessToken": null,
+      "refreshToken": null
+    },
+    "active": true,
+    "updatedAt": "2024-07-01T17:11:36.387646"
+  },
+  {
+    "_id": "60c72b2f9b1e8b2a3c9d7e27",
+    "firstName": "Frank",
+    "lastName": "Miller",
+    "email": "frank.miller@example.com",
+    "password": "$2b$10$3GQZzl2JZcR4X2uv4ISkZOaIB58Bho7Rr.0FSG2yaEKvZ8NB7RFuW",
+    "phone": "+1234567807",
+    "birthDate": "1990-01-01T00:00:00Z",
+    "address": "123 Main St, Anytown, USA 7",
+    "avatar": "https://firebasestorage.googleapis.com/v0/b/nover-task-b511e.appspot.com/o/avatar-default.png?alt=media&token=80691c07-1acd-42f2-9e2b-de82476a09c6",
+    "createdAt": "2024-07-01T17:11:36.387657",
+    "passwordChangedAt": "2024-01-01T00:00:00Z",
+    "role": "user",
+    "refreshToken": [],
+    "profileLogin": {
+      "id": null,
+      "provider": "local",
+      "tokenLogin": null
+    },
+    "providerToken": {
+      "accessToken": null,
+      "refreshToken": null
+    },
+    "active": true,
+    "updatedAt": "2024-07-01T17:11:36.387664"
+  },
+  {
+    "_id": "60c72b2f9b1e8b2a3c9d7e28",
+    "firstName": "Grace",
+    "lastName": "Davis",
+    "email": "grace.davis@example.com",
+    "password": "$2b$10$3GQZzl2JZcR4X2uv4ISkZOaIB58Bho7Rr.0FSG2yaEKvZ8NB7RFuW",
+    "phone": "+1234567808",
+    "birthDate": "1990-01-01T00:00:00Z",
+    "address": "123 Main St, Anytown, USA 8",
+    "avatar": "https://firebasestorage.googleapis.com/v0/b/nover-task-b511e.appspot.com/o/avatar-default.png?alt=media&token=80691c07-1acd-42f2-9e2b-de82476a09c6",
+    "createdAt": "2024-07-01T17:11:36.387672",
+    "passwordChangedAt": "2024-01-01T00:00:00Z",
+    "role": "user",
+    "refreshToken": [],
+    "profileLogin": {
+      "id": null,
+      "provider": "local",
+      "tokenLogin": null
+    },
+    "providerToken": {
+      "accessToken": null,
+      "refreshToken": null
+    },
+    "active": true,
+    "updatedAt": "2024-07-01T17:11:36.387682"
+  },
+  {
+    "_id": "60c72b2f9b1e8b2a3c9d7e29",
+    "firstName": "Hank",
+    "lastName": "Rodriguez",
+    "email": "hank.rodriguez@example.com",
+    "password": "$2b$10$3GQZzl2JZcR4X2uv4ISkZOaIB58Bho7Rr.0FSG2yaEKvZ8NB7RFuW",
+    "phone": "+1234567809",
+    "birthDate": "1990-01-01T00:00:00Z",
+    "address": "123 Main St, Anytown, USA 9",
+    "avatar": "https://firebasestorage.googleapis.com/v0/b/nover-task-b511e.appspot.com/o/avatar-default.png?alt=media&token=80691c07-1acd-42f2-9e2b-de82476a09c6",
+    "createdAt": "2024-07-01T17:11:36.387686",
+    "passwordChangedAt": "2024-01-01T00:00:00Z",
+    "role": "user",
+    "refreshToken": [],
+    "profileLogin": {
+      "id": null,
+      "provider": "local",
+      "tokenLogin": null
+    },
+    "providerToken": {
+      "accessToken": null,
+      "refreshToken": null
+    },
+    "active": true,
+    "updatedAt": "2024-07-01T17:11:36.387689"
+  }
+]

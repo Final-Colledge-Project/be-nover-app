@@ -33,6 +33,10 @@ const SubCardSchema = new mongoose.Schema(
       ref: MODEL_NAME.user,
       default: null,
     },
+    startDate: {
+      type: Date,
+      default: null,
+    },
     dueDate: {
       type: Date,
       default: null,
