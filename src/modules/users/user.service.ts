@@ -9,7 +9,7 @@ import UpdateUserDto from "./dtos/updateUser.dto";
 import ChangePasswordDto from "./dtos/changePasswordDto";
 import { Request, Response } from "express";
 import { StatusCodes } from "http-status-codes";
-import { EmailVerifySchema } from "@modules/emailVerifications";
+import { EmailVerifySchema } from "@modules/email_verification";
 import UpdateTokenDto from "./dtos/updateTokenDto";
 
 class UserService {
@@ -253,7 +253,7 @@ class UserService {
       )
       .exec();
     if (!updatedUser) {
-      throw new HttpException(StatusCodes.BAD_REQUEST, "You are not an user");
+      throw new HttpException(StatusCodes.CONFLICT, "You are not an user");
     }
   }
   public async getUserByQuery(req: Request): Promise<Object> {

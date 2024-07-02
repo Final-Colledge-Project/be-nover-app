@@ -71,7 +71,7 @@ export default class NotificationService {
     const notis = await this.notificationSchema.insertMany(model);
     if (!notis) {
       throw new HttpException(
-        StatusCodes.BAD_REQUEST,
+        StatusCodes.CONFLICT,
         "Notifications not created"
       );
     }
@@ -82,10 +82,7 @@ export default class NotificationService {
     }
     const newNotification = await this.notificationSchema.create({ ...model });
     if (!newNotification) {
-      throw new HttpException(
-        StatusCodes.BAD_REQUEST,
-        "Notification not created"
-      );
+      throw new HttpException(StatusCodes.CONFLICT, "Notification not created");
     }
   }
   public async markReadNotification(

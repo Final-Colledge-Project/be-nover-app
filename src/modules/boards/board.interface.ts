@@ -1,8 +1,6 @@
 export default interface IBoard {
   _id: string;
   title: string;
-  key: string;
-  template: string;
   description: string;
   cover: string;
   columnOrderIds: string[];
@@ -14,7 +12,9 @@ export default interface IBoard {
   updatedAt: Date;
   dueDate: Date;
   isActive: boolean;
-  defaultAssigneeId: string;
-  initColumnId: string;
 }
 
+export interface IBoardAdmin {
+  user: string;
+  role: string;
+}

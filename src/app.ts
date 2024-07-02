@@ -67,6 +67,7 @@ export default class App {
       });
 
       socket.on("assignMemberToCard", (data) => {
+        console.log("~~~~~~~~~~~~~~>assignMemberToCard", data);
         this.sendMessageToUser(users, data.userId, "fetchNotification");
       });
 

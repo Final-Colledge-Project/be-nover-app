@@ -1,13 +1,13 @@
 import { BoardSchema } from "@modules/boards";
 import { CardSchema } from "@modules/cards";
-import { TeamWorkspaceSchema } from "@modules/teamWorkspaces";
+import { TeamWorkspaceSchema } from "@modules/teamWorkspace";
 import {
   IMember,
   IWorkspaceAdmin,
-} from "@modules/teamWorkspaces/teamWorkspace.interface";
+} from "@modules/teamWorkspace/teamWorkspace.interface";
 import { MODE_ACCESS, ROLE } from "./constant";
-import { WorkspacePermissionSchema } from "@modules/workspacePermissions";
-import { BoardPermissionSchema } from "@modules/boardPermissions";
+import { BoardPermissionSchema } from "@modules/boardPermission";
+import { WorkspacePermissionSchema } from "@modules/workspacePermission";
 
 export const isWorkspaceAdmin = async (
   teamWorkspaceId: string,
@@ -21,9 +21,7 @@ export const isWorkspaceAdmin = async (
     workspaceId: teamWorkspaceId,
     isWSAdmin: true,
   }).exec();
-  const isInPerm = adminPermission?.memberIds.find(
-    (mem: any) => mem.toString() === adminId.toString()
-  );
+  const isInPerm = adminPermission?.memberIds.find((mem) => mem.toString() === adminId.toString());
   if (!isInPerm) return false;
   return true;
 };
@@ -66,9 +64,7 @@ export const isBoardAdmin = async (
     boardId: boardId,
     isAdmin: true,
   }).exec();
-  const isInPerm = adminPermission?.memberIds.find(
-    (mem: any) => mem.toString() === adminId.toString()
-  );
+  const isInPerm = adminPermission?.memberIds.find((mem) => mem.toString() === adminId.toString());
   if (!isInPerm) return false;
   return true;
 };
@@ -84,6 +80,9 @@ export const isBoardMember = async (
   const checkOwner = board?.ownerIds.find((owner) => {
     return owner.toString() === memberId;
   });
+  // if (!checkMember && !checkOwner) {
+  //   return false;
+  // }
   return !!checkMember || !!checkOwner;
 };
 

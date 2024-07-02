@@ -1,7 +1,5 @@
-import { IIssueLinkType } from "@modules/issueLinkTypes";
 import { IUser } from "@modules/users";
 import dayjs from "dayjs";
-import { DIRECTION_TYPE } from "./constant";
 export const isEmptyObject = (obj: Object): boolean => {
   return !Object.keys(obj).length;
 };
@@ -19,10 +17,10 @@ export const checkUserChangePasswordAfter = (
   return false;
 };
 export const generateCardId = (
-  boardName: string,
+  workSpaceName: string,
   lengthCard: number
 ): string => {
-  const formatName = boardName.toUpperCase();
+  const formatName = workSpaceName.substring(0, 3).toUpperCase();
   return `${formatName}-${lengthCard + 1}`;
 };
 export const generateSubCardId = (
@@ -61,22 +59,4 @@ export const isJsonString = (str: string) => {
 
 export const isValidObjectId = (id: string) => {
   return id.match(/^[0-9a-fA-F]{24}$/);
-};
-
-export const upperCaseFirstLetter = (str: string) => {
-  if (!str) return str;
-  return str.charAt(0).toUpperCase() + str.slice(1);
-};
-
-export const getMsgLogIssue = (
-  direction: string,
-  targetIssueName: string,
-  issueType: IIssueLinkType
-) => {
-  const inwardName = issueType.inwardName;
-  const outwardName = issueType.outwardName;
-
-  return `This issue ${
-    direction === DIRECTION_TYPE.inward ? inwardName : outwardName
-  } ${targetIssueName}`;
 };

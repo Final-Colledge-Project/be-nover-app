@@ -5,26 +5,18 @@ import { validateEnv } from "@core/utils";
 import { UsersRoute } from "@modules/users";
 import { AuthRoute } from "@modules/auth";
 import { OTPRoute } from "@modules/otp";
-import { EmailVerificationRoute } from "@modules/emailVerifications";
-import { TeamWorkspaceRoute } from "@modules/teamWorkspaces";
+import { EmailVerificationRoute } from "@modules/email_verification";
+import { TeamWorkspaceRoute } from "@modules/teamWorkspace";
 import { BoardRoute } from "@modules/boards";
 import { ColumnRoute } from "@modules/columns";
 import { CardRoute } from "@modules/cards";
 import { LabelRoute } from "@modules/labels";
 import { InvitationRoute } from "@modules/invitations";
-import { SubCardRoute } from "@modules/subCards";
+import { SubCardRoute } from "@modules/sub_cards";
 import { NotificationRoute } from "@modules/notifications";
-import { ScheduleRoute } from "@modules/schedules";
-import { BoardPermissionRoute } from "@modules/boardPermissions";
-import { WorkspacePermissionRoute } from "@modules/workspacePermissions";
-import { SprintRoute } from "@modules/sprints";
-import { EpicRoute } from "@modules/epics";
-import { TaskLogRoute } from "@modules/taskLogs";
-import { IssueLinkRoute } from "@modules/issueLinks";
-import { IssueLinkTypeRoute } from "@modules/issueLinkTypes";
-import { IssueTypeRoute } from "@modules/issueTypes";
-import { StatisticRoute } from "@modules/statistics";
-import { PriorityRoute } from "@modules/priorities";
+import { ScheduleRoute } from "@modules/schedule";
+import { BoardPermissionRoute } from "@modules/boardPermission";
+import { WorkspacePermissionRoute } from "@modules/workspacePermission";
 validateEnv();
 const routes = [
   new IndexRoute(),
@@ -43,14 +35,6 @@ const routes = [
   new ScheduleRoute(),
   new BoardPermissionRoute(),
   new WorkspacePermissionRoute(),
-  new SprintRoute(),
-  new EpicRoute(),
-  new TaskLogRoute(),
-  new IssueLinkRoute(),
-  new IssueLinkTypeRoute(),
-  new IssueTypeRoute(),
-  new StatisticRoute(),
-  new PriorityRoute(),
 ];
 const app = new App(routes);
 app.listen();

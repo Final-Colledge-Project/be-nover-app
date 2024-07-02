@@ -1,9 +1,7 @@
 import {
-  BOARD_TEMPLATE,
   MODEL_NAME,
   OBJECT_ID,
   ROLE,
-  SPRINT_STATUS,
   isBoardAdmin,
   isBoardMember,
   isEmptyObject,
@@ -18,45 +16,34 @@ import CreateBoardDto from "./dtos/createBoardDto";
 import { HttpException } from "@core/exceptions";
 import { Request } from "express";
 import APIFeatures from "@core/utils/apiFeature";
-import { cloneDeep } from "lodash";
+import { cloneDeep, create } from "lodash";
 import ICard from "@modules/cards/card.interface";
-import { ColumnSchema, IColumn, IResColumn } from "@modules/columns";
-import { TeamWorkspaceSchema } from "@modules/teamWorkspaces";
+import { IResColumn } from "@modules/columns";
+import { TeamWorkspaceSchema } from "@modules/teamWorkspace";
 import UpdateBoardDto from "./dtos/updateBoardDto";
 import AddMemsToBoardDto, { IAddMem } from "./dtos/addMemsToBoard";
 import { StatusCodes } from "http-status-codes";
 import { NotificationService } from "@modules/notifications";
 import PushNotificationDto from "@modules/notifications/dtos/pushNotificationDto";
 import { CardSchema } from "@modules/cards";
-import { SubCardSchema } from "@modules/subCards";
+import { SubCardSchema } from "@modules/sub_cards";
 import { LabelSchema } from "@modules/labels";
-import { BoardPermissionSchema } from "@modules/boardPermissions";
+import { BoardPermissionSchema } from "@modules/boardPermission";
 import { UserSchema } from "@modules/users";
 import mongoose, { ClientSession } from "mongoose";
-import { PrioritySchema } from "@modules/priorities";
-import { IIssueType, IssueTypeSchema } from "@modules/issueTypes";
-import { SprintSchema } from "@modules/sprints";
-import { IssueLinkSchema } from "@modules/issueLinks";
-import { IssueLinkTypeSchema } from "@modules/issueLinkTypes";
-import { WorkspacePermissionSchema } from "@modules/workspacePermissions";
-
+import { WorkspacePermissionSchema } from "@modules/workspacePermission";
 export default class BoardService {
   private boardSchema = BoardSchema;
   private workspaceSchema = TeamWorkspaceSchema;
   private boardPermissionSchema = BoardPermissionSchema;
   private wsPermissionSchema = WorkspacePermissionSchema;
-  private prioritySchema = PrioritySchema;
-  private colSchema = ColumnSchema;
-  private issueTypeSchema = IssueTypeSchema;
   private userSchema = UserSchema;
-  private sprintSchema = SprintSchema;
   private notificationService = new NotificationService();
-  private issueLinkTypeSchema = IssueLinkTypeSchema;
   public async createBoard(
     model: CreateBoardDto,
     ownerId: string,
     wsId: string,
-    session: ClientSession
+    session: any
   ): Promise<IBoard> {
     if (isEmptyObject(model)) {
       throw new HttpException(StatusCodes.BAD_REQUEST, "Model is empty");
@@ -69,7 +56,7 @@ export default class BoardService {
       })
       .exec();
     if (existedBoard) {
-      throw new HttpException(StatusCodes.BAD_REQUEST, "Board already exists");
+      throw new HttpException(StatusCodes.CONFLICT, "Board already exists");
     }
     const createdBoard = await this.boardSchema.create(
       [
@@ -79,35 +66,19 @@ export default class BoardService {
           ownerIds: [ownerId],
         },
       ],
-      { new: true, session }
+      { session }
     );
 
     if (!createdBoard) {
-      throw new HttpException(StatusCodes.BAD_REQUEST, "Board not created");
+      throw new HttpException(StatusCodes.CONFLICT, "Board not created");
     }
     const workspace = await this.workspaceSchema.findById(wsId).exec();
     if (!workspace) {
-      throw new HttpException(StatusCodes.BAD_REQUEST, "Workspace not found");
+      throw new HttpException(StatusCodes.CONFLICT, "Workspace not found");
     }
     const superAdmin = workspace.workspaceAdmins.find(
       (mem) => mem.role === ROLE.superAdmin
     );
-    const extendPerm =
-      createdBoard[0].template === BOARD_TEMPLATE.scrum
-        ? {
-            sprint: {
-              create: true,
-              update: true,
-              delete: true,
-            },
-            epic: {
-              create: true,
-              update: true,
-              delete: true,
-            },
-          }
-        : {};
-
     await this.boardPermissionSchema.create(
       [
         {
@@ -138,16 +109,7 @@ export default class BoardService {
             update: true,
             delete: true,
           },
-          issueLinkType: {
-            create: true,
-            update: true,
-            delete: true,
-          },
-          report: {
-            create: true,
-          },
           isAdmin: true,
-          ...extendPerm,
         },
         {
           name: "Viewer",
@@ -159,192 +121,7 @@ export default class BoardService {
       ],
       { session }
     );
-    await this.prioritySchema.create(
-      [
-        {
-          boardId: createdBoard[0]._id,
-          name: "Lowest",
-          color: "#419CFF",
-          description: "This is lowest priority",
-        },
-        {
-          boardId: createdBoard[0]._id,
-          name: "Low",
-          color: "#0B84FF",
-          description: "This is low priority",
-        },
-        {
-          boardId: createdBoard[0]._id,
-          name: "Medium",
-          color: "#FF9F0B",
-          description: "This is medium priority",
-        },
-        {
-          boardId: createdBoard[0]._id,
-          name: "High",
-          color: "#FF6861",
-          description: "This is high priority",
-        },
-        {
-          boardId: createdBoard[0]._id,
-          name: "Highest",
-          color: "#FF453A",
-          description: "This is highest priority",
-        },
-      ],
-      { session }
-    );
-
-    const columns = await this.colSchema.create(
-      [
-        {
-          boardId: createdBoard[0]._id,
-          title: "To Do",
-          color: "#C7C7CC",
-          description: "This column is for tasks that have not been started",
-        },
-        {
-          boardId: createdBoard[0]._id,
-          title: "In Progress",
-          color: "#0B84FF",
-          description: "This column is for tasks that are in progress",
-        },
-        {
-          boardId: createdBoard[0]._id,
-          title: "Done",
-          isResolved: true,
-          color: "#27CD41",
-          description: "This column is for tasks that have been completed",
-        },
-      ],
-      { session }
-    );
-
-    await this.boardSchema.findByIdAndUpdate(
-      createdBoard[0]._id,
-      {
-        columnOrderIds: columns.map((col: IColumn) => col._id),
-        initColumnId: columns[0]._id,
-      },
-      { session }
-    );
-    if (createdBoard[0].template === BOARD_TEMPLATE.scrum) {
-      const issueTypes = await this.issueTypeSchema.create(
-        [
-          {
-            boardId: createdBoard[0]._id,
-            name: "Epic",
-            color: "#3634A3",
-            description:
-              "An epic is a large body of work that can be broken down into a number of smaller stories",
-            hierarchy: 1,
-          },
-          {
-            boardId: createdBoard[0]._id,
-            name: "Task",
-            color: "#007AFF",
-            description: "A task is a small, distinct piece of work",
-            hierarchy: 2,
-          },
-          {
-            boardId: createdBoard[0]._id,
-            name: "User Story",
-            color: "#27CD41",
-            description:
-              "A user story is the smallest unit of work in an agile framework",
-            hierarchy: 2,
-          },
-          {
-            boardId: createdBoard[0]._id,
-            name: "Bug",
-            color: "#FF3B2F",
-            description:
-              "A bug is a problem which impairs or prevents the functions of a product",
-            hierarchy: 2,
-          },
-          {
-            boardId: createdBoard[0]._id,
-            name: "SubTask",
-            color: "#5DE6FF",
-            description: "A subtask is a smaller piece of work within a task",
-            hierarchy: 3,
-          },
-        ],
-        { session }
-      );
-      await this.sprintSchema.create(
-        [
-          {
-            boardId: createdBoard[0]._id,
-            name: "Backlog",
-            creatorId: ownerId,
-            status: SPRINT_STATUS.backlog,
-          },
-        ],
-        { session }
-      );
-    } else {
-      const issueTypes = await this.issueTypeSchema.create(
-        [
-          {
-            boardId: createdBoard[0]._id,
-            name: "Epic",
-            color: "#3634A3",
-            description:
-              "An epic is a large body of work that can be broken down into a number of smaller stories",
-            hierarchy: 1,
-          },
-          {
-            boardId: createdBoard[0]._id,
-            name: "Task",
-            color: "#007AFF",
-            description: "A task is a small, distinct piece of work",
-            hierarchy: 2,
-          },
-          {
-            boardId: createdBoard[0]._id,
-            name: "SubTask",
-            color: "#5DE6FF",
-            description: "A subtask is a smaller piece of work within a task",
-            hierarchy: 3,
-          },
-        ],
-        { session }
-      );
-    }
-
-    await this.issueLinkTypeSchema.create(
-      [
-        {
-          boardId: createdBoard[0]._id,
-          name: "Blocker",
-          inwardName: "is blocked by",
-          outwardName: "blocks",
-        },
-        {
-          boardId: createdBoard[0]._id,
-          name: "Duplicate",
-          inwardName: "is duplicated by",
-          outwardName: "duplicates",
-        },
-        {
-          boardId: createdBoard[0]._id,
-          name: "Relates",
-          inwardName: "is related to",
-          outwardName: "relates to",
-        },
-        {
-          boardId: createdBoard[0]._id,
-          name: "Depends",
-          inwardName: "depends on",
-          outwardName: "is required for",
-        },
-      ],
-      {
-        session,
-      }
-    );
-    await await session.commitTransaction();
+    await session.commitTransaction();
     session.endSession();
     return createdBoard[0];
   }
@@ -726,7 +503,7 @@ export default class BoardService {
     });
 
     if (!workspaces) {
-      throw new HttpException(StatusCodes.BAD_REQUEST, "Workspace not found");
+      throw new HttpException(StatusCodes.CONFLICT, "Workspace not found");
     }
     const userBoards = await this.workspaceSchema.aggregate([
       {
@@ -832,7 +609,7 @@ export default class BoardService {
     }
     const existBoard = await this.boardSchema.findById(boardId).exec();
     if (!existBoard) {
-      throw new HttpException(StatusCodes.BAD_REQUEST, "Board not found");
+      throw new HttpException(StatusCodes.CONFLICT, "Board not found");
     }
     const checkPermissionBoard = await permissionBoard(boardId, userId);
     if (!checkPermissionBoard) {
@@ -848,7 +625,7 @@ export default class BoardService {
       )
       .exec();
     if (!updatedBoard) {
-      throw new HttpException(StatusCodes.BAD_REQUEST, "Board not updated");
+      throw new HttpException(StatusCodes.CONFLICT, "Board not updated");
     }
     updatedBoard.save();
     return updatedBoard;
@@ -860,7 +637,7 @@ export default class BoardService {
   ): Promise<void> {
     const board = await this.boardSchema.findById(boardId).exec();
     if (!board) {
-      throw new HttpException(StatusCodes.BAD_REQUEST, "Board not found");
+      throw new HttpException(StatusCodes.CONFLICT, "Board not found");
     }
     const checkSuperAdmin = await isSuperAdmin(board.teamWorkspaceId, userId);
     if (!checkSuperAdmin) {
@@ -872,7 +649,7 @@ export default class BoardService {
     const checkBoardMember = await isBoardMember(boardId, memberId);
     if (!checkBoardMember) {
       throw new HttpException(
-        StatusCodes.BAD_REQUEST,
+        StatusCodes.CONFLICT,
         "This member is not member of this board"
       );
     }
@@ -890,7 +667,7 @@ export default class BoardService {
   ): Promise<void> {
     const board = await this.boardSchema.findById(boardId).exec();
     if (!board) {
-      throw new HttpException(StatusCodes.BAD_REQUEST, "Board not found");
+      throw new HttpException(StatusCodes.CONFLICT, "Board not found");
     }
     const checkSuperAdmin = await isSuperAdmin(board.teamWorkspaceId, userId);
 
@@ -906,14 +683,14 @@ export default class BoardService {
     );
     if (!checkWorkspaceMem) {
       throw new HttpException(
-        StatusCodes.BAD_REQUEST,
+        StatusCodes.CONFLICT,
         "This member is not member of this workspace"
       );
     }
     const checkBoardAdmin = await isBoardAdmin(boardId, boardAdminId);
     if (!checkBoardAdmin) {
       throw new HttpException(
-        StatusCodes.BAD_REQUEST,
+        StatusCodes.CONFLICT,
         "This member is not admin of this board"
       );
     }
@@ -954,7 +731,7 @@ export default class BoardService {
   ): Promise<void> {
     const board = await this.boardSchema.findById(boardId).exec();
     if (!board) {
-      throw new HttpException(StatusCodes.BAD_REQUEST, "Board not found");
+      throw new HttpException(StatusCodes.CONFLICT, "Board not found");
     }
     const adminBoardPerm = await isBoardAdmin(boardId, userId);
     if (!adminBoardPerm) {
@@ -963,7 +740,7 @@ export default class BoardService {
     const checkBoardMember = await isBoardMember(boardId, memberId);
     if (!checkBoardMember) {
       throw new HttpException(
-        StatusCodes.BAD_REQUEST,
+        StatusCodes.CONFLICT,
         "This member is not member of this board"
       );
     }
@@ -1022,7 +799,7 @@ export default class BoardService {
   ): Promise<void> {
     const board = await this.boardSchema.findById(boardId).exec();
     if (!board) {
-      throw new HttpException(StatusCodes.BAD_REQUEST, "Board not found");
+      throw new HttpException(StatusCodes.CONFLICT, "Board not found");
     }
     const checkSuperAdmin = await isSuperAdmin(board.teamWorkspaceId, userId);
     if (!checkSuperAdmin) {

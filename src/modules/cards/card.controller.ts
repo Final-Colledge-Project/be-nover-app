@@ -4,36 +4,17 @@ import { NextFunction, Request, Response } from "express";
 import UpdateCardDto from "./dtos/updateCardDto";
 import { StatusCodes } from "http-status-codes";
 import assignUserDto from "./dtos/assignUserDto";
-import { startSession } from "mongoose";
-import AddCommentDto from "./dtos/addCommentDto";
 export default class CardController {
   private cardService = new CardService();
-  public createCard = async (
-    req: Request,
-    res: Response,
-    next: NextFunction
-  ) => {
-    const session = await startSession();
-    try {
-      const userId = req.user.id;
-      const model = req.body;
-      const boardId = req.params.boardId;
-      session.startTransaction();
-      const newCard = await this.cardService.createCard(
-        model,
-        userId,
-        boardId,
-        session
-      );
-      res
-        .status(StatusCodes.CREATED)
-        .json({ data: newCard, message: "Create card successfully" });
-    } catch (error) {
-      await session.abortTransaction();
-      session.endSession();
-      next(error);
-    }
-  };
+  public createCard = catchAsync(async (req: Request, res: Response) => {
+    const userId = req.user.id;
+    const model = req.body;
+    const boardId = req.params.boardId;
+    const newCard = await this.cardService.createCard(model, userId, boardId);
+    res
+      .status(StatusCodes.CREATED)
+      .json({ data: newCard, message: "Create card successfully" });
+  });
   public getDetailCardById = catchAsync(async (req: Request, res: Response) => {
     const cardId = req.params.id;
     const userId = req.user.id;
@@ -42,58 +23,26 @@ export default class CardController {
       .status(StatusCodes.OK)
       .json({ data: card, message: "Get card successfully" });
   });
-  public updateCard = async (
-    req: Request,
-    res: Response,
-    next: NextFunction
-  ) => {
-    const session = await startSession();
-    try {
-      const userId = req.user.id;
-      const cardId = req.params.id;
-      const model: UpdateCardDto = req.body;
-      session.startTransaction();
-      const card = await this.cardService.updateCard(
-        cardId,
-        model,
-        userId,
-        session
-      );
-      res
-        .status(StatusCodes.OK)
-        .json({ data: card, message: "Update card successfully" });
-    } catch (err) {
-      await session.abortTransaction();
-      session.endSession();
-      next(err);
-    }
-  };
-  public assignMemberToCard = async (
-    req: Request,
-    res: Response,
-    next: NextFunction
-  ) => {
-    const session = await startSession();
-    try {
+  public updateCard = catchAsync(async (req: Request, res: Response) => {
+    const userId = req.user.id;
+    const cardId = req.params.id;
+    const model: UpdateCardDto = req.body;
+    const card = await this.cardService.updateCard(cardId, model, userId);
+    res
+      .status(StatusCodes.OK)
+      .json({ data: card, message: "Update card successfully" });
+  });
+  public assignMemberToCard = catchAsync(
+    async (req: Request, res: Response) => {
       const userId = req.user.id;
       const cardId = req.params.id;
       const assigneeId = req.body.memId;
-      session.startTransaction();
-      await this.cardService.assignMemberToCard(
-        userId,
-        cardId,
-        assigneeId,
-        session
-      );
+      await this.cardService.assignMemberToCard(userId, cardId, assigneeId);
       res
         .status(StatusCodes.OK)
         .json({ message: "Assign member to card successfully" });
-    } catch (error) {
-      await session.abortTransaction();
-      session.endSession();
-      next(error);
     }
-  };
+  );
   public getMemsInCard = catchAsync(async (req: Request, res: Response) => {
     const cardId = req.params.id;
     const userId = req.user.id;
@@ -117,26 +66,15 @@ export default class CardController {
         .json({ data: cardCover, message: "Upload card cover successfully" });
     }
   );
-  public unAssignMemberFromCard = async (
-    req: Request,
-    res: Response,
-    next: NextFunction
-  ) => {
-    const session = await startSession();
-    try {
+  public unAssignMemberFromCard = catchAsync(
+    async (req: Request, res: Response) => {
       const cardId = req.params.id;
-      const userId = req.user.id;
-      session.startTransaction();
-      await this.cardService.unAssignMemberFromCard(cardId, userId, session);
+      await this.cardService.unAssignMemberFromCard(cardId);
       res
         .status(StatusCodes.OK)
         .json({ message: "Unassign member to card successfully" });
-    } catch (error) {
-      await session.abortTransaction();
-      session.endSession();
-      next(error);
     }
-  };
+  );
   public deleteCard = catchAsync(async (req: Request, res: Response) => {
     const userId = req.user.id;
     const cardId = req.params.id;
@@ -150,51 +88,4 @@ export default class CardController {
       message: "Get task assigned to me successfully",
     });
   });
-  public addCommentToCard = catchAsync(
-    async (req: Request, res: Response, next: NextFunction) => {
-      const userId = req.user.id;
-      const cardId = req.params.cardId;
-      const model: AddCommentDto = req.body;
-      await this.cardService.addCommentToCard(userId, model, cardId);
-      res
-        .status(StatusCodes.OK)
-        .json({ message: "Add comment to card successfully" });
-    }
-  );
-  public getCommentsInCard = catchAsync(async (req: Request, res: Response) => {
-    const cardId = req.params.cardId;
-    const comments = await this.cardService.getCommentsInCard(cardId);
-    res.status(StatusCodes.OK).json({
-      data: comments,
-      message: "Get comments in card successfully",
-    });
-  });
-  public updateCommentInCard = catchAsync(
-    async (req: Request, res: Response, next: NextFunction) => {
-      const userId = req.user.id;
-      const cardId = req.params.cardId;
-      const commentId = req.params.commentId;
-      const model: AddCommentDto = req.body;
-      await this.cardService.updateCommentInCard(
-        cardId,
-        userId,
-        model,
-        commentId
-      );
-      res
-        .status(StatusCodes.OK)
-        .json({ message: "Update comment in card successfully" });
-    }
-  );
-  public deleteCommentInCard = catchAsync(
-    async (req: Request, res: Response, next: NextFunction) => {
-      const userId = req.user.id;
-      const cardId = req.params.cardId;
-      const commentId = req.params.commentId;
-      await this.cardService.deleteCommentInCard(cardId, userId, commentId);
-      res
-        .status(StatusCodes.OK)
-        .json({ message: "Delete comment in card successfully" });
-    }
-  );
 }
