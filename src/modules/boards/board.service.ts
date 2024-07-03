@@ -1001,7 +1001,7 @@ export default class BoardService {
       }
     }
     const memInPerm = await this.boardPermissionSchema
-      .findOneAndReplace({
+      .findOne({
         boardId: boardId,
         memberIds: memberId,
       })

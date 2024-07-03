@@ -7,21 +7,32 @@ import { StatusCodes } from "http-status-codes";
 import { startSession } from "mongoose";
 export default class BoardPermissionController {
   private boardPermissionService = new BoardPermissionService();
-  public createBoardPermission = catchAsync(
-    async (req: Request, res: Response) => {
+  public createBoardPermission = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    const session = await startSession();
+    try {
       const userId = req.user.id;
       const boardId = req.params.id;
       const model: AddBoardPermissionDto = req.body;
+      session.startTransaction();
       await this.boardPermissionService.createBoardPermission(
         userId,
         boardId,
-        model
+        model,
+        session
       );
       res
         .status(StatusCodes.CREATED)
         .json({ message: "Create group permission successfully" });
+    } catch (err) {
+      await session.abortTransaction();
+      session.endSession();
+      next(err);
     }
-  );
+  };
   public updateBoardPermission = async (
     req: Request,
     res: Response,

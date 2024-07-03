@@ -19,7 +19,8 @@ export default class BoardPermissionService {
   public async createBoardPermission(
     userId: string,
     boardId: string,
-    model: AddBoardPermissionDto
+    model: AddBoardPermissionDto,
+    session: ClientSession
   ): Promise<void> {
     if (!userId) {
       throw new HttpException(StatusCodes.BAD_REQUEST, "UserId is required");
@@ -64,26 +65,42 @@ export default class BoardPermissionService {
           "Member not found in board"
         );
       }
-      const exitMemInPerm = await this.boardPermissionSchema.findOne({
-        boardId: boardId,
-        memberIds: { $in: model.memberIds },
-      });
-      if (exitMemInPerm && (model.memberIds || []).length > 0) {
-        const listPromise = (model.memberIds || []).map((item) => {
-          if ((exitMemInPerm.memberIds || []).includes(item)) {
-            exitMemInPerm.memberIds = (exitMemInPerm.memberIds || []).filter(
-              (i: string) => i.toString() !== item
-            );
-            return exitMemInPerm.save();
-          }
+      // const exitMemInPerm = await this.boardPermissionSchema.findOne({
+      //   boardId: boardId,
+      //   memberIds: { $in: model.memberIds },
+      // });
+      const boardPerm = await this.boardPermissionSchema
+        .find({
+          boardId: boardId,
+        })
+        .exec();
+      if (!boardPerm.length) {
+        throw new HttpException(
+          StatusCodes.BAD_REQUEST,
+          "Permissions of board not found"
+        );
+      }
+      if (boardPerm.length && model.memberIds && model.memberIds.length > 0) {
+        const listPromise = boardPerm.map((perm) => {
+          perm.memberIds = perm.memberIds.filter(
+            (i: string) => !model.memberIds.includes(i.toString())
+          );
+          return perm.save({ session });
         });
         await Promise.all(listPromise);
       }
     }
-    await this.boardPermissionSchema.create({
-      ...model,
-      boardId,
-    });
+    await this.boardPermissionSchema.create(
+      [
+        {
+          ...model,
+          boardId,
+        },
+      ],
+      { session }
+    );
+    await session.commitTransaction();
+    session.endSession();
   }
   public async updateBoardPermission(
     userId: string,
@@ -112,7 +129,8 @@ export default class BoardPermissionService {
     }
     if (boardPermission.isAdmin || boardPermission.isViewer) {
       if (
-        difference(Object.keys(model), ["memberIds", "description"]).length > 0
+        difference(Object.keys(model), ["memberIds", "description", "color"])
+          .length > 0
       ) {
         throw new HttpException(
           StatusCodes.BAD_REQUEST,
@@ -215,8 +233,7 @@ export default class BoardPermissionService {
       updateModel = {
         ...otherProps,
       };
-    }
-    else {
+    } else {
       updateModel = {
         ...model,
       };

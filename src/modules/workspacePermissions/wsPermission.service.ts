@@ -114,7 +114,8 @@ export default class WorkspacePermissionService {
 
     if (wsPermission.isWSAdmin || wsPermission.isWSViewer) {
       if (
-        difference(Object.keys(model), ["memberIds", "description"]).length > 0
+        difference(Object.keys(model), ["memberIds", "description", "color"])
+          .length > 0
       ) {
         throw new HttpException(
           StatusCodes.BAD_REQUEST,
