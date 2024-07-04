@@ -81,13 +81,15 @@ export default class BoardPermissionService {
         );
       }
       if (boardPerm.length && model.memberIds && model.memberIds.length > 0) {
-        const listPromise = boardPerm.map((perm) => {
-          perm.memberIds = perm.memberIds.filter(
+        for (let i = 0; i < boardPerm.length; i++) {
+          const originalLength = boardPerm[i].memberIds.length;
+          boardPerm[i].memberIds = (boardPerm[i].memberIds || []).filter(
             (i: string) => !model.memberIds.includes(i.toString())
           );
-          return perm.save({ session });
-        });
-        await Promise.all(listPromise);
+          if (boardPerm[i]?.memberIds.length !== originalLength) {
+            await boardPerm[i].save({ session });
+          }
+        }
       }
     }
     await this.boardPermissionSchema.create(
@@ -99,6 +101,7 @@ export default class BoardPermissionService {
       ],
       { session }
     );
+
     await session.commitTransaction();
     session.endSession();
   }
