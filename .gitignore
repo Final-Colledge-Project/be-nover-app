@@ -1,3 +1,5 @@
 node_modules/
 .env
 credentials.json
+cloud_service.json
+yarn.lock
