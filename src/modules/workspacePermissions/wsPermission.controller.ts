@@ -7,21 +7,33 @@ import UpdateWSPermissionDto from "./dtos/updateWSPermissionDto";
 import { startSession } from "mongoose";
 export default class WorkspacePermissionController {
   private wsPermissionService = new WorkspacePermissionService();
-  public createWSPermission = catchAsync(
-    async (req: Request, res: Response) => {
+  public createWSPermission = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    const session = await startSession();
+    try {
       const userId = req.user.id;
       const wsId = req.params.id;
       const model: AddWSPermissionDto = req.body;
+      await session.startTransaction();
       await this.wsPermissionService.createWorkspacePermission(
         userId,
         wsId,
-        model
+        model,
+        session
       );
       res
         .status(StatusCodes.CREATED)
         .json({ message: "Create group permission successfully" });
+    } catch (err) {
+      await session.abortTransaction();
+      session.endSession();
+      next(err);
     }
-  );
+  };
+
   public updateWSPermission = async (
     req: Request,
     res: Response,

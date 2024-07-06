@@ -23,7 +23,8 @@ export default class WorkspacePermissionService {
   public async createWorkspacePermission(
     userId: string,
     wsId: string,
-    model: AddWSPermissionDto
+    model: AddWSPermissionDto,
+    session: ClientSession
   ): Promise<void> {
     if (!userId) {
       throw new HttpException(StatusCodes.BAD_REQUEST, "UserId is required");
@@ -31,7 +32,7 @@ export default class WorkspacePermissionService {
     if (isEmptyObject(model)) {
       throw new HttpException(StatusCodes.BAD_REQUEST, "Model is empty");
     }
-    const wsSuperAdmin = await isSuperAdmin(wsId, userId);
+    const wsSuperAdmin = await isWorkspaceAdmin(wsId, userId);
     if (!wsSuperAdmin) {
       throw new HttpException(StatusCodes.FORBIDDEN, "Permission denied");
     }
@@ -47,10 +48,10 @@ export default class WorkspacePermissionService {
     }
     //Handle members in perm
     if (model.memberIds && model.memberIds.length) {
-      const owner = workspace.workspaceAdmins.filter((item) => {
+      const owner = workspace.workspaceAdmins.find((item) => {
         item.role === ROLE.superAdmin;
-      })[0];
-      if (model.memberIds.includes(owner.user.toString())) {
+      });
+      if (model.memberIds.includes((owner?.user || "").toString())) {
         throw new HttpException(
           StatusCodes.BAD_REQUEST,
           "Owner cannot be added to permission group"
@@ -65,32 +66,40 @@ export default class WorkspacePermissionService {
           "Member not found in workspace"
         );
       }
-      const exitMemInPerm = await this.wsPermissionSchema.findOne({
-        workspaceId: wsId,
-        memberIds: { $in: model.memberIds },
-      });
-      if (exitMemInPerm && (model.memberIds || []).length > 0) {
-        const listPromise = (model.memberIds || []).map((item) => {
-          if ((exitMemInPerm.memberIds || []).includes(item)) {
-            exitMemInPerm.memberIds = (exitMemInPerm.memberIds || []).filter(
-              (i: string) => i.toString() !== item
-            );
-            return exitMemInPerm.save();
+      const workspacePerm = await this.wsPermissionSchema
+        .find({
+          workspaceId: wsId,
+        })
+        .exec();
+      if (!workspacePerm.length) {
+        throw new HttpException(
+          StatusCodes.BAD_REQUEST,
+          "Permissions of workspace not found"
+        );
+      }
+      if (workspacePerm.length && (model.memberIds || []).length > 0) {
+        for (let i = 0; i < workspacePerm.length; i++) {
+          const originalLength = workspacePerm[i].memberIds.length;
+          workspacePerm[i].memberIds = (
+            workspacePerm[i].memberIds || []
+          ).filter((i: string) => !model.memberIds.includes(i.toString()));
+          if (originalLength !== workspacePerm[i].memberIds.length) {
+            await workspacePerm[i].save({ session });
           }
-        });
-        await Promise.all(listPromise);
+        }
       }
     }
-    const workspacePerm = await this.wsPermissionSchema.create({
-      ...model,
-      workspaceId: wsId,
-    });
-    if (!workspacePerm) {
-      throw new HttpException(
-        StatusCodes.BAD_REQUEST,
-        "Create workspace permission failed"
-      );
-    }
+    const workspacePerm = await this.wsPermissionSchema.create(
+      [
+        {
+          ...model,
+          workspaceId: wsId,
+        },
+      ],
+      { session }
+    );
+    await session.commitTransaction();
+    session.endSession();
   }
   public async updateWSPermission(
     userId: string,
@@ -150,7 +159,7 @@ export default class WorkspacePermissionService {
     let updateModel = model;
     if (model.memberIds) {
       const owner = workspace.workspaceAdmins.filter((item) => {
-        item.role === ROLE.superAdmin;
+        return item.role === ROLE.superAdmin;
       })[0];
       if (model.memberIds.includes(owner.user.toString())) {
         throw new HttpException(

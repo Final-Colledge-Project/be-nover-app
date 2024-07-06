@@ -65,10 +65,6 @@ export default class BoardPermissionService {
           "Member not found in board"
         );
       }
-      // const exitMemInPerm = await this.boardPermissionSchema.findOne({
-      //   boardId: boardId,
-      //   memberIds: { $in: model.memberIds },
-      // });
       const boardPerm = await this.boardPermissionSchema
         .find({
           boardId: boardId,

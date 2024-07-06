@@ -19,6 +19,7 @@ import { CardSchema } from "@modules/cards";
 import { LabelSchema } from "@modules/labels";
 import AddWSPermissionDto from "@modules/workspacePermissions/dtos/addWSPermissionDto";
 import { WorkspacePermissionSchema } from "@modules/workspacePermissions";
+import { Request } from "express";
 class TeamWorkspaceService {
   public teamWorkspaceSchema = TeamWorkspaceSchema;
   private wsPermissionSchema = WorkspacePermissionSchema;
@@ -313,6 +314,39 @@ class TeamWorkspaceService {
     });
     workspace.isActive = false;
     await workspace.save();
+  }
+  public async getWorkspaceByUserId(
+    userId: string,
+    req: Request
+  ): Promise<ITeamWorkspace[]> {
+    const canCreateBoard = req.query.createBoard;
+    const workspaces = await this.teamWorkspaceSchema
+      .find({
+        $or: [
+          { "workspaceAdmins.user": userId },
+          { "workspaceMembers.user": userId },
+        ],
+        isActive: true,
+      })
+      .exec();
+
+    if (canCreateBoard) {
+      const wsPermissions = await this.wsPermissionSchema
+        .find({
+          memberIds: {
+            $in: [userId],
+          },
+          "board.create": true, 
+        })
+        .exec();
+      return workspaces.filter((ws) => {
+        return wsPermissions.some(
+          (permission) =>
+            permission.workspaceId.toString() === ws._id.toString()
+        );
+      });
+    }
+    return workspaces;
   }
 }
 

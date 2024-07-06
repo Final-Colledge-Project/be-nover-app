@@ -1,5 +1,8 @@
+import { formatDate } from "@core/utils";
 import { ILinkedIssue } from "@modules/issueLinks/issueLink.interface";
+import { Transform, TransformFnParams } from "class-transformer";
 import {
+  IsDateString,
   IsNotEmpty,
   IsNumber,
   IsOptional,
@@ -19,7 +22,8 @@ export default class UpdateCardDto {
     sprintId: string,
     epicId: string,
     issueTypeId: string,
-    storyPoint: number
+    storyPoint: number,
+    storyPointDate: Date
   ) {
     this.columnId = columnId;
     this.title = title;
@@ -30,6 +34,7 @@ export default class UpdateCardDto {
     this.epicId = epicId;
     this.issueTypeId = issueTypeId;
     this.storyPoint = storyPoint;
+    this.storyPointDate = storyPointDate;
   }
   @IsOptional()
   @IsString()
@@ -71,6 +76,9 @@ export default class UpdateCardDto {
   @IsNumber()
   @Min(0)
   public storyPoint: number;
+  @Transform(({ value }: TransformFnParams) => formatDate(value))
+  @IsDateString()
+  public storyPointDate: Date; // used to testing
 }
 
 export interface IIssueLinkPayload {

@@ -8,6 +8,7 @@ import { Router } from "express";
 import SprintController from "./sprint.controller";
 import CreateSprintDto from "./dtos/createSprintDto";
 import { PERM_TYPE } from "@core/utils";
+import UpdateSprintDto from "./dtos/updateSprintDto";
 
 export default class ScheduleRoute implements Route {
   public path = "/api/v1/sprints";
@@ -26,7 +27,7 @@ export default class ScheduleRoute implements Route {
     );
     this.router.patch(
       this.path + "/:id/board/:boardId",
-      validationMiddleware(CreateSprintDto, true),
+      validationMiddleware(UpdateSprintDto, true),
       authMiddleware,
       authorizePermission("sprint:update", PERM_TYPE.board),
       this.sprintController.updateSprint

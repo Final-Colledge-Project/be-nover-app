@@ -84,6 +84,14 @@ const BoardSchema = new mongoose.Schema(
       type: SCHEMA_TYPE,
       ref: MODEL_NAME.column,
     },
+    nextAutoIncrement: {
+      type: Number,
+      default: 1,
+    },
+    workingDays: {
+      type: [Number],
+      default: [1, 2, 3, 4, 5], // 1: Monday, 2: Tuesday, 3: Wednesday, 4: Thursday, 5: Friday
+    },
   },
   { timestamps: true }
 );

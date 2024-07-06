@@ -107,19 +107,22 @@ export default class CardService {
     if (!backlog && existBoard.template === BOARD_TEMPLATE.scrum) {
       throw new HttpException(StatusCodes.BAD_REQUEST, "Backlog not found");
     }
-    const lengthCardInBoard = await this.cardSchema.find({ boardId }).count();
     const newCard = await this.cardSchema.create(
       [
         {
           ...model,
-          cardId: generateCardId(existBoard.key, lengthCardInBoard),
+          cardId: existBoard.nextAutoIncrement.toString(),
           boardId: boardId,
           reporterId: !model.reporterId ? userId : model.reporterId,
           columnId: model.columnId ? model.columnId : existBoard.initColumnId,
           assigneeId: model.assigneeId
             ? model.assigneeId
             : existBoard.defaultAssigneeId,
-          watcherIds: model.assigneeId ? [userId, model.assigneeId] : [userId],
+          watcherIds: model.assigneeId
+            ? [!model.reporterId ? userId : model.reporterId, model.assigneeId]
+            : [!model.reporterId ? userId : model.reporterId],
+          sprintId:
+            existBoard.template === BOARD_TEMPLATE.scrum ? backlog?._id : null,
         },
       ],
       { session }
@@ -203,6 +206,8 @@ export default class CardService {
       ],
       { session }
     );
+    existBoard.nextAutoIncrement += 1;
+    await existBoard.save({ session });
     await session.commitTransaction();
     session.endSession();
     return newCard[0];
@@ -510,11 +515,18 @@ export default class CardService {
     if (model.columnId && model.columnId !== cloneCard.columnId) {
       const oldCol = await this.colSchema.findById(cloneCard.columnId).exec();
       const newCol = await this.colSchema.findById(model.columnId).exec();
-
+      if (!oldCol)
+        throw new HttpException(StatusCodes.BAD_REQUEST, "Column not found");
       if (!newCol) {
         throw new HttpException(StatusCodes.BAD_REQUEST, "Column not found");
       }
+      oldCol.cardOrderIds = oldCol.cardOrderIds.filter(
+        (item) => item.toString() !== cardId.toString()
+      );
+      newCol.cardOrderIds.push(cardId);
       isResolve = newCol.isResolved;
+      //Handle StotyPoint
+      //Resolve Columns => StoryPoint - , Unresolve Columns => StoryPoint +
       if (isResolve && board?.template === BOARD_TEMPLATE.scrum) {
         const sprint = await this.sprintSchema.findById(card.sprintId).exec();
         if (!sprint) {
@@ -524,7 +536,9 @@ export default class CardService {
           sprint.dailyStoryPoints.find(
             (item: IDailyStoryPoint) =>
               item?.date?.toISOString().split("T")[0] ===
-              new Date().toISOString().split("T")[0]
+              (model.storyPointDate
+                ? model.storyPointDate
+                : new Date().toISOString().split("T")[0])
           );
         if (storyPoint) {
           storyPoint.storyPoints -= cloneCard.storyPoint;
@@ -532,12 +546,13 @@ export default class CardService {
           const prevDailyStoryPoint =
             sprint.dailyStoryPoints[sprint.dailyStoryPoints.length - 1];
           sprint.dailyStoryPoints.push({
-            date: new Date(),
+            date: model.storyPointDate ? model.storyPointDate : new Date(),
             storyPoints: prevDailyStoryPoint
               ? prevDailyStoryPoint.storyPoints - cloneCard.storyPoint
               : 0,
           });
         }
+        await sprint.save({ session });
       }
       if (oldCol?.isResolved && !newCol.isResolved) {
         const sprint = await this.sprintSchema.findById(card.sprintId).exec();
@@ -548,7 +563,9 @@ export default class CardService {
           sprint.dailyStoryPoints.find(
             (item: IDailyStoryPoint) =>
               item?.date?.toISOString().split("T")[0] ===
-              new Date().toISOString().split("T")[0]
+              (model.storyPointDate
+                ? model.storyPointDate
+                : new Date().toISOString().split("T")[0])
           );
         if (storyPoint) {
           storyPoint.storyPoints += cloneCard.storyPoint;
@@ -556,12 +573,13 @@ export default class CardService {
           const prevDailyStoryPoint =
             sprint.dailyStoryPoints[sprint.dailyStoryPoints.length - 1];
           sprint.dailyStoryPoints.push({
-            date: new Date(),
+            date: model.storyPointDate ? model.storyPointDate : new Date(),
             storyPoints: prevDailyStoryPoint
               ? prevDailyStoryPoint.storyPoints + cloneCard.storyPoint
               : cloneCard.storyPoint,
           });
         }
+        await sprint.save({ session });
       }
       taskLogs.push({
         userId: userId,
@@ -572,6 +590,8 @@ export default class CardService {
         issueModel: MODEL_NAME.card,
         issueId: card._id,
       });
+      await oldCol.save({ session });
+      await newCol.save({ session });
     }
     const updateCard = await this.cardSchema
       .findByIdAndUpdate(
@@ -642,9 +662,10 @@ export default class CardService {
         issueId: card._id,
       });
     }
+    //Update sprint
     if (
       model.sprintId &&
-      model.sprintId.toString() !== cloneCard.sprintId.toString()
+      model.sprintId.toString() !== (cloneCard.sprintId || "").toString()
     ) {
       const oldSprint = await this.sprintSchema.findById(cloneCard.sprintId);
       const newSprint = await this.sprintSchema.findById(model.sprintId);
@@ -659,7 +680,9 @@ export default class CardService {
             oldSprint.dailyStoryPoints.find(
               (item: IDailyStoryPoint) =>
                 item?.date?.toISOString().split("T")[0] ===
-                new Date().toISOString().split("T")[0]
+                (model.storyPointDate
+                  ? model.storyPointDate
+                  : new Date().toISOString().split("T")[0])
             );
           if (dailyStoryPoint) {
             dailyStoryPoint.storyPoints -= cloneCard.storyPoint;
@@ -667,7 +690,7 @@ export default class CardService {
             const prevDailyStoryPoint: IDailyStoryPoint | undefined =
               oldSprint.dailyStoryPoints[oldSprint.dailyStoryPoints.length - 1];
             oldSprint.dailyStoryPoints.push({
-              date: new Date(),
+              date: model.storyPointDate ? model.storyPointDate : new Date(),
               storyPoints: prevDailyStoryPoint
                 ? prevDailyStoryPoint.storyPoints - cloneCard.storyPoint
                 : 0,
@@ -679,7 +702,9 @@ export default class CardService {
             newSprint.dailyStoryPoints.find(
               (item: IDailyStoryPoint) =>
                 item?.date?.toISOString().split("T")[0] ===
-                new Date().toISOString().split("T")[0]
+                (model.storyPointDate
+                  ? model.storyPointDate
+                  : new Date().toISOString().split("T")[0])
             );
           if (dailyStoryPoint) {
             dailyStoryPoint.storyPoints += cloneCard.storyPoint;
@@ -687,7 +712,7 @@ export default class CardService {
             const prevDailyStoryPoint: IDailyStoryPoint | undefined =
               newSprint.dailyStoryPoints[newSprint.dailyStoryPoints.length - 1];
             newSprint.dailyStoryPoints.push({
-              date: new Date(),
+              date: model.storyPointDate ? model.storyPointDate : new Date(),
               storyPoints: prevDailyStoryPoint
                 ? prevDailyStoryPoint.storyPoints + cloneCard.storyPoint
                 : cloneCard.storyPoint,
@@ -695,8 +720,12 @@ export default class CardService {
           }
         }
 
+        const cardOrderIds = oldSprint.cardOrderIds.filter(
+          (item: string) => item.toString() !== cardId.toString()
+        );
+        oldSprint.cardOrderIds = cardOrderIds;
+        newSprint.cardOrderIds.push(cardId);
         await oldSprint.save({ session });
-
         await newSprint.save({ session });
       }
       taskLogs.push({
@@ -715,6 +744,15 @@ export default class CardService {
       if (!newEpic) {
         throw new HttpException(StatusCodes.BAD_REQUEST, "Epic not found");
       }
+      if (oldEpic) {
+        const cardOrderIds = oldEpic.cardOrderIds.filter(
+          (item: string) => item.toString() !== cardId.toString()
+        );
+        oldEpic.cardOrderIds = cardOrderIds;
+        await oldEpic.save({ session });
+      }
+      newEpic.cardOrderIds.push(cardId);
+      await newEpic.save({ session });
       taskLogs.push({
         userId: userId,
         target: "Epic",
@@ -754,6 +792,7 @@ export default class CardService {
         issueId: card._id,
       });
     }
+    //Update storyPoint
     if (model.storyPoint && model.storyPoint !== cloneCard.storyPoint) {
       const currSprint = await this.sprintSchema.findById(cloneCard.sprintId);
 
@@ -762,7 +801,9 @@ export default class CardService {
           currSprint?.dailyStoryPoints.find(
             (item: IDailyStoryPoint) =>
               item?.date?.toISOString().split("T")[0] ===
-              new Date().toISOString().split("T")[0]
+              (model.storyPointDate
+                ? model.storyPointDate
+                : new Date().toISOString().split("T")[0])
           );
         if (dailyStoryPoint) {
           dailyStoryPoint.storyPoints =
@@ -775,7 +816,7 @@ export default class CardService {
               currSprint?.dailyStoryPoints.length - 1
             ];
           currSprint?.dailyStoryPoints.push({
-            date: new Date(),
+            date: model.storyPointDate ? model.storyPointDate : new Date(),
             storyPoints: prevDailyStoryPoint
               ? prevDailyStoryPoint.storyPoints -
                 cloneCard.storyPoint +
@@ -789,8 +830,8 @@ export default class CardService {
         userId: userId,
         target: "StoryPoint",
         msg: "changed the",
-        oldVal: cloneCard.storyPoint.toString(),
-        newVal: model.storyPoint.toString(),
+        oldVal: (cloneCard.storyPoint || "").toString(),
+        newVal: (model.storyPoint || "").toString(),
         issueModel: MODEL_NAME.card,
         issueId: card._id,
       });

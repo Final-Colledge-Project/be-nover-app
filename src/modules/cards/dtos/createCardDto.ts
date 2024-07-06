@@ -45,8 +45,8 @@ export default class CreateCardDto {
   @MinLength(2, {
     message: "Title must be at least 2 characters long",
   })
-  @MaxLength(50, {
-    message: "Title must be at most 50 characters long",
+  @MaxLength(100, {
+    message: "Title must be at most 100 characters long",
   })
   public title: string;
   @IsNotEmpty()
@@ -54,8 +54,8 @@ export default class CreateCardDto {
   @MinLength(2, {
     message: "Description must be at least 2 characters long",
   })
-  @MaxLength(200, {
-    message: "Description must be at most 200 characters long",
+  @MaxLength(2000, {
+    message: "Description must be at most 2000 characters long",
   })
   public description;
   @IsString()

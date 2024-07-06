@@ -3,6 +3,7 @@ import SprintService from "./sprint.service";
 import { NextFunction, Request, Response } from "express";
 import CreateSprintDto from "./dtos/createSprintDto";
 import { StatusCodes } from "http-status-codes";
+import UpdateSprintDto from "./dtos/updateSprintDto";
 export default class SprintController {
   private sprintService = new SprintService();
   public createSprint = async (
@@ -40,7 +41,7 @@ export default class SprintController {
     const session = await startSession();
     try {
       session.startTransaction();
-      const model: CreateSprintDto = req.body;
+      const model: UpdateSprintDto = req.body;
       const sprintId = req.params.id;
       const userId = req.user.id;
       const sprint = await this.sprintService.updateSprint(

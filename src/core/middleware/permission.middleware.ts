@@ -74,19 +74,23 @@ export const authorizePermission = (roles: string, permType: string) => {
           );
         }
 
+        if (wsPermGroup?.isWSAdmin) {
+          return next();
+        }
+
         let isHasPerm = false;
-        let isViewPerm = false;
+        // let isViewPerm = false;
         (Object.keys(listPerm) || []).forEach((item) => {
           const wsPerm = (wsPermGroup as any)[item] || {};
           const wsKey = (listPerm as any)[item];
           if (wsPerm[wsKey]) {
             isHasPerm = true;
           }
-          if (wsKey === "viewAll" && isBoolean(wsPerm[wsKey])) {
-            isViewPerm = true;
-          }
+          // if (wsKey === "viewAll" && isBoolean(wsPerm[wsKey])) {
+          //   isViewPerm = true;
+          // }
         });
-        if (!isHasPerm && !isViewPerm) {
+        if (!isHasPerm) {
           return next(
             new HttpException(StatusCodes.FORBIDDEN, "Permission denied")
           );

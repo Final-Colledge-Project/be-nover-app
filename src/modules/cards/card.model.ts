@@ -22,12 +22,12 @@ const CardSchema = new mongoose.Schema(
       type: String,
       required: [true, "Title is required"],
       minlength: [2, "Title must be at least 2 characters long"],
-      maxlength: [50, "Title must be at most 50 characters long"],
+      maxlength: [100, "Title must be at most 100 characters long"],
       trim: true,
     },
     description: {
       type: String,
-      maxLength: [500, "Description must be at most 500 characters long"],
+      maxLength: [2000, "Description must be at most 2000 characters long"],
       trim: true,
     },
     cover: {

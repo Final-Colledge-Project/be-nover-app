@@ -1,11 +1,17 @@
 import { BoardSchema } from "@modules/boards";
 import CreateSprintDto from "./dtos/createSprintDto";
 import dayjs from "dayjs";
-import { BOARD_TEMPLATE, SPRINT_DURATION, isBoardMember } from "@core/utils";
+import {
+  BOARD_TEMPLATE,
+  SPRINT_DURATION,
+  SPRINT_STATUS,
+  isBoardMember,
+} from "@core/utils";
 import SprintSchema from "./sprint.model";
 import ISprint from "./sprint.interface";
 import { HttpException } from "@core/exceptions";
 import { StatusCodes } from "http-status-codes";
+import UpdateSprintDto from "./dtos/updateSprintDto";
 export default class SprintService {
   private boardSchema = BoardSchema;
   private sprintSchema = SprintSchema;
@@ -43,13 +49,27 @@ export default class SprintService {
     }
     return formatDuration;
   }
-  private calculateEndDate(startDay: Date, duration: number) {
-    let startDate = dayjs(startDay);
-    let endDate = startDate.add(duration * 7, "day");
-    //Skip weekend
-    while (endDate.day() === 0 || endDate.day() === 6) {
-      //0: Sunday, 6: Saturday
-      endDate = endDate.add(1, "day");
+  private calculateEndDate(
+    startDay: Date,
+    duration: number,
+    workingDays: number[]
+  ): Date {
+    let endDate = dayjs(startDay);
+    let remainDays = duration * workingDays.length;
+    let testDate = endDate;
+    while (remainDays > 0) {
+      testDate = testDate.add(1, "day");
+      console.log("🚀 ~ SprintService ~ testDate:", testDate.toDate());
+      if (workingDays.includes(testDate.day())) {
+        endDate = testDate;
+        console.log("🚀 ~ SprintService ~ endDate:", endDate.toDate());
+        remainDays--;
+      }
+      if (remainDays === 1 && !workingDays.includes(testDate.day())) {
+        endDate = testDate;
+        remainDays--;
+      }
+      console.log("🚀 ~ SprintService ~ remainDays:", remainDays);
     }
     return endDate.toDate();
   }
@@ -63,26 +83,42 @@ export default class SprintService {
     if (!board) {
       throw new HttpException(StatusCodes.BAD_REQUEST, "Board not found");
     }
+    const workingDays = board.workingDays;
+    if (!board) {
+      throw new HttpException(StatusCodes.BAD_REQUEST, "Board not found");
+    }
     if (board.template === BOARD_TEMPLATE.kanban) {
       throw new HttpException(
         StatusCodes.BAD_REQUEST,
         "Invalid board template"
       );
     }
+    let extendProps = {};
+    if (model.startDate) {
+      if (model.endDate) {
+        const validDuration = this.isValidDuration(
+          model.startDate,
+          model.endDate,
+          model.duration
+        );
+        if (!validDuration) {
+          throw new HttpException(StatusCodes.BAD_REQUEST, "Invalid duration");
+        }
+      }
 
-    const validDuration = this.isValidDuration(
-      model.startDate,
-      model.endDate,
-      model.duration
-    );
-    if (!validDuration) {
-      throw new HttpException(StatusCodes.BAD_REQUEST, "Invalid duration");
-    }
-    let endDate: Date;
-    if (model.duration !== 0) {
-      endDate = dayjs(model.startDate).add(model.duration, "day").toDate();
-    } else {
-      endDate = dayjs(model.startDate).add(model.duration, "week").toDate();
+      let endDate = null;
+      if (model.duration !== 0) {
+        endDate = this.calculateEndDate(
+          model.startDate,
+          model.duration,
+          workingDays
+        );
+      } else {
+        endDate = model.endDate;
+      }
+      extendProps = {
+        endDate,
+      };
     }
 
     const data = {
@@ -90,10 +126,7 @@ export default class SprintService {
       boardId,
       creatorId: userId,
       duration: this.formatDuration(model.duration),
-      endDate:
-        model.duration === 0
-          ? endDate
-          : this.calculateEndDate(model.startDate, model.duration),
+      ...extendProps,
     };
     const sprint = await this.sprintSchema.create([data], { session });
     await session.commitTransaction();
@@ -101,7 +134,7 @@ export default class SprintService {
     return sprint[0];
   }
   public async updateSprint(
-    model: CreateSprintDto,
+    model: UpdateSprintDto,
     sprintId: string,
     userId: string,
     session: any
@@ -118,6 +151,18 @@ export default class SprintService {
     if (!validDuration) {
       throw new HttpException(StatusCodes.BAD_REQUEST, "Invalid duration");
     }
+
+    if (model.status === SPRINT_STATUS.backlog) {
+      throw new HttpException(
+        StatusCodes.BAD_REQUEST,
+        "Cannot update with this status"
+      );
+    }
+
+    if (model.status === SPRINT_STATUS.pending) {
+      throw new HttpException(StatusCodes.BAD_REQUEST, "Cannot revert sprint");
+    }
+
     const data = {
       ...model,
       creatorId: userId,
@@ -128,7 +173,7 @@ export default class SprintService {
       { session, new: true }
     );
     if (!updateSprint) {
-      throw new Error("Update sprint failed");
+      throw new HttpException(StatusCodes.BAD_REQUEST, "Update sprint failed");
     }
     await session.commitTransaction();
     session.endSession();

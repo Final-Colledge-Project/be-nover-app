@@ -22,7 +22,7 @@ export const isWorkspaceAdmin = async (
     isWSAdmin: true,
   }).exec();
   const isInPerm = adminPermission?.memberIds.find(
-    (mem: any) => mem.toString() === adminId.toString()
+    (mem) => mem.toString() === adminId.toString()
   );
   if (!isInPerm) return false;
   return true;
@@ -35,12 +35,13 @@ export const isWorkspaceMember = async (
   const teamWorkspace = await TeamWorkspaceSchema.findById(
     teamWorkspaceId
   ).exec();
+  const superAdmin = await isSuperAdmin(teamWorkspaceId, memberId);
   const checkMember = teamWorkspace?.workspaceMembers.find(
     (member: IMember) => {
       return member.user.toString() === memberId;
     }
   );
-  return !!checkMember;
+  return !!checkMember || superAdmin;
 };
 
 export const isSuperAdmin = async (
@@ -67,7 +68,7 @@ export const isBoardAdmin = async (
     isAdmin: true,
   }).exec();
   const isInPerm = adminPermission?.memberIds.find(
-    (mem: any) => mem.toString() === adminId.toString()
+    (mem) => mem.toString() === adminId.toString()
   );
   if (!isInPerm) return false;
   return true;

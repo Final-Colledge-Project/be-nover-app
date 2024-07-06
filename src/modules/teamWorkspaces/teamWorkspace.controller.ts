@@ -8,7 +8,6 @@ import { startSession } from "mongoose";
 
 export default class TeamWorkspaceController {
   private teamWorkspaceService = new TeamWorkspaceService();
-  
   public createTeamWorkspace = async (
     req: Request,
     res: Response,
@@ -90,6 +89,17 @@ export default class TeamWorkspaceController {
       res
         .status(StatusCodes.OK)
         .json({ message: "Delete team workspace successfully" });
+    }
+  );
+  public getTeamWorkspaceByUserId = catchAsync(
+    async (req: Request, res: Response) => {
+      const userId = req.user.id;
+      const teamWorkspace =
+        await this.teamWorkspaceService.getWorkspaceByUserId(userId, req);
+      res.status(StatusCodes.OK).json({
+        data: teamWorkspace,
+        message: "Get team workspace by user id successfully",
+      });
     }
   );
 }

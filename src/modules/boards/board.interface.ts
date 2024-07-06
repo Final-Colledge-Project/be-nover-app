@@ -16,5 +16,6 @@ export default interface IBoard {
   isActive: boolean;
   defaultAssigneeId: string;
   initColumnId: string;
+  nextAutoIncrement: number;
+  workingDays: number[];
 }
-
