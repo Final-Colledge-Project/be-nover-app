@@ -102,4 +102,24 @@ export default class SprintController {
       next(err);
     }
   };
+  public getBacklogDetail = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      const boardId = req.params.boardId;
+      const userId = req.user.id;
+      const backlogDetail = await this.sprintService.getBacklogDetail(
+        boardId,
+        userId
+      );
+      res.status(StatusCodes.OK).json({
+        data: backlogDetail,
+        message: "Get backlog detail successfully",
+      });
+    } catch (err) {
+      next(err);
+    }
+  };
 }

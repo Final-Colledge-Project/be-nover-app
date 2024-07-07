@@ -1,5 +1,10 @@
 import mongoose, { Query } from "mongoose";
-import { MODEL_NAME, SCHEMA_TYPE, SPRINT_DURATION, SPRINT_STATUS } from "@core/utils";
+import {
+  MODEL_NAME,
+  SCHEMA_TYPE,
+  SPRINT_DURATION,
+  SPRINT_STATUS,
+} from "@core/utils";
 import ISprint from "./sprint.interface";
 
 const SprintSchema = new mongoose.Schema(
@@ -69,6 +74,10 @@ const SprintSchema = new mongoose.Schema(
         },
       },
     ],
+    actualCompletedDate: {
+      type: Date,
+      default: null,
+    },
   },
   { timestamps: true }
 );

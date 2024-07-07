@@ -462,9 +462,9 @@ export default class CardService {
             cardId: 1,
             title: 1,
             description: 1,
-            member: {
-              $arrayElemAt: ["$members", 0],
-            },
+              member: {
+                $arrayElemAt: ["$members", 0],
+              },
             cover: 1,
             startDate: 1,
             dueDate: 1,
