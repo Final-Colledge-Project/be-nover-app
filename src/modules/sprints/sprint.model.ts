@@ -78,6 +78,10 @@ const SprintSchema = new mongoose.Schema(
       type: Date,
       default: null,
     },
+    totalStoryPoint: {
+      type: Number,
+      default: null,
+    },
   },
   { timestamps: true }
 );

@@ -25,7 +25,7 @@ export default class UpdateIssueTypeDto {
   @IsString()
   @IsOptional()
   public description: string;
-  @IsUrl()
+  @IsString()
   @IsNotEmpty()
   public icon: string;
   @IsNotEmpty()

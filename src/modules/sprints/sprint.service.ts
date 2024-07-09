@@ -16,7 +16,7 @@ import UpdateSprintDto from "./dtos/updateSprintDto";
 import { CardSchema } from "@modules/cards";
 import { ColumnSchema } from "@modules/columns";
 import { ClientSession } from "mongoose";
-import { uniq } from "lodash";
+import { cloneDeep, uniq } from "lodash";
 export default class SprintService {
   private boardSchema = BoardSchema;
   private sprintSchema = SprintSchema;
@@ -66,17 +66,14 @@ export default class SprintService {
     let testDate = endDate;
     while (remainDays > 0) {
       testDate = testDate.add(1, "day");
-      console.log("🚀 ~ SprintService ~ testDate:", testDate.toDate());
       if (workingDays.includes(testDate.day())) {
         endDate = testDate;
-        console.log("🚀 ~ SprintService ~ endDate:", endDate.toDate());
         remainDays--;
       }
       if (remainDays === 1 && !workingDays.includes(testDate.day())) {
         endDate = testDate;
         remainDays--;
       }
-      console.log("🚀 ~ SprintService ~ remainDays:", remainDays);
     }
     return endDate.toDate();
   }
@@ -182,6 +179,10 @@ export default class SprintService {
           sprintId,
         })
         .exec();
+      const cloneTasks = cloneDeep(tasksInSprint);
+      const totalStoryPoint = cloneTasks.reduce((total, card) => {
+        return total + card.storyPoint || 0;
+      }, 0);
       const resovledColumns = await this.columnSchema
         .find({
           boardId: sprint.boardId,
@@ -199,6 +200,7 @@ export default class SprintService {
       extendUpdateData = {
         cardOrderIds: resolvedTask.map((e) => e._id),
         actualCompletedDate: new Date(),
+        totalStoryPoint: totalStoryPoint,
       };
       backlog.cardOrderIds = uniq([
         ...backlog.cardOrderIds,

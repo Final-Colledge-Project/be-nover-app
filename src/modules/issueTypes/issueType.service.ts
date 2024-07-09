@@ -11,6 +11,7 @@ import { StatusCodes } from "http-status-codes";
 import UpdateIssueTypeDto from "./dtos/updateIssueTypeDto";
 import { Request } from "express";
 import APIFeatures from "@core/utils/apiFeature";
+import { assign } from "lodash";
 export default class IssueTypeService {
   private boardSchema = BoardSchema;
   private issueTypeSchema = IssueTypeSchema;
@@ -51,31 +52,32 @@ export default class IssueTypeService {
     await this.issueTypeSchema.findByIdAndUpdate(issueTypeId, model);
   }
   public async deleteIssueType(issueTypeId: string): Promise<void> {
-    const existCard = await this.cardSChema
-      .findOne({
-        issueTypeId,
-      })
-      .exec();
-    if (existCard) {
-      throw new HttpException(
-        StatusCodes.BAD_REQUEST,
-        "Card with this issue type exists"
-      );
-    }
-    const existEpic = await this.epicSchema
-      .findOne({
-        issueTypeId,
-      })
-      .exec();
     const existIssueType = await this.issueTypeSchema.findById(issueTypeId);
     if (!existIssueType) {
       throw new HttpException(StatusCodes.BAD_REQUEST, "Issue type not found");
     }
-    if (existEpic) {
-      throw new HttpException(
-        StatusCodes.BAD_REQUEST,
-        "Epic with this issue type exists"
-      );
+    const distinctIdsInCard = await this.cardSChema.distinct("issueTypeId");
+    const distinctIdsInEpic = await this.epicSchema.distinct("issueTypeId");
+    const distinctIdsInSubCard = await this.subCardSchema.distinct(
+      "issueTypeId"
+    );
+    const distinctIds = [
+      ...new Set([
+        ...distinctIdsInCard,
+        ...distinctIdsInEpic,
+        ...distinctIdsInSubCard,
+      ]),
+    ];
+    const issueTypesInUse = await this.issueTypeSchema
+      .find({
+        _id: { $in: distinctIds },
+      })
+      .exec();
+    const isUsed = issueTypesInUse.some(
+      (item) => item._id.toString() === issueTypeId.toString()
+    );
+    if (isUsed) {
+      throw new HttpException(StatusCodes.BAD_REQUEST, "Issue type is in use");
     }
     const existHierarchy = await this.issueTypeSchema.find({
       hierarchy: existIssueType.hierarchy,
@@ -108,6 +110,25 @@ export default class IssueTypeService {
     if (!isMem) {
       throw new HttpException(StatusCodes.FORBIDDEN, "Permission denied");
     }
+
+    const distinctIdsInCard = await this.cardSChema.distinct("issueTypeId");
+    const distinctIdsInEpic = await this.epicSchema.distinct("issueTypeId");
+    const distinctIdsInSubCard = await this.subCardSchema.distinct(
+      "issueTypeId"
+    );
+    const distinctIds = [
+      ...new Set([
+        ...distinctIdsInCard,
+        ...distinctIdsInEpic,
+        ...distinctIdsInSubCard,
+      ]),
+    ];
+    const issueTypesInUse = await this.issueTypeSchema
+      .find({
+        _id: { $in: distinctIds },
+      })
+      .exec();
+
     let extendCondition = {};
     if (req.query.search) {
       extendCondition = {
@@ -126,6 +147,12 @@ export default class IssueTypeService {
       .limit()
       .filter();
     const issueTypes = await feature.query;
-    return issueTypes;
+
+    return issueTypes.map((issueType: IIssueType) => {
+      const isUsed = issueTypesInUse.some(
+        (item) => item._id.toString() === issueType._id.toString()
+      );
+      return assign({}, issueType.toObject(), { canDelete: !isUsed });
+    });
   }
 }
