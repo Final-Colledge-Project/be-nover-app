@@ -7,4 +7,5 @@ export default interface IPriority {
   createdAt: Date;
   updatedAt: Date;
   isActive: boolean;
+  toObject?: any;
 }
