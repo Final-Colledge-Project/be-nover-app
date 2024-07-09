@@ -462,9 +462,9 @@ export default class CardService {
             cardId: 1,
             title: 1,
             description: 1,
-              member: {
-                $arrayElemAt: ["$members", 0],
-              },
+            member: {
+              $arrayElemAt: ["$members", 0],
+            },
             cover: 1,
             startDate: 1,
             dueDate: 1,
@@ -512,6 +512,7 @@ export default class CardService {
     const cloneCard = cloneDeep(card);
     const taskLogs: ITaskLog[] = [];
     let isResolve = false;
+
     if (model.columnId && model.columnId !== cloneCard.columnId) {
       const oldCol = await this.colSchema.findById(cloneCard.columnId).exec();
       const newCol = await this.colSchema.findById(model.columnId).exec();
@@ -540,18 +541,21 @@ export default class CardService {
                 ? model.storyPointDate
                 : new Date().toISOString().split("T")[0])
           );
-        if (storyPoint) {
-          storyPoint.storyPoints -= cloneCard.storyPoint;
-        } else {
-          const prevDailyStoryPoint =
-            sprint.dailyStoryPoints[sprint.dailyStoryPoints.length - 1];
-          sprint.dailyStoryPoints.push({
-            date: model.storyPointDate ? model.storyPointDate : new Date(),
-            storyPoints: prevDailyStoryPoint
-              ? prevDailyStoryPoint.storyPoints - cloneCard.storyPoint
-              : 0,
-          });
+        if (sprint.status !== SPRINT_STATUS.completed) {
+          if (storyPoint) {
+            storyPoint.storyPoints -= cloneCard.storyPoint;
+          } else {
+            const prevDailyStoryPoint =
+              sprint.dailyStoryPoints[sprint.dailyStoryPoints.length - 1];
+            sprint.dailyStoryPoints.push({
+              date: model.storyPointDate ? model.storyPointDate : new Date(),
+              storyPoints: prevDailyStoryPoint
+                ? prevDailyStoryPoint.storyPoints - cloneCard.storyPoint
+                : 0,
+            });
+          }
         }
+
         await sprint.save({ session });
       }
       if (oldCol?.isResolved && !newCol.isResolved) {
@@ -559,26 +563,29 @@ export default class CardService {
         if (!sprint) {
           throw new HttpException(StatusCodes.BAD_REQUEST, "Sprint not found");
         }
-        const storyPoint: IDailyStoryPoint | undefined =
-          sprint.dailyStoryPoints.find(
-            (item: IDailyStoryPoint) =>
-              item?.date?.toISOString().split("T")[0] ===
-              (model.storyPointDate
-                ? model.storyPointDate
-                : new Date().toISOString().split("T")[0])
-          );
-        if (storyPoint) {
-          storyPoint.storyPoints += cloneCard.storyPoint;
-        } else {
-          const prevDailyStoryPoint =
-            sprint.dailyStoryPoints[sprint.dailyStoryPoints.length - 1];
-          sprint.dailyStoryPoints.push({
-            date: model.storyPointDate ? model.storyPointDate : new Date(),
-            storyPoints: prevDailyStoryPoint
-              ? prevDailyStoryPoint.storyPoints + cloneCard.storyPoint
-              : cloneCard.storyPoint,
-          });
+        if (sprint.status !== SPRINT_STATUS.completed) {
+          const storyPoint: IDailyStoryPoint | undefined =
+            sprint.dailyStoryPoints.find(
+              (item: IDailyStoryPoint) =>
+                item?.date?.toISOString().split("T")[0] ===
+                (model.storyPointDate
+                  ? model.storyPointDate
+                  : new Date().toISOString().split("T")[0])
+            );
+          if (storyPoint) {
+            storyPoint.storyPoints += cloneCard.storyPoint;
+          } else {
+            const prevDailyStoryPoint =
+              sprint.dailyStoryPoints[sprint.dailyStoryPoints.length - 1];
+            sprint.dailyStoryPoints.push({
+              date: model.storyPointDate ? model.storyPointDate : new Date(),
+              storyPoints: prevDailyStoryPoint
+                ? prevDailyStoryPoint.storyPoints + cloneCard.storyPoint
+                : cloneCard.storyPoint,
+            });
+          }
         }
+
         await sprint.save({ session });
       }
       taskLogs.push({
@@ -675,51 +682,56 @@ export default class CardService {
       if (oldSprint) {
         // Handle storyPoints
         //3 cases : Backlog -> Sprint, Sprint -> Sprint, Sprint -> Backlog
-        if (oldSprint.status !== SPRINT_STATUS.backlog) {
-          const dailyStoryPoint: IDailyStoryPoint | undefined =
-            oldSprint.dailyStoryPoints.find(
-              (item: IDailyStoryPoint) =>
-                item?.date?.toISOString().split("T")[0] ===
-                (model.storyPointDate
-                  ? model.storyPointDate
-                  : new Date().toISOString().split("T")[0])
-            );
-          if (dailyStoryPoint) {
-            dailyStoryPoint.storyPoints -= cloneCard.storyPoint;
-          } else {
-            const prevDailyStoryPoint: IDailyStoryPoint | undefined =
-              oldSprint.dailyStoryPoints[oldSprint.dailyStoryPoints.length - 1];
-            oldSprint.dailyStoryPoints.push({
-              date: model.storyPointDate ? model.storyPointDate : new Date(),
-              storyPoints: prevDailyStoryPoint
-                ? prevDailyStoryPoint.storyPoints - cloneCard.storyPoint
-                : 0,
-            });
+        if (oldSprint.status !== SPRINT_STATUS.completed) {
+          if (oldSprint.status !== SPRINT_STATUS.backlog) {
+            const dailyStoryPoint: IDailyStoryPoint | undefined =
+              oldSprint.dailyStoryPoints.find(
+                (item: IDailyStoryPoint) =>
+                  item?.date?.toISOString().split("T")[0] ===
+                  (model.storyPointDate
+                    ? model.storyPointDate
+                    : new Date().toISOString().split("T")[0])
+              );
+            if (dailyStoryPoint) {
+              dailyStoryPoint.storyPoints -= cloneCard.storyPoint;
+            } else {
+              const prevDailyStoryPoint: IDailyStoryPoint | undefined =
+                oldSprint.dailyStoryPoints[
+                  oldSprint.dailyStoryPoints.length - 1
+                ];
+              oldSprint.dailyStoryPoints.push({
+                date: model.storyPointDate ? model.storyPointDate : new Date(),
+                storyPoints: prevDailyStoryPoint
+                  ? prevDailyStoryPoint.storyPoints - cloneCard.storyPoint
+                  : 0,
+              });
+            }
+          }
+          if (newSprint.status !== SPRINT_STATUS.backlog) {
+            const dailyStoryPoint: IDailyStoryPoint | undefined =
+              newSprint.dailyStoryPoints.find(
+                (item: IDailyStoryPoint) =>
+                  item?.date?.toISOString().split("T")[0] ===
+                  (model.storyPointDate
+                    ? model.storyPointDate
+                    : new Date().toISOString().split("T")[0])
+              );
+            if (dailyStoryPoint) {
+              dailyStoryPoint.storyPoints += cloneCard.storyPoint;
+            } else {
+              const prevDailyStoryPoint: IDailyStoryPoint | undefined =
+                newSprint.dailyStoryPoints[
+                  newSprint.dailyStoryPoints.length - 1
+                ];
+              newSprint.dailyStoryPoints.push({
+                date: model.storyPointDate ? model.storyPointDate : new Date(),
+                storyPoints: prevDailyStoryPoint
+                  ? prevDailyStoryPoint.storyPoints + cloneCard.storyPoint
+                  : cloneCard.storyPoint,
+              });
+            }
           }
         }
-        if (newSprint.status !== SPRINT_STATUS.backlog) {
-          const dailyStoryPoint: IDailyStoryPoint | undefined =
-            newSprint.dailyStoryPoints.find(
-              (item: IDailyStoryPoint) =>
-                item?.date?.toISOString().split("T")[0] ===
-                (model.storyPointDate
-                  ? model.storyPointDate
-                  : new Date().toISOString().split("T")[0])
-            );
-          if (dailyStoryPoint) {
-            dailyStoryPoint.storyPoints += cloneCard.storyPoint;
-          } else {
-            const prevDailyStoryPoint: IDailyStoryPoint | undefined =
-              newSprint.dailyStoryPoints[newSprint.dailyStoryPoints.length - 1];
-            newSprint.dailyStoryPoints.push({
-              date: model.storyPointDate ? model.storyPointDate : new Date(),
-              storyPoints: prevDailyStoryPoint
-                ? prevDailyStoryPoint.storyPoints + cloneCard.storyPoint
-                : cloneCard.storyPoint,
-            });
-          }
-        }
-
         const cardOrderIds = oldSprint.cardOrderIds.filter(
           (item: string) => item.toString() !== cardId.toString()
         );
@@ -795,36 +807,40 @@ export default class CardService {
     //Update storyPoint
     if (model.storyPoint && model.storyPoint !== cloneCard.storyPoint) {
       const currSprint = await this.sprintSchema.findById(cloneCard.sprintId);
-
-      if (currSprint?.status !== SPRINT_STATUS.backlog) {
-        const dailyStoryPoint: IDailyStoryPoint | undefined =
-          currSprint?.dailyStoryPoints.find(
-            (item: IDailyStoryPoint) =>
-              item?.date?.toISOString().split("T")[0] ===
-              (model.storyPointDate
-                ? model.storyPointDate
-                : new Date().toISOString().split("T")[0])
-          );
-        if (dailyStoryPoint) {
-          dailyStoryPoint.storyPoints =
-            dailyStoryPoint.storyPoints -
-            cloneCard.storyPoint +
-            model.storyPoint;
-        } else {
-          const prevDailyStoryPoint: IDailyStoryPoint | undefined =
-            currSprint?.dailyStoryPoints[
-              currSprint?.dailyStoryPoints.length - 1
-            ];
-          currSprint?.dailyStoryPoints.push({
-            date: model.storyPointDate ? model.storyPointDate : new Date(),
-            storyPoints: prevDailyStoryPoint
-              ? prevDailyStoryPoint.storyPoints -
-                cloneCard.storyPoint +
-                model.storyPoint
-              : model.storyPoint,
-          });
+      if (!currSprint) {
+        throw new HttpException(StatusCodes.BAD_REQUEST, "Sprint not found");
+      }
+      if (currSprint.status !== SPRINT_STATUS.completed) {
+        if (currSprint?.status !== SPRINT_STATUS.backlog) {
+          const dailyStoryPoint: IDailyStoryPoint | undefined =
+            currSprint?.dailyStoryPoints.find(
+              (item: IDailyStoryPoint) =>
+                item?.date?.toISOString().split("T")[0] ===
+                (model.storyPointDate
+                  ? model.storyPointDate
+                  : new Date().toISOString().split("T")[0])
+            );
+          if (dailyStoryPoint) {
+            dailyStoryPoint.storyPoints =
+              dailyStoryPoint.storyPoints -
+              cloneCard.storyPoint +
+              model.storyPoint;
+          } else {
+            const prevDailyStoryPoint: IDailyStoryPoint | undefined =
+              currSprint?.dailyStoryPoints[
+                currSprint?.dailyStoryPoints.length - 1
+              ];
+            currSprint?.dailyStoryPoints.push({
+              date: model.storyPointDate ? model.storyPointDate : new Date(),
+              storyPoints: prevDailyStoryPoint
+                ? prevDailyStoryPoint.storyPoints -
+                  cloneCard.storyPoint +
+                  model.storyPoint
+                : model.storyPoint,
+            });
+          }
+          await currSprint?.save({ session });
         }
-        await currSprint?.save({ session });
       }
       taskLogs.push({
         userId: userId,

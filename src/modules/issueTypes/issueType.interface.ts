@@ -1,4 +1,5 @@
 export default interface IIssueType {
+  toObject(): any;
   _id: string;
   boardId: string;
   name: string;
@@ -8,4 +9,5 @@ export default interface IIssueType {
   updatedAt: Date;
   isActive: boolean;
   hierarchy: number;
+  canDelete?: boolean;
 }

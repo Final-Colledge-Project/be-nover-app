@@ -64,9 +64,12 @@ export default class StatisticService {
     const totalStoryPoint = cardsInSprints.reduce((total, card) => {
       return total + card.storyPoint;
     }, 0);
+
     const res = {
       ...sprint.toObject(),
-      totalStoryPoint,
+      totalStoryPoint: sprint.totalStoryPoint
+        ? sprint.totalStoryPoint
+        : totalStoryPoint,
     };
     return res;
   }

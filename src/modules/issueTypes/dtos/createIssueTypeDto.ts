@@ -1,4 +1,10 @@
-import { IsEnum, IsNotEmpty, IsOptional, IsString, IsUrl } from "class-validator";
+import {
+  IsEnum,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  IsUrl,
+} from "class-validator";
 
 export default class CreateIssueTypeDto {
   constructor(
@@ -18,7 +24,7 @@ export default class CreateIssueTypeDto {
   @IsString()
   @IsOptional()
   public description: string;
-  @IsUrl()
+  @IsString()
   @IsOptional()
   public icon: string;
   @IsNotEmpty()
