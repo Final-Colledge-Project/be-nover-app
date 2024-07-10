@@ -25,7 +25,7 @@ export default class IssueLinkTypeRoute implements Route {
       authorizePermission("issueLinkType:create", PERM_TYPE.board),
       this.issueLinkTypeController.createLinkIssueType
     );
-    this.router.patch(
+    this.router.put(
       this.path + "/:issueLinkTypeId/board/:boardId",
       validationMiddleware(UpdateIssueLinkTypeDto, true),
       authMiddleware,

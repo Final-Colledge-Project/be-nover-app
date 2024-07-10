@@ -7,8 +7,8 @@ const LabelSchema = new mongoose.Schema(
     name: {
       type: String,
       required: [true, "Name is required"],
-      minlength: [2, "Name must be at least 2 characters long"],
-      maxlength: [20, "Name must be at most 20 characters long"],
+      minlength: [3, "Name must be at least 2 characters long"],
+      maxlength: [50, "Name must be at most 20 characters long"],
       trim: true,
     },
     color: {

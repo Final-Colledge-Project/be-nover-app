@@ -72,6 +72,15 @@ export default class IssueLinkTypeService {
     if (!isMem) {
       throw new HttpException(StatusCodes.FORBIDDEN, "Permission denied");
     }
+    const distinctIdsInIssueLink = await this.issueLinkSchema.distinct(
+      "linkIssueTypeId"
+    );
+    const issueLinkTypesInUse = await this.issueLinkTypeSchema
+      .find({
+        _id: { $in: distinctIdsInIssueLink },
+      })
+      .exec();
+
     let extendCondition = {};
     if (req.query.search) {
       extendCondition = {
@@ -90,6 +99,11 @@ export default class IssueLinkTypeService {
       .limit()
       .filter();
     const issueLinkTypes = await feature.query;
-    return issueLinkTypes;
+    return issueLinkTypes.map((issueLinkType: IIssueLinkType) => {
+      const isUse = issueLinkTypesInUse.some((item) =>
+        item._id.equals(issueLinkType._id)
+      );
+      return Object.assign({}, issueLinkType.toObject(), { canDelete: !isUse });
+    });
   }
 }

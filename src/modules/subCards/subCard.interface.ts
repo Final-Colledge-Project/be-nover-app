@@ -6,6 +6,7 @@ export default interface ISubCard {
   assignedTo: string | null;
   issueTypeId: string;
   priorityId: string;
+  labelId: string;
   startDate: Date;
   createdAt: Date;
   dueDate: Date;

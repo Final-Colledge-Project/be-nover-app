@@ -1,4 +1,5 @@
 export default interface IIssueLinkType {
+  toObject: any;
   _id: string;
   boardId: string;
   name: string;
