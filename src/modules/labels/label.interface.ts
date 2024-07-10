@@ -1,4 +1,5 @@
 export default interface ILabel {
+  toObject: any;
   _id: string;
   name: string;
   color: string;

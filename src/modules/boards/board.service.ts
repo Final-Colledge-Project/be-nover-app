@@ -238,6 +238,7 @@ export default class BoardService {
             description:
               "An epic is a large body of work that can be broken down into a number of smaller stories",
             hierarchy: 1,
+            icon: "/public/icon/epic.png",
           },
           {
             boardId: createdBoard[0]._id,
@@ -245,6 +246,7 @@ export default class BoardService {
             color: "#007AFF",
             description: "A task is a small, distinct piece of work",
             hierarchy: 2,
+            icon: "/public/icon/task.png",
           },
           {
             boardId: createdBoard[0]._id,
@@ -253,6 +255,7 @@ export default class BoardService {
             description:
               "A user story is the smallest unit of work in an agile framework",
             hierarchy: 2,
+            icon: "/public/icon/story.png",
           },
           {
             boardId: createdBoard[0]._id,
@@ -261,6 +264,7 @@ export default class BoardService {
             description:
               "A bug is a problem which impairs or prevents the functions of a product",
             hierarchy: 2,
+            icon: "/public/icon/bugRed.png",
           },
           {
             boardId: createdBoard[0]._id,
@@ -268,6 +272,7 @@ export default class BoardService {
             color: "#5DE6FF",
             description: "A subtask is a smaller piece of work within a task",
             hierarchy: 3,
+            icon: "/public/icon/subtask.png",
           },
         ],
         { session }
@@ -293,6 +298,7 @@ export default class BoardService {
             description:
               "An epic is a large body of work that can be broken down into a number of smaller stories",
             hierarchy: 1,
+            icon: "/public/icon/epic.png",
           },
           {
             boardId: createdBoard[0]._id,
@@ -300,6 +306,7 @@ export default class BoardService {
             color: "#007AFF",
             description: "A task is a small, distinct piece of work",
             hierarchy: 2,
+            icon: "/public/icon/task.png",
           },
           {
             boardId: createdBoard[0]._id,
@@ -307,6 +314,7 @@ export default class BoardService {
             color: "#5DE6FF",
             description: "A subtask is a smaller piece of work within a task",
             hierarchy: 3,
+            icon: "/public/icon/subtask.png",
           },
         ],
         { session }
@@ -662,6 +670,13 @@ export default class BoardService {
                       $arrayElemAt: ["$members", 0],
                     },
                   },
+                  epicId: { $first: "$epicId" },
+                  attachments: { $first: "$attachments" },
+                  sprintId: { $first: "$sprintId" },
+                  storyPoint: { $first: "$storyPoint" },
+                  issueTypeId: { $first: "$issueTypeId" },
+                  priorityId: { $first: "$priorityId" },
+                  watcherIds: { $first: "$watcherIds" },
                 },
               },
               {
@@ -681,6 +696,13 @@ export default class BoardService {
                   isDone: 1,
                   isOverdue: 1,
                   memberIds: 1,
+                  epicId: 1,
+                  attachments: 1,
+                  sprintId: 1,
+                  storyPoint: 1,
+                  issueTypeId: 1,
+                  priorityId: 1,
+                  watcherIds: 1,
                 },
               },
             ],

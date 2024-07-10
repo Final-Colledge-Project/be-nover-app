@@ -427,7 +427,7 @@ export default class CardService {
         },
         {
           $lookup: {
-            from: "issueTypes",
+            from: "issuetypes",
             localField: "issueTypeId",
             foreignField: "_id",
             as: "issueType",

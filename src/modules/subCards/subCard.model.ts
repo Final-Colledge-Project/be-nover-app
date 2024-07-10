@@ -51,6 +51,11 @@ const SubCardSchema = new mongoose.Schema(
       ref: MODEL_NAME.priority,
       default: null,
     },
+    labelId: {
+      type: SCHEMA_TYPE,
+      ref: MODEL_NAME.label,
+      default: null,
+    },
     isActive: {
       type: Boolean,
       default: true,

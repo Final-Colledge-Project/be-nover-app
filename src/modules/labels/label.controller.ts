@@ -33,15 +33,15 @@ export default class LabelController {
     res.status(200).json({ data: label, message: "Get label successfully" });
   });
   public updateLabel = catchAsync(async (req: Request, res: Response) => {
-    const userId = req.user.id;
     const labelId = req.params.id;
     const model: UpdateLabelDto = req.body;
-    const label = await this.labelService.updateLabel(labelId, model, userId);
+    const label = await this.labelService.updateLabel(labelId, model);
     res.status(200).json({ data: label, message: "Update label successfully" });
   });
   public deleteLabel = catchAsync(async (req: Request, res: Response) => {
     const userId = req.user.id;
     const labelId = req.params.id;
+    
     await this.labelService.deleteLabel(labelId, userId);
     res.status(204).json({ message: "Delete label successfully" });
   });

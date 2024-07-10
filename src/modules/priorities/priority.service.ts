@@ -12,6 +12,7 @@ import { SubCardSchema } from "@modules/subCards";
 import { Request } from "express";
 import APIFeatures from "@core/utils/apiFeature";
 import { ClientSession } from "mongoose";
+import { assign } from "lodash";
 export default class PriorityService {
   private prioritySchema = PrioritySchema;
   private boardSchema = BoardSchema;
@@ -57,11 +58,29 @@ export default class PriorityService {
     if (!existPriority) {
       throw new HttpException(StatusCodes.BAD_REQUEST, "Priority not found");
     }
-    const filter = { priorityId };
-    const updateDoc = { $set: { priorityId: "" } };
-    await this.epicSchema.updateMany(filter, updateDoc, { session });
-    await this.cardSchema.updateMany(filter, updateDoc, { session });
-    await this.subCardSchema.updateMany(filter, updateDoc, { session });
+    const distinctIdsInCard = await this.cardSchema.distinct("priorityId");
+    const distinctIdsInEpic = await this.epicSchema.distinct("priorityId");
+    const distinctIdsInSubCard = await this.subCardSchema.distinct(
+      "priorityId"
+    );
+    const distinctIds = [
+      ...new Set([
+        ...distinctIdsInCard,
+        ...distinctIdsInEpic,
+        ...distinctIdsInSubCard,
+      ]),
+    ];
+    const prioritiesInUse = await this.prioritySchema
+      .find({
+        _id: { $in: distinctIds },
+      })
+      .exec();
+    const isUsed = prioritiesInUse.some(
+      (item) => item._id.toString() === priorityId.toString()
+    );
+    if (isUsed) {
+      throw new HttpException(StatusCodes.BAD_REQUEST, "Issue type is in use");
+    }
     await this.prioritySchema.findByIdAndDelete(priorityId, { session });
     await session.commitTransaction();
     session.endSession();
@@ -75,6 +94,24 @@ export default class PriorityService {
     if (!isMem) {
       throw new HttpException(StatusCodes.FORBIDDEN, "Permission denied");
     }
+    const distinctIdsInCard = await this.cardSchema.distinct("priorityId");
+    const distinctIdsInEpic = await this.epicSchema.distinct("priorityId");
+    const distinctIdsInSubCard = await this.subCardSchema.distinct(
+      "priorityId"
+    );
+    const distinctIds = [
+      ...new Set([
+        ...distinctIdsInCard,
+        ...distinctIdsInEpic,
+        ...distinctIdsInSubCard,
+      ]),
+    ];
+    const prioritiesInUse = await this.prioritySchema
+      .find({
+        _id: { $in: distinctIds },
+      })
+      .exec();
+
     let extendCondition = {};
     if (req.query.search) {
       extendCondition = {
@@ -93,6 +130,11 @@ export default class PriorityService {
       .limit()
       .filter();
     const priorities = await feature.query;
-    return priorities;
+    return priorities.map((priority: IPriority) => {
+      const isUse = prioritiesInUse.some((item) =>
+        item._id.equals(priority._id)
+      );
+      return assign({}, priority.toObject(), { canDelete: !isUse });
+    });
   }
 }

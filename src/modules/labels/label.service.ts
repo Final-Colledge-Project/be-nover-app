@@ -3,14 +3,23 @@ import ILabel from "./label.interface";
 import { HttpException } from "@core/exceptions";
 import {
   isBoardAdmin,
+  isBoardMember,
   isEmptyObject,
   viewedBoardPermission,
 } from "@core/utils";
 import CreateLabelDto from "./dtos/createLabelDto";
 import { BoardSchema } from "@modules/boards";
 import UpdateLabelDto from "./dtos/updateLabelDto";
+import { CardSchema } from "@modules/cards";
+import { EpicSchema } from "@modules/epics";
+import { SubCardSchema } from "@modules/subCards";
+import { StatusCodes } from "http-status-codes";
+import { assign } from "lodash";
 export default class LabelService {
   private labelSchema = LabelSchema;
+  private cardSchema = CardSchema;
+  private epicSchema = EpicSchema;
+  private subCardSchema = SubCardSchema;
   public async createLabel(
     model: CreateLabelDto,
     boardId: string
@@ -36,11 +45,30 @@ export default class LabelService {
     if (!existBoard) {
       throw new HttpException(404, "Board not found");
     }
-    if ((await viewedBoardPermission(boardId, userId)) === false) {
-      throw new HttpException(403, "Board is private");
+    const isMem = await isBoardMember(boardId, userId);
+    if (!isMem) {
+      throw new HttpException(StatusCodes.FORBIDDEN, "Permission denied");
     }
+    const distinctIdsInCard = await this.cardSchema.distinct("labelId");
+    const distinctIdsInEpic = await this.epicSchema.distinct("labelId");
+    const distinctIdsInSubCard = await this.subCardSchema.distinct("labelId");
+    const distinctIds = [
+      ...new Set([
+        ...distinctIdsInCard,
+        ...distinctIdsInEpic,
+        ...distinctIdsInSubCard,
+      ]),
+    ];
+    const labelInUse = await this.labelSchema
+      .find({
+        _id: { $in: distinctIds },
+      })
+      .exec();
     const labels = await this.labelSchema.find({ boardId: boardId }).exec();
-    return labels;
+    return labels.map((label: ILabel) => {
+      const isUse = labelInUse.some((item) => item._id.equals(label._id));
+      return assign({}, label.toObject(), { canDelete: !isUse });
+    });
   }
   public async getLabelById(labelId: string): Promise<ILabel> {
     const label = await this.labelSchema.findById(labelId).exec();
@@ -51,8 +79,7 @@ export default class LabelService {
   }
   public async updateLabel(
     labelId: string,
-    model: UpdateLabelDto,
-    userId: string
+    model: UpdateLabelDto
   ): Promise<ILabel> {
     if (isEmptyObject(model)) {
       throw new HttpException(400, "Model is empty");
@@ -77,8 +104,27 @@ export default class LabelService {
     if (!existLabel) {
       throw new HttpException(404, "Label not found");
     }
-    await this.labelSchema
-      .findByIdAndUpdate(labelId, { isActive: false }, { new: true })
+    const distinctIdsInCard = await this.cardSchema.distinct("labelId");
+    const distinctIdsInEpic = await this.epicSchema.distinct("labelId");
+    const distinctIdsInSubCard = await this.subCardSchema.distinct("labelId");
+    const distinctIds = [
+      ...new Set([
+        ...distinctIdsInCard,
+        ...distinctIdsInEpic,
+        ...distinctIdsInSubCard,
+      ]),
+    ];
+    const labelsInUse = await this.labelSchema
+      .find({
+        _id: { $in: distinctIds },
+      })
       .exec();
+    const isUsed = labelsInUse.some(
+      (item) => item._id.toString() === labelId.toString()
+    );
+    if (isUsed) {
+      throw new HttpException(StatusCodes.BAD_REQUEST, "Label is in use");
+    }
+    await this.labelSchema.findByIdAndDelete(labelId).exec();
   }
 }

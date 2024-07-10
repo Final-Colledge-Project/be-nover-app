@@ -24,7 +24,7 @@ export default class PriorityRoute implements Route {
       authorizePermission("priority:create", PERM_TYPE.board),
       this.priorityController.createPriority
     );
-    this.router.patch(
+    this.router.put(
       this.path + "/:priorityId/board/:boardId",
       validationMiddleware(UpdatePriorityDto, true),
       authMiddleware,
