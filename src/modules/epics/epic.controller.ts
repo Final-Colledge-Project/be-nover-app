@@ -58,4 +58,39 @@ export default class EpicController {
       next(error);
     }
   };
+  public getDetailEpicById = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      const epicId = req.params.id;
+      const boardId = req.params.boardId;
+      const epic = await this.epicService.getEpicDetailByBoardId(
+        epicId,
+        boardId
+      );
+      console.log("🚀 ~ EpicController ~ epic:", epic);
+      res
+        .status(StatusCodes.OK)
+        .json({ data: epic, message: "Get epic detail successfully" });
+    } catch (error) {
+      next(error);
+    }
+  };
+  public getEpicsByBoardId = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      const boardId = req.params.boardId;
+      const epics = await this.epicService.getEpicsByBoardId(boardId);
+      res
+        .status(StatusCodes.OK)
+        .json({ data: epics, message: "Get epics successfully" });
+    } catch (error) {
+      next(error);
+    }
+  };
 }

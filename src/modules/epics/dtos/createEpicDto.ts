@@ -18,7 +18,8 @@ export default class CreateEpicDto {
     color: string,
     labelId: string,
     assigneeId: string,
-    issueTypeId: string
+    issueTypeId: string,
+    columnId: string
   ) {
     this.name = name;
     this.description = description;
@@ -28,6 +29,7 @@ export default class CreateEpicDto {
     this.labelId = labelId;
     this.assigneeId = assigneeId;
     this.issueTypeId = issueTypeId;
+    this.columnId = columnId;
   }
   @IsNotEmpty()
   @IsString()
@@ -68,4 +70,6 @@ export default class CreateEpicDto {
   @IsOptional()
   @IsString()
   public issueTypeId: string;
+  @IsString()
+  public columnId: string;
 }

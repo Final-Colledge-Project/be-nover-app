@@ -70,7 +70,6 @@ export default class CardService {
       if (!label) {
         throw new HttpException(StatusCodes.BAD_REQUEST, "Label not found");
       }
-
     }
     if (model.priorityId) {
       const priority = await this.prioritySchema
@@ -1209,6 +1208,8 @@ export default class CardService {
       icon: model.icon,
       createdAt: new Date(),
       updatedAt: new Date(),
+      edited: false,
+      likeIds: [],
     };
     card.comments.push(comment);
     await card.save();
@@ -1226,7 +1227,7 @@ export default class CardService {
   public async updateCommentInCard(
     cardId: string,
     userId: string,
-    model: AddCommentDto,
+    model: UpdateCommentDto,
     commentId: string
   ): Promise<void> {
     const card = await this.cardSchema.findById(cardId).exec();
@@ -1246,7 +1247,11 @@ export default class CardService {
     if (model.icon) {
       comment.icon = model.icon;
     }
+    if (model.likeIds) {
+      comment.likeIds = model.likeIds;
+    }
     comment.updatedAt = new Date();
+    comment.edited = true;
     await card.save();
   }
   public async deleteCommentInCard(

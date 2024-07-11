@@ -7,24 +7,24 @@ export default interface IEpic {
   dueDate: Date;
   cardOrderIds: string[];
   color: string;
-  preEpicId: string;
-  nextEpicId: string;
   columnId: string;
   assigneeId: string;
   labelId: string;
   priorityId: string;
   comments: IComment[];
   attachments: IAttachment[];
+  creatorId: string;
   issueTypeId: string;
 }
-
 export interface IComment {
-  user: string;
-  email: string;
-  avatar: string;
-  displayName: string;
+  _id?: string;
+  userId: string;
   content: string;
+  icon: string;
+  edited: boolean;
+  likeIds: string[];
   createdAt: Date;
+  updatedAt: Date;
 }
 export interface IAttachment {
   fileName: string;

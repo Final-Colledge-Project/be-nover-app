@@ -41,16 +41,6 @@ const EpicSchema = new mongoose.Schema(
       trim: true,
       default: "#3634A3",
     },
-    preEpicId: {
-      type: SCHEMA_TYPE,
-      ref: MODEL_NAME.epic,
-      default: null,
-    },
-    nextEpicId: {
-      type: SCHEMA_TYPE,
-      ref: MODEL_NAME.epic,
-      default: null,
-    },
     columnId: {
       type: SCHEMA_TYPE,
       ref: MODEL_NAME.column,
@@ -68,30 +58,37 @@ const EpicSchema = new mongoose.Schema(
     },
     comments: [
       {
-        user: {
-          type: SCHEMA_TYPE,
+        userId: {
+          type: mongoose.Schema.ObjectId,
           ref: MODEL_NAME.user,
-          required: [true, "User is required"],
-        },
-        email: {
-          type: String,
-          required: [true, "Email is required"],
-        },
-        avatar: {
-          type: String,
-          required: [true, "Avatar is required"],
-        },
-        displayName: {
-          type: String,
-          required: [true, "DisplayName is required"],
         },
         content: {
           type: String,
-          required: [true, "Content is required"],
+          minlength: [2, "Content must be at least 2 characters long"],
+          maxlength: [200, "Content must be at most 200 characters long"],
+          trim: true,
         },
+        icon: {
+          type: String,
+          default: null,
+        },
+        edited: {
+          type: Boolean,
+          default: false,
+        },
+        likeIds: [
+          {
+            type: SCHEMA_TYPE,
+            ref: MODEL_NAME.user,
+          },
+        ],
         createdAt: {
           type: Date,
           default: Date.now,
+        },
+        updatedAt: {
+          type: Date,
+          default: null,
         },
       },
     ],
@@ -123,6 +120,10 @@ const EpicSchema = new mongoose.Schema(
     priorityId: {
       type: SCHEMA_TYPE,
       ref: MODEL_NAME.priority,
+    },
+    creatorId: {
+      type: SCHEMA_TYPE,
+      ref: MODEL_NAME.user,
     },
     isActive: {
       type: Boolean,

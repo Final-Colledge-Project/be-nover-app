@@ -6,6 +6,7 @@ import { StatusCodes } from "http-status-codes";
 import assignUserDto from "./dtos/assignUserDto";
 import { startSession } from "mongoose";
 import AddCommentDto from "./dtos/addCommentDto";
+import UpdateCommentDto from "./dtos/updateCommentDto";
 export default class CardController {
   private cardService = new CardService();
   public createCard = async (
@@ -174,7 +175,7 @@ export default class CardController {
       const userId = req.user.id;
       const cardId = req.params.cardId;
       const commentId = req.params.commentId;
-      const model: AddCommentDto = req.body;
+      const model: UpdateCommentDto = req.body;
       await this.cardService.updateCommentInCard(
         cardId,
         userId,

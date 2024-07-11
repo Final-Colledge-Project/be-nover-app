@@ -1,4 +1,4 @@
-import { MODEL_NAME, isEmptyObject } from "@core/utils";
+import { MODEL_NAME, OBJECT_ID, isEmptyObject } from "@core/utils";
 
 import { HttpException } from "@core/exceptions";
 import { BoardSchema } from "@modules/boards";
@@ -66,6 +66,7 @@ export default class EpicService {
           ...model,
           boardId,
           columnId: board.initColumnId,
+          creatorId: userId,
         },
       ],
       { session: session }
@@ -213,14 +214,14 @@ export default class EpicService {
       const newAssignee = await this.userSchema
         .findById(model.assigneeId)
         .exec();
-      if (!oldAssignee || !newAssignee) {
+      if (!newAssignee) {
         throw new HttpException(StatusCodes.BAD_REQUEST, "Assignee not found");
       }
       taskLogs.push({
         userId,
         target: "Assignee",
         msg: "changed the",
-        oldVal: `${oldAssignee.firstName} ${oldAssignee.lastName}`,
+        oldVal: `${oldAssignee?.firstName} ${oldAssignee?.lastName}`,
         newVal: `${newAssignee.firstName} ${newAssignee.lastName}`,
         issueModel: MODEL_NAME.epic,
         issueId: epic._id,
@@ -284,5 +285,148 @@ export default class EpicService {
     }
     await session.commitTransaction();
     session.endSession();
+  };
+
+  public async getEpicDetailByBoardId(
+    epicId: string,
+    boardId: string
+  ): Promise<IEpic[]> {
+    console.log("🚀 ~ EpicService ~ epicId:", epicId);
+    console.log("🚀 ~ EpicService ~ boardId:", boardId);
+    const epic = await this.epicSchema
+      .aggregate([
+        {
+          $match: {
+            _id: new OBJECT_ID(epicId),
+          },
+        },
+        {
+          $lookup: {
+            from: "cards",
+            localField: "cardOrderIds",
+            foreignField: "_id",
+            as: "cards",
+            pipeline: [
+              {
+                $match: {
+                  boardId: new OBJECT_ID(boardId),
+                },
+              },
+              {
+                $lookup: {
+                  from: "columns",
+                  localField: "columnId",
+                  foreignField: "_id",
+                  as: "column",
+                  pipeline: [
+                    {
+                      $project: {
+                        _id: 1,
+                        title: 1,
+                        isResolved: 1,
+                      },
+                    },
+                  ],
+                },
+              },
+              {
+                $lookup: {
+                  from: "issuetypes",
+                  localField: "issueTypeId",
+                  foreignField: "_id",
+                  as: "issueType",
+                  pipeline: [
+                    {
+                      $project: {
+                        _id: 1,
+                        name: 1,
+                      },
+                    },
+                  ],
+                },
+              },
+              {
+                $lookup: {
+                  from: "users",
+                  let: {
+                    memberIds: "$memberIds",
+                  },
+                  localField: "memberIds",
+                  foreignField: "_id",
+                  as: "members",
+                  pipeline: [
+                    {
+                      $match: {
+                        $expr: {
+                          $in: ["$_id", "$$memberIds"],
+                        },
+                      },
+                    },
+                    {
+                      $project: {
+                        _id: 1,
+                        fullName: {
+                          $concat: ["$firstName", " ", "$lastName"],
+                        },
+                        avatar: 1,
+                      },
+                    },
+                  ],
+                },
+              },
+              {
+                $project: {
+                  _id: 1,
+                  title: 1,
+                  column: {
+                    $arrayElemAt: ["$column", 0],
+                  },
+                  issueType: {
+                    $arrayElemAt: ["$issueType", 0],
+                  },
+                  storyPoint: 1,
+                  assignee: {
+                    $arrayElemAt: ["$members", 0],
+                  },
+                },
+              },
+            ],
+          },
+        },
+        {
+          $project: {
+            _id: 1,
+            name: 1,
+            description: 1,
+            startDate: 1,
+            dueDate: 1,
+            cards: 1,
+            color: 1,
+            columnId: 1,
+            assigneeId: 1,
+            labelId: 1,
+            comments: 1,
+            attachments: 1,
+            issueTypeId: 1,
+            priorityId: 1,
+            creatorId: 1,
+            isActive: 1,
+            boardId: 1,
+          },
+        },
+      ])
+      .exec();
+    return epic;
+  }
+  public getEpicsByBoardId = async (boardId: string): Promise<IEpic[]> => {
+    const epic = await this.epicSchema
+      .find({
+        boardId,
+      })
+      .exec();
+    if (!epic) {
+      throw new HttpException(StatusCodes.BAD_REQUEST, "Epic not found");
+    }
+    return epic;
   };
 }
