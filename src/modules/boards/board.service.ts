@@ -561,12 +561,26 @@ export default class BoardService {
     boardId: string,
     userId: string
   ): Promise<object> {
-    if ((await viewedBoardPermission(boardId, userId)) === false) {
-      throw new HttpException(
-        StatusCodes.FORBIDDEN,
-        "You has not permission to get detail this board"
-      );
+    const existBoard = await this.boardSchema.findById(boardId).exec();
+    if (!existBoard)
+      throw new HttpException(StatusCodes.BAD_REQUEST, "Board not found");
+
+    const isMember = await isBoardMember(boardId, userId);
+
+    if (!isMember) {
+      const permGroup = await this.wsPermissionSchema
+        .findOne({
+          memberIds: userId,
+          workspaceId: existBoard.teamWorkspaceId,
+        })
+        .exec();
+      const isViewAll = permGroup?.board?.viewAll;
+
+      if (!isViewAll) {
+        throw new HttpException(StatusCodes.FORBIDDEN, "Permission denied");
+      }
     }
+
     const boardDetail = await this.boardSchema
       .aggregate([
         {
