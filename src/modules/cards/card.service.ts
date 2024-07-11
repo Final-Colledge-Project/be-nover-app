@@ -30,7 +30,7 @@ import { IssueLinkSchema } from "@modules/issueLinks";
 import { ITaskLog, TaskLogSchema } from "@modules/taskLogs";
 import { IssueTypeSchema } from "@modules/issueTypes";
 import { ClientSession } from "mongoose";
-import { cloneDeep } from "lodash";
+import { cloneDeep, uniq } from "lodash";
 import AddCommentDto from "./dtos/addCommentDto";
 import UpdateCommentDto from "./dtos/updateCommentDto";
 import { IDailyStoryPoint } from "@modules/sprints/sprint.interface";
@@ -70,6 +70,7 @@ export default class CardService {
       if (!label) {
         throw new HttpException(StatusCodes.BAD_REQUEST, "Label not found");
       }
+
     }
     if (model.priorityId) {
       const priority = await this.prioritySchema
@@ -115,12 +116,15 @@ export default class CardService {
           boardId: boardId,
           reporterId: !model.reporterId ? userId : model.reporterId,
           columnId: model.columnId ? model.columnId : existBoard.initColumnId,
-          assigneeId: model.assigneeId
-            ? model.assigneeId
-            : existBoard.defaultAssigneeId,
+          memberIds: [
+            model.assigneeId ? model.assigneeId : existBoard.defaultAssigneeId,
+          ],
           watcherIds: model.assigneeId
-            ? [!model.reporterId ? userId : model.reporterId, model.assigneeId]
-            : [!model.reporterId ? userId : model.reporterId],
+            ? uniq([
+                !model.reporterId ? userId : model.reporterId,
+                model.assigneeId,
+              ])
+            : uniq([!model.reporterId ? userId : model.reporterId]),
           sprintId:
             existBoard.template === BOARD_TEMPLATE.scrum ? backlog?._id : null,
         },
