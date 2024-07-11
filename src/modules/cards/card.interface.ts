@@ -31,6 +31,8 @@ export interface IComment {
   userId: string;
   content: string;
   icon: string;
+  edited: boolean;
+  likeIds: string[];
   createdAt: Date;
   updatedAt: Date;
 }

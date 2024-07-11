@@ -65,6 +65,16 @@ const CardSchema = new mongoose.Schema(
           type: String,
           default: null,
         },
+        edited: {
+          type: Boolean,
+          default: false,
+        },
+        likeIds: [
+          {
+            type: SCHEMA_TYPE,
+            ref: MODEL_NAME.user,
+          },
+        ],
         createdAt: {
           type: Date,
           default: Date.now,
