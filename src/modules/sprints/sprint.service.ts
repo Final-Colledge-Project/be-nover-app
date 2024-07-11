@@ -394,6 +394,7 @@ export default class SprintService {
           endDate: 1,
           status: 1,
           cards: 1,
+          cardOrderIds: 1,
         },
       },
     ]);
