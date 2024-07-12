@@ -58,7 +58,7 @@ const CardSchema = new mongoose.Schema(
         content: {
           type: String,
           minlength: [2, "Content must be at least 2 characters long"],
-          maxlength: [200, "Content must be at most 200 characters long"],
+          maxlength: [10000, "Content must be at most 10000 characters long"],
           trim: true,
         },
         icon: {
