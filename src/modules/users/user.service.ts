@@ -11,10 +11,11 @@ import { Request, Response } from "express";
 import { StatusCodes } from "http-status-codes";
 import { EmailVerifySchema } from "@modules/emailVerifications";
 import UpdateTokenDto from "./dtos/updateTokenDto";
+import { ScheduleSchema } from "@modules/schedules";
 
 class UserService {
   private userSchema = UserSchema;
-
+  private scheduleSchema = ScheduleSchema;
   public async createUser(model: RegisterDto, req: Request): Promise<IUser> {
     if (isEmptyObject(model)) {
       throw new HttpException(400, "Model is empty");
@@ -56,6 +57,12 @@ class UserService {
       existedEmailVerify.isVerified = true;
       await existedEmailVerify.save();
     }
+
+    await this.scheduleSchema.create({
+      userId: createdUser._id,
+      name: "Assigned Task",
+      color: "#1677FF",
+    });
 
     const url = "http://localhost:5173/";
     // const url=`${req.protocol}://${req.get('host')}`

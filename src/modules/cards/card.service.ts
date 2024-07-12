@@ -1122,6 +1122,7 @@ export default class CardService {
                 $project: {
                   _id: 1,
                   title: 1,
+                  key: 1,
                 },
               },
             ],
@@ -1155,6 +1156,24 @@ export default class CardService {
                 $project: {
                   _id: 1,
                   title: 1,
+                  isResolved: 1,
+                },
+              },
+            ],
+          },
+        },
+        {
+          $lookup: {
+            from: "issuetypes",
+            localField: "issueTypeId",
+            foreignField: "_id",
+            as: "issueType",
+            pipeline: [
+              {
+                $project: {
+                  _id: 1,
+                  name: 1,
+                  icon: 1,
                 },
               },
             ],
@@ -1176,6 +1195,9 @@ export default class CardService {
             },
             column: {
               $arrayElemAt: ["$columns", 0],
+            },
+            issueType: {
+              $arrayElemAt: ["$issueType", 0],
             },
             cardId: 1,
             title: 1,
