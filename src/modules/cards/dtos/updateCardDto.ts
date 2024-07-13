@@ -53,8 +53,8 @@ export default class UpdateCardDto {
   @MinLength(2, {
     message: "Description must be at least 2 characters long",
   })
-  @MaxLength(200, {
-    message: "Description must be at most 200 characters long",
+  @MaxLength(10000, {
+    message: "Description must be at most 10000 characters long",
   })
   public description;
   @IsString()
