@@ -10,6 +10,22 @@ const allowedFileTypes = [
   "image/png",
   "application/pdf",
   "text/csv",
+  "application/msword",
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  "application/pdf",
+  "application/vnd.ms-excel",
+  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  "text/plain",
+  "application/xml",
+  "text/xml",
+  "application/atom+xml",
+  "application/zip",
+  "application/rtf",
+  "application/vnd.rar",
+  "text/rtf",
+  "text/xml",
+  "application/x-rar-compressed",
+  "application/octet-stream",
 ];
 const maxFileSize = 2 * 1024 * 1024; // 2 MB
 
