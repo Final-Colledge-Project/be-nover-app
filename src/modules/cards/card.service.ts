@@ -1,8 +1,11 @@
 import {
   BOARD_TEMPLATE,
+  ISSUE_TYPE,
+  MAX_FILES,
   MODEL_NAME,
   OBJECT_ID,
   SPRINT_STATUS,
+  isBoardAdmin,
   isBoardMember,
   isCardNumber,
   isEmptyObject,
@@ -34,6 +37,7 @@ import { cloneDeep, uniq } from "lodash";
 import AddCommentDto from "./dtos/addCommentDto";
 import UpdateCommentDto from "./dtos/updateCommentDto";
 import { IDailyStoryPoint } from "@modules/sprints/sprint.interface";
+import { CloudStorageFileService } from "@core/cloudService";
 export default class CardService {
   private cardSchema = CardSchema;
   private notificationService = new NotificationService();
@@ -46,6 +50,7 @@ export default class CardService {
   private sprintSchema = SprintSchema;
   private taskLogSchema = TaskLogSchema;
   private issueTypeSchema = IssueTypeSchema;
+  private cloudService = new CloudStorageFileService();
   public async createCard(
     model: CreateCardDto,
     userId: string,
@@ -70,7 +75,6 @@ export default class CardService {
       if (!label) {
         throw new HttpException(StatusCodes.BAD_REQUEST, "Label not found");
       }
-
     }
     if (model.priorityId) {
       const priority = await this.prioritySchema
@@ -1123,6 +1127,7 @@ export default class CardService {
                 $project: {
                   _id: 1,
                   title: 1,
+                  key: 1,
                 },
               },
             ],
@@ -1156,6 +1161,24 @@ export default class CardService {
                 $project: {
                   _id: 1,
                   title: 1,
+                  isResolved: 1,
+                },
+              },
+            ],
+          },
+        },
+        {
+          $lookup: {
+            from: "issuetypes",
+            localField: "issueTypeId",
+            foreignField: "_id",
+            as: "issueType",
+            pipeline: [
+              {
+                $project: {
+                  _id: 1,
+                  name: 1,
+                  icon: 1,
                 },
               },
             ],
@@ -1177,6 +1200,9 @@ export default class CardService {
             },
             column: {
               $arrayElemAt: ["$columns", 0],
+            },
+            issueType: {
+              $arrayElemAt: ["$issueType", 0],
             },
             cardId: 1,
             title: 1,
@@ -1209,6 +1235,8 @@ export default class CardService {
       icon: model.icon,
       createdAt: new Date(),
       updatedAt: new Date(),
+      edited: false,
+      likeIds: [],
     };
     card.comments.push(comment);
     await card.save();
@@ -1226,7 +1254,7 @@ export default class CardService {
   public async updateCommentInCard(
     cardId: string,
     userId: string,
-    model: AddCommentDto,
+    model: UpdateCommentDto,
     commentId: string
   ): Promise<void> {
     const card = await this.cardSchema.findById(cardId).exec();
@@ -1246,7 +1274,11 @@ export default class CardService {
     if (model.icon) {
       comment.icon = model.icon;
     }
+    if (model.likeIds) {
+      comment.likeIds = model.likeIds;
+    }
     comment.updatedAt = new Date();
+    comment.edited = true;
     await card.save();
   }
   public async deleteCommentInCard(
@@ -1269,5 +1301,137 @@ export default class CardService {
       (c) => c?._id?.toString() !== commentId
     );
     await card.save();
+  }
+  public async uploadAttachmentToCard(
+    files: Express.Multer.File[],
+    cardId: string,
+    session: ClientSession,
+    userId: string,
+    boardId: string
+  ): Promise<void> {
+    if (!files) {
+      throw new HttpException(StatusCodes.BAD_REQUEST, "Files not found");
+    }
+    const boardAdmin = await isBoardAdmin(boardId, userId);
+    const card = await this.cardSchema.findById(cardId).exec();
+    if (!card) {
+      throw new HttpException(StatusCodes.BAD_REQUEST, "Card not found");
+    }
+    const reporterId = card.reporterId.toString();
+    const memberIds = card.memberIds.map((id) => id.toString())[0];
+    if (userId !== reporterId && userId !== memberIds && !boardAdmin) {
+      throw new HttpException(StatusCodes.FORBIDDEN, "Permission denied");
+    }
+    const attachments = (files || []).map((file) => {
+      return {
+        fileName: file.originalname,
+        fileType: file.mimetype,
+        fileUrl: file.path,
+        createAt: new Date(),
+        createdBy: userId,
+      };
+    });
+    const attachInCard = card.attachments;
+    if ((attachInCard || []).length + attachments.length > MAX_FILES) {
+      throw new HttpException(
+        StatusCodes.BAD_REQUEST,
+        `Attachment limit is ${MAX_FILES}`
+      );
+    }
+    const bucketName = process.env.BUCKET_NAME;
+    const issueType = ISSUE_TYPE.task;
+    if (!bucketName) {
+      throw new HttpException(StatusCodes.BAD_REQUEST, "Bucket name not found");
+    }
+    try {
+      await this.cloudService.uploadMultipleFiles(
+        files,
+        bucketName,
+        issueType,
+        cardId
+      );
+    } catch (error: any) {
+      throw new HttpException(StatusCodes.BAD_REQUEST, error.message);
+    }
+    card.attachments = [...attachInCard, ...attachments];
+
+    await card.save({ session });
+    await session.commitTransaction();
+    session.endSession();
+  }
+  public async downloadAttachmentInCard(
+    cardId: string,
+    boardId: string,
+    fileName: string,
+    userId: string
+  ): Promise<void> {
+    const isMember = await isBoardMember(boardId, userId);
+    if (!isMember) {
+      throw new HttpException(StatusCodes.FORBIDDEN, "Permission denied");
+    }
+
+    const card = await this.cardSchema.findById(cardId).exec();
+
+    if (!card) {
+      throw new HttpException(StatusCodes.BAD_REQUEST, "Card not found");
+    }
+
+    const attachment = card.attachments.find((e) => e.fileName === fileName);
+    if (!attachment) {
+      throw new HttpException(StatusCodes.BAD_REQUEST, "Attachment not found");
+    }
+    const bucketName = process.env.BUCKET_NAME;
+    if (!bucketName) {
+      throw new HttpException(StatusCodes.BAD_REQUEST, "Bucket name not found");
+    }
+    const issueType = ISSUE_TYPE.task;
+    const formatFileName = `${issueType}/${cardId}/${fileName}`;
+    try {
+      await this.cloudService.downloadFile(bucketName, formatFileName);
+    } catch (error: any) {
+      throw new HttpException(StatusCodes.BAD_REQUEST, error.message);
+    }
+  }
+  public async deleteAttachmentInCard(
+    boardId: string,
+    cardId: string,
+    fileName: string,
+    userId: string,
+    session: ClientSession
+  ): Promise<void> {
+    const boardAdmin = await isBoardAdmin(boardId, userId);
+    const card = await this.cardSchema.findById(cardId).exec();
+    if (!card) {
+      throw new HttpException(StatusCodes.BAD_REQUEST, "Card not found");
+    }
+    const reporterId = card.reporterId.toString();
+    const memberIds = card.memberIds.map((id) => id.toString())[0];
+    if (userId !== reporterId && userId !== memberIds && !boardAdmin) {
+      throw new HttpException(StatusCodes.FORBIDDEN, "Permission denied");
+    }
+    const attachment = card.attachments.find(
+      (e) => e.fileName.toString() === fileName.toString()
+    );
+    if (!attachment) {
+      throw new HttpException(StatusCodes.BAD_REQUEST, "Attachment not found");
+    }
+    const bucketName = process.env.BUCKET_NAME;
+    if (!bucketName) {
+      throw new HttpException(StatusCodes.BAD_REQUEST, "Bucket name not found");
+    }
+    const issueType = ISSUE_TYPE.task;
+    const formatFileName = `${issueType}/${cardId}/${fileName}`;
+    try {
+      await this.cloudService.deleteFile(bucketName, formatFileName);
+    } catch (error: any) {
+      throw new HttpException(StatusCodes.BAD_REQUEST, error.message);
+    }
+    const attachments = card.attachments.filter(
+      (item) => item.fileName !== fileName
+    );
+    card.attachments = attachments;
+    await card.save({ session });
+    await session.commitTransaction();
+    session.endSession();
   }
 }

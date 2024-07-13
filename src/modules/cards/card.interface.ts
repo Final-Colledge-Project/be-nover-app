@@ -31,6 +31,8 @@ export interface IComment {
   userId: string;
   content: string;
   icon: string;
+  edited: boolean;
+  likeIds: string[];
   createdAt: Date;
   updatedAt: Date;
 }
@@ -38,5 +40,6 @@ export interface IAttachment {
   fileName: string;
   fileType: string;
   fileUrl: string;
+  createdBy: string;
   createAt: Date;
 }

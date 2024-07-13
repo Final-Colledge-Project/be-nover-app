@@ -29,7 +29,16 @@ export default class EpicRoute implements Route {
       authMiddleware,
       authorizePermission("epic:update", "board"),
       this.epicController.updateEpic
-    )
+    ),
+      this.router.get(
+        this.path + "/:id/board/:boardId",
+        authMiddleware,
+        this.epicController.getDetailEpicById
+      );
+    this.router.get(
+      this.path + "/board/:boardId",
+      authMiddleware,
+      this.epicController.getEpicsByBoardId
+    );
   }
-
 }

@@ -12,6 +12,10 @@ import UpdateCardDto from "./dtos/updateCardDto";
 import { PERM_TYPE } from "@core/utils";
 import AssignMemDto from "./dtos/assignedMemDto";
 import AddCommentDto from "./dtos/addCommentDto";
+import {
+  fileUploadErrorHandlerMiddleware,
+  uploadMultipleMiddleware,
+} from "@core/middleware/uploadMultiple.middleware";
 export default class CardRoute implements Route {
   public path = "/api/v1/cards";
   public router = Router();
@@ -113,6 +117,35 @@ export default class CardRoute implements Route {
         PERM_TYPE.board
       ),
       this.cardController.deleteCommentInCard
+    );
+    this.router.post(
+      this.path + "/:id/attachments/board/:boardId",
+      authMiddleware,
+      authorizePermission(
+        "card:create,card:update,card:delete",
+        PERM_TYPE.board
+      ),
+      uploadMultipleMiddleware,
+      fileUploadErrorHandlerMiddleware,
+      this.cardController.uploadAttachments
+    );
+    this.router.get(
+      this.path + "/:id/attachments/board/:boardId/download",
+      authMiddleware,
+      authorizePermission(
+        "card:create,card:update,card:delete",
+        PERM_TYPE.board
+      ),
+      this.cardController.downloadAttachment
+    );
+    this.router.delete(
+      this.path + "/:id/attachments/board/:boardId",
+      authMiddleware,
+      authorizePermission(
+        "card:create,card:update,card:delete",
+        PERM_TYPE.board
+      ),
+      this.cardController.deleteAttachment
     );
   }
 }

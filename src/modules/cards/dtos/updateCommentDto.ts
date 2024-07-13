@@ -1,9 +1,22 @@
-import { IsMongoId, IsNotEmpty, IsString, isMongoId } from "class-validator";
+import {
+  IsArray,
+  IsBoolean,
+  IsMongoId,
+  IsNotEmpty,
+  IsString,
+  isMongoId,
+} from "class-validator";
 export default class UpdateCommentDto {
-  constructor(content: string, icon: string, commentId: string) {
+  constructor(
+    content: string,
+    icon: string,
+    commentId: string,
+    likeIds: string[]
+  ) {
     this.content = content;
     this.icon = icon;
     this.commentId = commentId;
+    this.likeIds = likeIds;
   }
   @IsNotEmpty()
   @IsString()
@@ -16,4 +29,7 @@ export default class UpdateCommentDto {
   @IsNotEmpty()
   @IsMongoId()
   public commentId: string;
+
+  @IsArray()
+  public likeIds: string[];
 }

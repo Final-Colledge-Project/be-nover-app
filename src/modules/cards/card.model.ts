@@ -58,13 +58,23 @@ const CardSchema = new mongoose.Schema(
         content: {
           type: String,
           minlength: [2, "Content must be at least 2 characters long"],
-          maxlength: [200, "Content must be at most 200 characters long"],
+          maxlength: [10000, "Content must be at most 10000 characters long"],
           trim: true,
         },
         icon: {
           type: String,
           default: null,
         },
+        edited: {
+          type: Boolean,
+          default: false,
+        },
+        likeIds: [
+          {
+            type: SCHEMA_TYPE,
+            ref: MODEL_NAME.user,
+          },
+        ],
         createdAt: {
           type: Date,
           default: Date.now,
@@ -94,6 +104,10 @@ const CardSchema = new mongoose.Schema(
         fileUrl: {
           type: String,
           default: null,
+        },
+        createdBy: {
+          type: SCHEMA_TYPE,
+          ref: MODEL_NAME.user,
         },
         createAt: {
           type: Date,
