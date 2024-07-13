@@ -105,6 +105,10 @@ const CardSchema = new mongoose.Schema(
           type: String,
           default: null,
         },
+        createdBy: {
+          type: SCHEMA_TYPE,
+          ref: MODEL_NAME.user,
+        },
         createAt: {
           type: Date,
           default: Date.now,

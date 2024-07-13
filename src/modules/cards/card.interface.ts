@@ -40,5 +40,6 @@ export interface IAttachment {
   fileName: string;
   fileType: string;
   fileUrl: string;
+  createdBy: string;
   createAt: Date;
 }
