@@ -16,6 +16,7 @@ import {
   fileUploadErrorHandlerMiddleware,
   uploadMultipleMiddleware,
 } from "@core/middleware/uploadMultiple.middleware";
+import UpdateCommentDto from "./dtos/updateCommentDto";
 export default class CardRoute implements Route {
   public path = "/api/v1/cards";
   public router = Router();
@@ -101,7 +102,7 @@ export default class CardRoute implements Route {
     );
     this.router.patch(
       this.path + "/:cardId/comments/:commentId/board/:boardId",
-      validationMiddleware(AddCommentDto, true),
+      validationMiddleware(UpdateCommentDto, true),
       authMiddleware,
       authorizePermission(
         "card:create,card:update,card:delete",

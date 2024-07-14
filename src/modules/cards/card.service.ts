@@ -1433,5 +1433,6 @@ export default class CardService {
     await card.save({ session });
     await session.commitTransaction();
     session.endSession();
-  }
+  } 
+  
 }
