@@ -19,3 +19,11 @@ export default interface IBoard {
   nextAutoIncrement: number;
   workingDays: number[];
 }
+
+export interface ICommonIssue {
+  _id: string;
+  name: string;
+  issueTag: string;
+  issueType: string;
+  type: string;
+}

@@ -2,6 +2,7 @@ export default interface ISubCard {
   _id: string;
   cardId: string;
   name: string;
+  subCardId: string;
   status: string;
   assignedTo: string | null;
   issueTypeId: string;

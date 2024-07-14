@@ -100,7 +100,7 @@ export default class CardService {
     if (issueType.hierarchy !== 2) {
       throw new HttpException(
         StatusCodes.BAD_REQUEST,
-        "IssueType is suitable for issue"
+        "IssueType is not suitable for issue"
       );
     }
     const backlog = await this.sprintSchema
@@ -798,7 +798,7 @@ export default class CardService {
       if (newIssueType.hierarchy !== 2) {
         throw new HttpException(
           StatusCodes.BAD_REQUEST,
-          "IssueType is suitable for issue"
+          "IssueType is not suitable for issue"
         );
       }
 
@@ -1433,6 +1433,5 @@ export default class CardService {
     await card.save({ session });
     await session.commitTransaction();
     session.endSession();
-  } 
-  
+  }
 }

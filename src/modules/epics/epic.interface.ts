@@ -13,8 +13,9 @@ export default interface IEpic {
   priorityId: string;
   comments: IComment[];
   attachments: IAttachment[];
-  creatorId: string;
+  reporterId: string;
   issueTypeId: string;
+  epicId: string;
 }
 export interface IComment {
   _id?: string;

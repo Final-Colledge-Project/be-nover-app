@@ -16,19 +16,27 @@ import UpdateSubTaskDto from "./dtos/updateSubTaskDto";
 import { BoardSchema } from "@modules/boards";
 import { ClientSession } from "mongoose";
 import { TaskLogSchema } from "@modules/taskLogs";
+import { LabelSchema } from "@modules/labels";
+import { PrioritySchema } from "@modules/priorities";
+import { IssueTypeSchema } from "@modules/issueTypes";
 export default class SubCardService {
   private subCardSchema = SubCardSchema;
   private cardSchema = CardSchema;
   private boardSchema = BoardSchema;
-  private taskLogSchema = TaskLogSchema;
+  private labelSchema = LabelSchema;
+  private prioritySchema = PrioritySchema;
+  private issueTypeSchema = IssueTypeSchema;
   public async createSubCard(
     model: AddSubTaskDto,
-    session: ClientSession
+    session: ClientSession,
+    boardId: string
   ): Promise<ISubCard> {
     if (isEmptyObject(model)) {
       throw new HttpException(StatusCodes.BAD_REQUEST, "Model is empty");
     }
-    const existCard = await this.cardSchema.findById(model.cardId).exec();
+    const existCard = await this.cardSchema
+      .findOne({ _id: model.cardId, boardId: boardId })
+      .exec();
     if (!existCard) {
       throw new HttpException(StatusCodes.BAD_REQUEST, "Card not found");
     }
@@ -37,6 +45,34 @@ export default class SubCardService {
       .exec();
     if (!existBoard) {
       throw new HttpException(StatusCodes.BAD_REQUEST, "Board not found");
+    }
+    if (model.labelId) {
+      const label = await this.labelSchema
+        .findOne({ _id: model.labelId, boardId: existCard.boardId })
+        .exec();
+      if (!label) {
+        throw new HttpException(StatusCodes.BAD_REQUEST, "Label not found");
+      }
+    }
+    if (model.priorityId) {
+      const priority = await this.prioritySchema
+        .findOne({ _id: model.priorityId, boardId: existCard.boardId })
+        .exec();
+      if (!priority) {
+        throw new HttpException(StatusCodes.BAD_REQUEST, "Priority not found");
+      }
+    }
+    const issueType = await this.issueTypeSchema
+      .findOne({ _id: model.issueTypeId, boardId: existCard.boardId })
+      .exec();
+    if (!issueType) {
+      throw new HttpException(StatusCodes.BAD_REQUEST, "IssueType not found");
+    }
+    if (issueType.hierarchy !== 3) {
+      throw new HttpException(
+        StatusCodes.BAD_REQUEST,
+        "IssueType is not suitable for issue"
+      );
     }
     const newSubCard = await this.subCardSchema.create(
       [
@@ -50,9 +86,9 @@ export default class SubCardService {
     );
     await this.cardSchema
       .findByIdAndUpdate(
-        { _id: new OBJECT_ID(model.cardId) },
+        { _id: model.cardId },
         {
-          $push: { subCards: newSubCard[0]._id },
+          $push: { subCardIds: newSubCard[0]._id },
         },
         { new: true, session }
       )
@@ -117,12 +153,18 @@ export default class SubCardService {
   }
   public async updateSubCard(
     model: UpdateSubTaskDto,
-    subCardId: string
+    subCardId: string,
+    boardId: string
   ): Promise<ISubCard> {
     if (isEmptyObject(model)) {
       throw new HttpException(StatusCodes.BAD_REQUEST, "Model is empty");
     }
-    const existSubCard = await this.subCardSchema.findById(subCardId).exec();
+    const existSubCard = await this.subCardSchema
+      .findOne({
+        _id: subCardId,
+        boardId: boardId,
+      })
+      .exec();
     if (!existSubCard) {
       throw new HttpException(StatusCodes.BAD_REQUEST, "Subcard not found");
     }
@@ -131,6 +173,34 @@ export default class SubCardService {
       .exec();
     if (!existCard) {
       throw new HttpException(StatusCodes.BAD_REQUEST, "Card not found");
+    }
+    if (model.labelId) {
+      const label = await this.labelSchema
+        .findOne({ _id: model.labelId, boardId: existCard.boardId })
+        .exec();
+      if (!label) {
+        throw new HttpException(StatusCodes.BAD_REQUEST, "Label not found");
+      }
+    }
+    if (model.priorityId) {
+      const priority = await this.prioritySchema
+        .findOne({ _id: model.priorityId, boardId: existCard.boardId })
+        .exec();
+      if (!priority) {
+        throw new HttpException(StatusCodes.BAD_REQUEST, "Priority not found");
+      }
+    }
+    const issueType = await this.issueTypeSchema
+      .findOne({ _id: model.issueTypeId, boardId: existCard.boardId })
+      .exec();
+    if (!issueType) {
+      throw new HttpException(StatusCodes.BAD_REQUEST, "IssueType not found");
+    }
+    if (issueType.hierarchy !== 3) {
+      throw new HttpException(
+        StatusCodes.BAD_REQUEST,
+        "IssueType is not suitable for issue"
+      );
     }
     const updatedSubCard = await this.subCardSchema
       .findByIdAndUpdate(subCardId, { ...model }, { new: true })
