@@ -5,7 +5,7 @@ import { BoardSchema } from "@modules/boards";
 import { StatusCodes } from "http-status-codes";
 import { EpicSchema } from ".";
 import CreateEpicDto from "./dtos/createEpicDto";
-import IEpic from "./epic.interface";
+import IEpic, { IComment } from "./epic.interface";
 import { ClientSession } from "mongoose";
 import { ITaskLog, TaskLogSchema } from "@modules/taskLogs";
 import UpdateEpicDto from "./dtos/updateEpicDto";
@@ -15,6 +15,8 @@ import { LabelSchema } from "@modules/labels";
 import { UserSchema } from "@modules/users";
 import { ColumnSchema } from "@modules/columns";
 import { IssueTypeSchema } from "@modules/issueTypes";
+import AddCommentDto from "./dtos/addCommentDto";
+import UpdateCommentDto from "./dtos/updateCommentDto";
 
 export default class EpicService {
   private epicSchema = EpicSchema;
@@ -67,6 +69,7 @@ export default class EpicService {
           boardId,
           columnId: board.initColumnId,
           creatorId: userId,
+          epicId: board.nextAutoIncrement.toString(),
         },
       ],
       { session: session }
@@ -88,6 +91,8 @@ export default class EpicService {
         session: session,
       }
     );
+    board.nextAutoIncrement += 1;
+    await board.save({ session });
     await session.commitTransaction();
     session.endSession();
     return newEpic[0];
@@ -429,4 +434,98 @@ export default class EpicService {
     }
     return epic;
   };
+  public async addCommentToEpic(
+    userId: string,
+    model: AddCommentDto,
+    epicId: string,
+    session: ClientSession
+  ) {
+    if (isEmptyObject(model)) {
+      throw new HttpException(StatusCodes.BAD_REQUEST, "Model is empty");
+    }
+    const epic = await this.epicSchema.findById(epicId).exec();
+    if (!epic) {
+      throw new HttpException(StatusCodes.BAD_REQUEST, "Epic not found");
+    }
+    const comment: IComment = {
+      userId,
+      content: model.content,
+      icon: model.icon,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      edited: false,
+      likeIds: [],
+    };
+    epic.comments.push(comment);
+    await epic.save();
+    await session.commitTransaction();
+    session.endSession();
+  }
+  public async updateCommentInEpic(
+    epicId: string,
+    userId: string,
+    model: UpdateCommentDto,
+    commentId: string,
+    session: ClientSession
+  ) {
+    if (isEmptyObject(model)) {
+      throw new HttpException(StatusCodes.BAD_REQUEST, "Model is empty");
+    }
+    const epic = await this.epicSchema.findById(epicId).exec();
+    if (!epic) {
+      throw new HttpException(StatusCodes.BAD_REQUEST, "Epic not found");
+    }
+    const comment = epic.comments.find((c) => c?._id?.toString() === commentId);
+    if (userId !== comment?.userId.toString()) {
+      throw new HttpException(
+        StatusCodes.FORBIDDEN,
+        "You are not owner of this comment"
+      );
+    }
+    if (model.content) {
+      comment.content = model.content;
+    }
+    if (model.icon) {
+      comment.icon = model.icon;
+    }
+    if (model.likeIds) {
+      comment.likeIds = model.likeIds;
+    }
+    comment.updatedAt = new Date();
+    comment.edited = true;
+    await epic.save();
+    await session.commitTransaction();
+    session.endSession();
+  }
+  public async deleteCommentInEpic(
+    cardId: string,
+    userId: string,
+    commentId: string
+  ): Promise<void> {
+    const epic = await this.epicSchema.findById(cardId).exec();
+    if (!epic) {
+      throw new HttpException(StatusCodes.BAD_REQUEST, "Epic not found");
+    }
+    const comment = epic.comments.find((c) => c?._id?.toString() === commentId);
+    if (userId !== comment?.userId.toString()) {
+      throw new HttpException(
+        StatusCodes.FORBIDDEN,
+        "You are not owner of this comment"
+      );
+    }
+    epic.comments = epic.comments.filter(
+      (c) => c?._id?.toString() !== commentId
+    );
+    await epic.save();
+  }
+  public async getCommentsInEpic(epicId: string): Promise<IComment[]> {
+    const epic = await this.epicSchema
+      .findById(epicId)
+      .populate("comments.userId", "firstName lastName avatar email")
+      .exec();
+    if (!epic) {
+      throw new HttpException(StatusCodes.BAD_REQUEST, "Card not found");
+    }
+    return epic.comments;
+  }
 }

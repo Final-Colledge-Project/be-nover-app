@@ -168,6 +168,19 @@ const BoardPermissionSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    direction: [
+      {
+        name: String,
+        sourceColumnId: {
+          type: SCHEMA_TYPE,
+          ref: MODEL_NAME.column,
+        },
+        targetColumnId: {
+          type: SCHEMA_TYPE,
+          ref: MODEL_NAME.column,
+        },
+      },
+    ],
   },
   { timestamps: true }
 );

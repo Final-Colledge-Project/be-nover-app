@@ -4,6 +4,7 @@ import { authMiddleware, validationMiddleware } from "@core/middleware";
 import AddBoardPermissionDto from "./dtos/addBoardPermissionDto";
 import { Route } from "@core/interfaces";
 import UpdateBoardPermissionDto from "./dtos/updateBoardPermissionDto";
+import AddDirectionDto from "./dtos/addDirectionDto";
 export default class BoardPermissionRoute implements Route {
   public path = "/api/v1/board-permissions";
   public router = Router();
@@ -38,6 +39,23 @@ export default class BoardPermissionRoute implements Route {
       this.path + "/:id/board/:boardId",
       authMiddleware,
       this.boardPermissionController.deleteBoardPermission
+    );
+    this.router.post(
+      this.path + "/:id/direction/board/:boardId",
+      authMiddleware,
+      validationMiddleware(AddDirectionDto, true),
+      this.boardPermissionController.addDirectionToBoardPermission
+    );
+    this.router.put(
+      this.path + "/:id/direction/:directionId/board/:boardId",
+      authMiddleware,
+      validationMiddleware(AddDirectionDto, true),
+      this.boardPermissionController.updateDirectionToBoardPermission
+    );
+    this.router.delete(
+      this.path + "/:id/direction/:directionId/board/:boardId",
+      authMiddleware,
+      this.boardPermissionController.deleteDirectionToBoardPermission
     );
   }
 }

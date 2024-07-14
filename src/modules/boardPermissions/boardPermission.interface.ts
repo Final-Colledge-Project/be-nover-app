@@ -56,4 +56,12 @@ export default interface IBoardPermission {
   isActive: boolean;
   isAdmin: boolean;
   isViewer: boolean;
+  direction: IDirection[];
+}
+
+export interface IDirection {
+  _id?: string;
+  name: string;
+  sourceColumnId: string;
+  targetColumnId: string;
 }

@@ -60,6 +60,10 @@ const SubCardSchema = new mongoose.Schema(
       type: Boolean,
       default: true,
     },
+    columnId: {
+      type: SCHEMA_TYPE,
+      ref: MODEL_NAME.column,
+    },
   },
   { timestamps: true }
 );

@@ -12,4 +12,5 @@ export default interface ISubCard {
   dueDate: Date;
   updatedAt: Date;
   isActive: boolean;
+  columnId: string;
 }
