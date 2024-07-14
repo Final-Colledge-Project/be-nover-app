@@ -5,6 +5,7 @@ import {
   IsEmail,
   IsEnum,
   IsNotEmpty,
+  IsOptional,
   IsString,
   MaxLength,
   Min,
@@ -16,13 +17,21 @@ export default class UpdateSubTaskDto {
     status: string,
     assignedTo: string,
     startDate: Date,
-    dueDate: Date
+    dueDate: Date,
+    labelId: string,
+    priorityId: string,
+    columnId: string,
+    issueTypeId: string
   ) {
     this.name = name;
     this.status = status;
     this.assignedTo = assignedTo;
     this.dueDate = dueDate;
     this.startDate = startDate;
+    this.labelId = labelId;
+    this.priorityId = priorityId;
+    this.columnId = columnId;
+    this.issueTypeId = issueTypeId;
   }
   @IsNotEmpty()
   @IsString()
@@ -48,4 +57,16 @@ export default class UpdateSubTaskDto {
   @Transform(({ value }: TransformFnParams) => formatDate(value))
   @IsDateString()
   public dueDate: Date;
+  @IsString()
+  @IsOptional()
+  public labelId: string;
+  @IsString()
+  @IsOptional()
+  public priorityId: string;
+  @IsOptional()
+  @IsString()
+  public columnId: string;
+  @IsString()
+  @IsOptional()
+  public issueTypeId: string;
 }

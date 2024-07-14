@@ -69,6 +69,7 @@ export default class EpicService {
           boardId,
           columnId: board.initColumnId,
           creatorId: userId,
+          epicId: board.nextAutoIncrement.toString(),
         },
       ],
       { session: session }
@@ -90,6 +91,8 @@ export default class EpicService {
         session: session,
       }
     );
+    board.nextAutoIncrement += 1;
+    await board.save({ session });
     await session.commitTransaction();
     session.endSession();
     return newEpic[0];
