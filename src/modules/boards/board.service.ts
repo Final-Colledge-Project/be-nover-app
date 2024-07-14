@@ -224,15 +224,9 @@ export default class BoardService {
       ],
       { session }
     );
-
-    await this.boardSchema.findByIdAndUpdate(
-      createdBoard[0]._id,
-      {
-        columnOrderIds: columns.map((col: IColumn) => col._id),
-        initColumnId: columns[0]._id,
-      },
-      { session }
-    );
+    let initEpicId = null;
+    let initTaskId = null;
+    let initSubTaskId = null;
     if (createdBoard[0].template === BOARD_TEMPLATE.scrum) {
       const issueTypes = await this.issueTypeSchema.create(
         [
@@ -293,6 +287,9 @@ export default class BoardService {
         ],
         { session }
       );
+      initEpicId = issueTypes[0]._id;
+      initTaskId = issueTypes[1]._id;
+      initSubTaskId = issueTypes[4]._id;
     } else {
       const issueTypes = await this.issueTypeSchema.create(
         [
@@ -324,6 +321,9 @@ export default class BoardService {
         ],
         { session }
       );
+      initEpicId = issueTypes[0]._id;
+      initTaskId = issueTypes[1]._id;
+      initSubTaskId = issueTypes[2]._id;
     }
 
     await this.issueLinkTypeSchema.create(
@@ -357,6 +357,18 @@ export default class BoardService {
         session,
       }
     );
+    await this.boardSchema.findByIdAndUpdate(
+      createdBoard[0]._id,
+      {
+        columnOrderIds: columns.map((col: IColumn) => col._id),
+        initColumnId: columns[0]._id,
+        initEpicId: initEpicId,
+        initTaskId: initTaskId,
+        initSubTaskId: initSubTaskId,
+      },
+      { session }
+    );
+
     await await session.commitTransaction();
     session.endSession();
     return createdBoard[0];

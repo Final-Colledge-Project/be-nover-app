@@ -38,6 +38,7 @@ import AddCommentDto from "./dtos/addCommentDto";
 import UpdateCommentDto from "./dtos/updateCommentDto";
 import { IDailyStoryPoint } from "@modules/sprints/sprint.interface";
 import { CloudStorageFileService } from "@core/cloudService";
+import { Multer } from "multer";
 export default class CardService {
   private cardSchema = CardSchema;
   private notificationService = new NotificationService();
@@ -532,8 +533,11 @@ export default class CardService {
       oldCol.cardOrderIds = oldCol.cardOrderIds.filter(
         (item) => item.toString() !== cardId.toString()
       );
-      newCol.cardOrderIds.push(cardId);
+      if (!newCol.cardOrderIds.find((item) => item.toString() === cardId)) {
+        newCol.cardOrderIds.push(cardId);
+      }
       isResolve = newCol.isResolved;
+
       //Handle StotyPoint
       //Resolve Columns => StoryPoint - , Unresolve Columns => StoryPoint +
       if (isResolve && board?.template === BOARD_TEMPLATE.scrum) {

@@ -18,6 +18,9 @@ export default interface IBoard {
   initColumnId: string;
   nextAutoIncrement: number;
   workingDays: number[];
+  initEpicId: string;
+  initTaskId: string;
+  initSubTaskId: string;
 }
 
 export interface ICommonIssue {
