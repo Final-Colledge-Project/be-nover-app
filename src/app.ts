@@ -15,19 +15,21 @@ import passport from "passport";
 import http from "http";
 import socketIo from "socket.io";
 import { setSameSite } from "@core/middleware/auth.middleware";
+import SocketManager from "@core/socketManager/socketManager";
 export default class App {
   public app: express.Application;
   public port: string | number;
   public production: boolean;
   public server: http.Server;
   public io: socketIo.Server;
-
+  public socketManager: SocketManager;
   constructor(routes: Route[]) {
     this.app = express();
     this.server = http.createServer(this.app);
     this.io = new socketIo.Server(this.server);
     this.port = process.env.PORT || 5000;
     this.production = process.env.NODE_ENV == "production" ? true : false;
+    this.socketManager = new SocketManager(this.app, this.server);
     this.connectToDB();
     this.initializeMiddleware();
     this.initialRoutes(routes);
@@ -68,6 +70,12 @@ export default class App {
 
       socket.on("assignMemberToCard", (data) => {
         this.sendMessageToUser(users, data.userId, "fetchNotification");
+      });
+
+      socket.on("updateCard", (data) => {
+        data.forEach((userId: string) => {
+          this.sendMessageToUser(users, userId, "fetchNotification");
+        });
       });
 
       socket.on("disconnect", function () {

@@ -24,7 +24,10 @@ import { StatusCodes } from "http-status-codes";
 import assignUserDto from "./dtos/assignUserDto";
 import { UserSchema } from "@modules/users";
 import PushNotificationDto from "@modules/notifications/dtos/pushNotificationDto";
-import { NotificationService } from "@modules/notifications";
+import {
+  NotificationSchema,
+  NotificationService,
+} from "@modules/notifications";
 import { LabelSchema } from "@modules/labels";
 import { PrioritySchema } from "@modules/priorities";
 import { SprintSchema } from "@modules/sprints";
@@ -521,7 +524,8 @@ export default class CardService {
     const cloneCard = cloneDeep(card);
     const taskLogs: ITaskLog[] = [];
     let isResolve = false;
-
+    let notifications: PushNotificationDto[] = [];
+    const contextUrl = `${process.env.URL_CLIENT}/u/boards/${board?._id}/cards/${card._id}`;
     if (model.columnId && model.columnId !== cloneCard.columnId) {
       const oldCol = await this.colSchema.findById(cloneCard.columnId).exec();
       const newCol = await this.colSchema.findById(model.columnId).exec();
@@ -609,6 +613,32 @@ export default class CardService {
         issueModel: MODEL_NAME.card,
         issueId: card._id,
       });
+      uniq(card.watcherIds.map((e) => e.toString()))
+        .filter((item) => item.toString() !== userId)
+        .forEach((item) => {
+          notifications.push({
+            senderId: userId,
+            targetType: card.title,
+            message: "changed the status of the task",
+            type: {
+              category: MODEL_NAME.board,
+              name: board?.title || "",
+            },
+            contextUrl: contextUrl,
+            receiverId: item,
+          });
+        });
+      // notifications.push({
+      //   senderId: userId,
+      //   targetType: card.title,
+      //   message: "changed the status of the task",
+      //   type: {
+      //     category: MODEL_NAME.board,
+      //     name: board?.title || "",
+      //   },
+      //   contextUrl: contextUrl,
+      //   receiverId: card.watcherIds.filter((item) => item !== userId),
+      // });
       await oldCol.save({ session });
       await newCol.save({ session });
     }
@@ -633,6 +663,21 @@ export default class CardService {
         issueModel: MODEL_NAME.card,
         issueId: card._id,
       });
+      uniq(card.watcherIds.map((e) => e.toString()))
+        .filter((item) => item.toString() !== userId)
+        .forEach((item) => {
+          notifications.push({
+            senderId: userId,
+            targetType: card.title,
+            message: "changed the title of the task",
+            type: {
+              category: MODEL_NAME.board,
+              name: board?.title || "",
+            },
+            contextUrl: contextUrl,
+            receiverId: item,
+          });
+        });
     }
     if (model.description) {
       taskLogs.push({
@@ -644,6 +689,21 @@ export default class CardService {
         issueModel: MODEL_NAME.card,
         issueId: card._id,
       });
+      uniq(card.watcherIds.map((e) => e.toString()))
+        .filter((item) => item.toString() !== userId)
+        .forEach((item) => {
+          notifications.push({
+            senderId: userId,
+            targetType: card.title,
+            message: "changed the description of the task",
+            type: {
+              category: MODEL_NAME.board,
+              name: board?.title || "",
+            },
+            contextUrl: contextUrl,
+            receiverId: item,
+          });
+        });
     }
     if (model.labelId) {
       const oldLabel = await this.labelSchema
@@ -662,6 +722,21 @@ export default class CardService {
         issueModel: MODEL_NAME.card,
         issueId: card._id,
       });
+      uniq(card.watcherIds.map((e) => e.toString()))
+        .filter((item) => item.toString() !== userId)
+        .forEach((item) => {
+          notifications.push({
+            senderId: userId,
+            targetType: card.title,
+            message: "changed the label of the task",
+            type: {
+              category: MODEL_NAME.board,
+              name: board?.title || "",
+            },
+            contextUrl: contextUrl,
+            receiverId: item,
+          });
+        });
     }
     if (model.priorityId && model.priorityId !== cloneCard.priorityId) {
       const oldPriority = await this.prioritySchema
@@ -680,6 +755,22 @@ export default class CardService {
         issueModel: MODEL_NAME.card,
         issueId: card._id,
       });
+      uniq(card.watcherIds.map((e) => e.toString()))
+        .filter((item) => item.toString() !== userId)
+        .forEach((item) => {
+          console.log("🚀 ~ CardService ~ .forEach ~ item:", item);
+          notifications.push({
+            senderId: userId,
+            targetType: card.title,
+            message: "changed the priority of the task",
+            type: {
+              category: MODEL_NAME.board,
+              name: board?.title || "",
+            },
+            contextUrl: contextUrl,
+            receiverId: item,
+          });
+        });
     }
     //Update sprint
     if (
@@ -761,6 +852,21 @@ export default class CardService {
         issueModel: MODEL_NAME.card,
         issueId: card._id,
       });
+      uniq(card.watcherIds.map((e) => e.toString()))
+        .filter((item) => item.toString() !== userId)
+        .forEach((item) => {
+          notifications.push({
+            senderId: userId,
+            targetType: card.title,
+            message: "changed the sprint of the task",
+            type: {
+              category: MODEL_NAME.board,
+              name: board?.title || "",
+            },
+            contextUrl: contextUrl,
+            receiverId: item,
+          });
+        });
     }
     if (model.epicId && model.epicId !== cloneCard.epicId) {
       const oldEpic = await this.epicSchema.findById(cloneCard.epicId);
@@ -786,6 +892,21 @@ export default class CardService {
         issueModel: MODEL_NAME.card,
         issueId: card._id,
       });
+      uniq(card.watcherIds.map((e) => e.toString()))
+        .filter((item) => item.toString() !== userId)
+        .forEach((item) => {
+          notifications.push({
+            senderId: userId,
+            targetType: card.title,
+            message: "changed the epic of the task",
+            type: {
+              category: MODEL_NAME.board,
+              name: board?.title || "",
+            },
+            contextUrl: contextUrl,
+            receiverId: item,
+          });
+        });
     }
     if (model.issueTypeId && model.issueTypeId !== cloneCard.issueTypeId) {
       const oldIssueType = await this.issueTypeSchema
@@ -815,6 +936,21 @@ export default class CardService {
         issueModel: MODEL_NAME.card,
         issueId: card._id,
       });
+      uniq(card.watcherIds.map((e) => e.toString()))
+        .filter((item) => item.toString() !== userId)
+        .forEach((item) => {
+          notifications.push({
+            senderId: userId,
+            targetType: card.title,
+            message: "changed the issue type of the task",
+            type: {
+              category: MODEL_NAME.board,
+              name: board?.title || "",
+            },
+            contextUrl: contextUrl,
+            receiverId: item,
+          });
+        });
     }
     //Update storyPoint
     if (model.storyPoint && model.storyPoint !== cloneCard.storyPoint) {
@@ -863,9 +999,27 @@ export default class CardService {
         issueModel: MODEL_NAME.card,
         issueId: card._id,
       });
+      uniq(card.watcherIds.map((e) => e.toString()))
+        .filter((item) => item.toString() !== userId)
+        .forEach((item) => {
+          notifications.push({
+            senderId: userId,
+            targetType: card.title,
+            message: "changed the story point of the task",
+            type: {
+              category: MODEL_NAME.board,
+              name: board?.title || "",
+            },
+            contextUrl: contextUrl,
+            receiverId: item,
+          });
+        });
     }
     if (taskLogs.length) {
       await this.taskLogSchema.create(taskLogs, { session });
+    }
+    if (notifications.length) {
+      await this.notificationService.pushMultiNotification(notifications);
     }
     await session.commitTransaction();
     session.endSession();

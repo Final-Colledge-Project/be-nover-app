@@ -62,18 +62,21 @@ export default class SubCardService {
         throw new HttpException(StatusCodes.BAD_REQUEST, "Priority not found");
       }
     }
-    const issueType = await this.issueTypeSchema
-      .findOne({ _id: model.issueTypeId, boardId: existCard.boardId })
-      .exec();
-    if (!issueType) {
-      throw new HttpException(StatusCodes.BAD_REQUEST, "IssueType not found");
+    if (model.issueTypeId) {
+      const issueType = await this.issueTypeSchema
+        .findOne({ _id: model.issueTypeId, boardId: existCard.boardId })
+        .exec();
+      if (!issueType) {
+        throw new HttpException(StatusCodes.BAD_REQUEST, "IssueType not found");
+      }
+      if (issueType.hierarchy !== 3) {
+        throw new HttpException(
+          StatusCodes.BAD_REQUEST,
+          "IssueType is not suitable for issue"
+        );
+      }
     }
-    if (issueType.hierarchy !== 3) {
-      throw new HttpException(
-        StatusCodes.BAD_REQUEST,
-        "IssueType is not suitable for issue"
-      );
-    }
+
     const newSubCard = await this.subCardSchema.create(
       [
         {
@@ -95,6 +98,8 @@ export default class SubCardService {
       .exec();
     existBoard.nextAutoIncrement += 1;
     await existBoard.save({ session });
+    await session.commitTransaction();
+    session.endSession();
     return newSubCard[0];
   }
   public async assignMemberToSubCard(

@@ -15,6 +15,7 @@ export default class SubCardController {
     try {
       const model: AddSubTaskDto = req.body;
       const boardId: string = req.params.boardId;
+      session.startTransaction();
       const subCard = await this.subCardService.createSubCard(
         model,
         session,

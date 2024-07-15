@@ -101,9 +101,11 @@ export default class StatisticService {
           return column._id.toString() === card.columnId.toString();
         });
       });
-      const totalStoryPoint = cardsInSprints.reduce((total, card) => {
-        return total + card.storyPoint;
-      }, 0);
+      const totalStoryPoint = sprint.totalStoryPoint
+        ? sprint.totalStoryPoint
+        : cardsInSprints.reduce((total, card) => {
+            return total + card.storyPoint;
+          }, 0);
       const completedStoryPoint = completedCards.reduce((total, card) => {
         return total + card.storyPoint;
       }, 0);
@@ -131,9 +133,11 @@ export default class StatisticService {
         isActive: { $ne: false },
       })
       .exec();
-    const totalStoryPoint = cardsInSprints.reduce((total, card) => {
-      return total + card.storyPoint;
-    }, 0);
+    const totalStoryPoint = sprint.totalStoryPoint
+      ? sprint.totalStoryPoint
+      : cardsInSprints.reduce((total, card) => {
+          return total + card.storyPoint;
+        }, 0);
     const resolveColumn = await this.columnSchema
       .find({
         boardId,
