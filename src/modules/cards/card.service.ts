@@ -134,7 +134,7 @@ export default class CardService {
               ])
             : uniq([!model.reporterId ? userId : model.reporterId]),
           sprintId:
-            existBoard.template === BOARD_TEMPLATE.scrum ? backlog?._id : null,
+            existBoard.template === BOARD_TEMPLATE.scrum && model.sprintId ? model.sprintId: null,
         },
       ],
       { session }
@@ -516,6 +516,7 @@ export default class CardService {
     if (isEmptyObject(model)) {
       throw new HttpException(StatusCodes.BAD_REQUEST, "Model is empty");
     }
+    console.log('~~~>model', model)
     const card = await this.cardSchema.findById(cardId).exec();
     if (!card) {
       throw new HttpException(StatusCodes.BAD_REQUEST, "Card not found");
@@ -560,6 +561,7 @@ export default class CardService {
         if (sprint.status !== SPRINT_STATUS.completed) {
           if (storyPoint) {
             storyPoint.storyPoints -= cloneCard.storyPoint;
+            await sprint.save({ session });
           } else {
             const prevDailyStoryPoint =
               sprint.dailyStoryPoints[sprint.dailyStoryPoints.length - 1];
@@ -569,10 +571,10 @@ export default class CardService {
                 ? prevDailyStoryPoint.storyPoints - cloneCard.storyPoint
                 : 0,
             });
+            await sprint.save({ session });
           }
         }
-
-        await sprint.save({ session });
+        
       }
       if (oldCol?.isResolved && !newCol.isResolved) {
         const sprint = await this.sprintSchema.findById(card.sprintId).exec();
@@ -601,7 +603,7 @@ export default class CardService {
             });
           }
         }
-
+        console.log('~~~~~~~>sprint', sprint);
         await sprint.save({ session });
       }
       taskLogs.push({
@@ -777,6 +779,7 @@ export default class CardService {
       model.sprintId &&
       model.sprintId.toString() !== (cloneCard.sprintId || "").toString()
     ) {
+      console.log('~~~~~~~~~~~~~~>Sprinttttt')
       const oldSprint = await this.sprintSchema.findById(cloneCard.sprintId);
       const newSprint = await this.sprintSchema.findById(model.sprintId);
       if (!newSprint) {

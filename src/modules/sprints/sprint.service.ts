@@ -224,8 +224,10 @@ export default class SprintService {
       throw new HttpException(StatusCodes.BAD_REQUEST, "Cannot revert sprint");
     }
 
+
     const data = {
       ...model,
+      duration: model.duration ? this.formatDuration(model.duration) : sprint.duration,
       creatorId: userId,
       ...extendUpdateData,
     };
