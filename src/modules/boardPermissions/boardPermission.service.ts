@@ -8,9 +8,10 @@ import IBoardPermission from "./boardPermission.interface";
 import { UserSchema } from "@modules/users";
 import { BoardSchema } from "@modules/boards";
 import { ClientSession } from "mongoose";
-import { difference } from "lodash";
+import { cloneDeep, difference } from "lodash";
 import { TeamWorkspaceSchema } from "@modules/teamWorkspaces";
 import { IWorkspaceAdmin } from "@modules/teamWorkspaces/teamWorkspace.interface";
+import AddDirectionDto from "./dtos/addDirectionDto";
 export default class BoardPermissionService {
   private boardPermissionSchema = BoardPermissionSchema;
   private userSchema = UserSchema;
@@ -339,4 +340,112 @@ export default class BoardPermissionService {
     await session.commitTransaction();
     session.endSession();
   };
+  public async addDirectionToBoardPermission(
+    boardId: string,
+    permissionId: string,
+    model: AddDirectionDto,
+    userId: string
+  ): Promise<void> {
+    const adminBoard = await isBoardAdmin(boardId, userId);
+    if (!adminBoard) {
+      throw new HttpException(StatusCodes.FORBIDDEN, "Permission denied");
+    }
+    const boardPermission = await this.boardPermissionSchema.findById(
+      permissionId
+    );
+    if (!boardPermission) {
+      throw new HttpException(
+        StatusCodes.NOT_FOUND,
+        "Permission group not found"
+      );
+    }
+    if (boardPermission.isAdmin) {
+      throw new HttpException(
+        StatusCodes.BAD_REQUEST,
+        "Cannot add direction to admin permission"
+      );
+    }
+    const direction = {
+      name: model.name,
+      sourceColumnId: model.sourceColumnId,
+      targetColumnId: model.targetColumnId,
+    };
+    boardPermission.direction.push(direction);
+    await boardPermission.save();
+  }
+  public async removeDirectionFromBoardPermission(
+    directionId: string,
+    permissionId: string,
+    userId: string,
+    boardId: string
+  ): Promise<void> {
+    const adminBoard = await isBoardAdmin(boardId, userId);
+    if (!adminBoard) {
+      throw new HttpException(StatusCodes.FORBIDDEN, "Permission denied");
+    }
+    const boardPermission = await this.boardPermissionSchema
+      .findById(permissionId)
+      .exec();
+    if (!boardPermission) {
+      throw new HttpException(
+        StatusCodes.NOT_FOUND,
+        "Permission group not found"
+      );
+    }
+    if (boardPermission.isAdmin) {
+      throw new HttpException(
+        StatusCodes.BAD_REQUEST,
+        "Cannot remove direction from admin permission"
+      );
+    }
+    boardPermission.direction = boardPermission.direction.filter(
+      (item) => item?._id?.toString() !== directionId
+    );
+    await boardPermission.save();
+  }
+  public async updateDirectionInBoardPermission(
+    boardId: string,
+    permissionId: string,
+    model: AddDirectionDto,
+    userId: string,
+    directionId: string
+  ): Promise<void> {
+    const adminBoard = await isBoardAdmin(boardId, userId);
+    if (!adminBoard) {
+      throw new HttpException(StatusCodes.FORBIDDEN, "Permission denied");
+    }
+    const boardPermission = await this.boardPermissionSchema.findById(
+      permissionId
+    );
+    if (!boardPermission) {
+      throw new HttpException(
+        StatusCodes.NOT_FOUND,
+        "Permission group not found"
+      );
+    }
+    if (boardPermission.isAdmin) {
+      throw new HttpException(
+        StatusCodes.BAD_REQUEST,
+        "Cannot modify direction in admin permission"
+      );
+    }
+    const existDirection = boardPermission.direction.find(
+      (c) => c?._id?.toString() === directionId
+    );
+    if (!existDirection) {
+      throw new HttpException(StatusCodes.NOT_FOUND, "Direction not found");
+    }
+
+    if (model.name) {
+      existDirection.name = model.name;
+    }
+    if (model.sourceColumnId) {
+      existDirection.sourceColumnId = model.sourceColumnId;
+    }
+
+    if (model.targetColumnId) {
+      existDirection.targetColumnId = model.targetColumnId;
+    }
+    await boardPermission.save();
+  }
 }

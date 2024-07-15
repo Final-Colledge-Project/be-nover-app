@@ -21,7 +21,8 @@ export default class UpdateEpicDto {
     assigneeId: string,
     cardOrderIds: string[],
     columnId: string,
-    issueTypeId: string
+    issueTypeId: string,
+    priorityId: string
   ) {
     this.name = name;
     this.description = description;
@@ -33,6 +34,7 @@ export default class UpdateEpicDto {
     this.cardOrderIds = cardOrderIds;
     this.columnId = columnId;
     this.issueTypeId = issueTypeId;
+    this.priorityId = priorityId;
   }
   @IsNotEmpty()
   @IsString()
@@ -79,4 +81,6 @@ export default class UpdateEpicDto {
   @IsOptional()
   @IsString()
   public issueTypeId: string;
+  @IsString()
+  public priorityId: string;
 }

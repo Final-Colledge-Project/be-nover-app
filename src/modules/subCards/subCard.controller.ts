@@ -1,17 +1,34 @@
 import { catchAsync } from "@core/utils";
-import { Request, Response } from "express";
+import { NextFunction, Request, Response } from "express";
 import SubCardService from "./subCard.service";
 import AddSubTaskDto from "./dtos/addSubTaskDto";
 import { StatusCodes } from "http-status-codes";
+import { startSession } from "mongoose";
 export default class SubCardController {
   private subCardService = new SubCardService();
-  public createSubCard = catchAsync(async (req: Request, res: Response) => {
-    const model: AddSubTaskDto = req.body;
-    const subCard = await this.subCardService.createSubCard(model);
-    res
-      .status(StatusCodes.CREATED)
-      .json({ data: subCard, message: "Create sub card successfully" });
-  });
+  public createSubCard = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    const session = await startSession();
+    try {
+      const model: AddSubTaskDto = req.body;
+      const boardId: string = req.params.boardId;
+      const subCard = await this.subCardService.createSubCard(
+        model,
+        session,
+        boardId
+      );
+      res
+        .status(StatusCodes.CREATED)
+        .json({ data: subCard, message: "Create sub card successfully" });
+    } catch (err) {
+      await session.abortTransaction();
+      session.endSession();
+      next(err);
+    }
+  };
   public assignMemberToSubCard = catchAsync(
     async (req: Request, res: Response) => {
       const subCardId = req.params.id;
@@ -44,9 +61,11 @@ export default class SubCardController {
   public updateSubCard = catchAsync(async (req: Request, res: Response) => {
     const subCardId = req.params.id;
     const model: AddSubTaskDto = req.body;
+    const boardId: string = req.params.boardId;
     const updatedSubCard = await this.subCardService.updateSubCard(
       model,
-      subCardId
+      subCardId,
+      boardId
     );
     res
       .status(StatusCodes.OK)

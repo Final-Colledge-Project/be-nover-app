@@ -198,4 +198,84 @@ export default class CardController {
         .json({ message: "Delete comment in card successfully" });
     }
   );
+  public uploadAttachments = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    const session = await startSession();
+    try {
+      const files = req.files as Express.Multer.File[];
+      if (!files) {
+        res
+          .status(StatusCodes.BAD_REQUEST)
+          .json({ error: "Please upload files to attach" });
+        return;
+      }
+      const itemId = req.params.id;
+      const userId = req.user.id;
+      const boardId = req.params.boardId;
+      // Upload attachments to cloud
+      session.startTransaction();
+      await this.cardService.uploadAttachmentToCard(
+        files,
+        itemId,
+        session,
+        userId,
+        boardId
+      );
+      res
+        .status(StatusCodes.CREATED)
+        .json({ message: "Upload attachments successfully" });
+    } catch (error) {
+      await session.abortTransaction();
+      session.endSession();
+      next(error);
+    }
+  };
+  public downloadAttachment = catchAsync(
+    async (req: Request, res: Response) => {
+      const userId = req.user.id;
+      const cardId = req.params.id;
+      const boardId = req.params.boardId;
+      const fileName = req.query.fileName as string;
+      await this.cardService.downloadAttachmentInCard(
+        cardId,
+        boardId,
+        fileName,
+        userId
+      );
+      res
+        .status(StatusCodes.OK)
+        .json({ message: "Download Attachment Successfully" });
+    }
+  );
+  public deleteAttachment = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    const session = await startSession();
+    try {
+      const userId = req.user.id;
+      const boardId = req.params.boardId;
+      const cardId = req.params.id;
+      const fileName = req.query.fileName as string;
+      session.startTransaction();
+      await this.cardService.deleteAttachmentInCard(
+        boardId,
+        cardId,
+        fileName,
+        userId,
+        session
+      );
+      res
+        .status(StatusCodes.OK)
+        .json({ message: "Delete attachment successfully" });
+    } catch (err) {
+      await session.abortTransaction();
+      session.endSession();
+      next(err);
+    }
+  };
 }

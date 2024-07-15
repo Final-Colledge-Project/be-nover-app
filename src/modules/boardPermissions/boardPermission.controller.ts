@@ -5,6 +5,8 @@ import AddBoardPermissionDto from "./dtos/addBoardPermissionDto";
 import UpdateBoardPermissionDto from "./dtos/updateBoardPermissionDto";
 import { StatusCodes } from "http-status-codes";
 import { startSession } from "mongoose";
+import AddWSPermissionDto from "@modules/workspacePermissions/dtos/addWSPermissionDto";
+import AddDirectionDto from "./dtos/addDirectionDto";
 export default class BoardPermissionController {
   private boardPermissionService = new BoardPermissionService();
   public createBoardPermission = async (
@@ -112,6 +114,77 @@ export default class BoardPermissionController {
     } catch (err) {
       await session.abortTransaction();
       session.endSession();
+      next(err);
+    }
+  };
+  public addDirectionToBoardPermission = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      const userId = req.user.id;
+      const boardId = req.params.boardId;
+      const model: AddDirectionDto = req.body;
+      const permId = req.params.id;
+      await this.boardPermissionService.addDirectionToBoardPermission(
+        boardId,
+        permId,
+        model,
+        userId
+      );
+      res
+        .status(StatusCodes.CREATED)
+        .json({ message: "Add direction to board permission successfully" });
+    } catch (err) {
+      next(err);
+    }
+  };
+  public updateDirectionToBoardPermission = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      const userId = req.user.id;
+      const boardId = req.params.boardId;
+      const model: AddDirectionDto = req.body;
+      const permId = req.params.id;
+      const directionId = req.params.directionId;
+      await this.boardPermissionService.updateDirectionInBoardPermission(
+        boardId,
+        permId,
+        model,
+        userId,
+        directionId
+      );
+      res
+        .status(StatusCodes.OK)
+        .json({ message: "Update direction to board permission successfully" });
+    } catch (err) {
+      next(err);
+    }
+  };
+  public deleteDirectionToBoardPermission = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      const userId = req.user.id;
+      const boardId = req.params.boardId;
+      const permId = req.params.id;
+      const directionId = req.params.directionId;
+      await this.boardPermissionService.removeDirectionFromBoardPermission(
+        directionId,
+        permId,
+        userId,
+        boardId
+      );
+      res
+        .status(StatusCodes.OK)
+        .json({ message: "Delete direction to board permission successfully" });
+    } catch (err) {
       next(err);
     }
   };

@@ -371,6 +371,7 @@ export default class SprintService {
               $project: {
                 _id: 1,
                 title: 1,
+                cardId: 1,
                 column: {
                   $arrayElemAt: ["$column", 0],
                 },

@@ -2,6 +2,7 @@ export default interface ISubCard {
   _id: string;
   cardId: string;
   name: string;
+  subCardId: string;
   status: string;
   assignedTo: string | null;
   issueTypeId: string;
@@ -12,4 +13,5 @@ export default interface ISubCard {
   dueDate: Date;
   updatedAt: Date;
   isActive: boolean;
+  columnId: string;
 }
