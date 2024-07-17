@@ -499,6 +499,7 @@ export default class CardService {
             resolvedAt: 1,
             isActive: 1,
             watcherIds: 1,
+            attachments: 1,
             ...extendPrj,
           },
         },
@@ -1481,22 +1482,7 @@ export default class CardService {
     if (userId !== reporterId && userId !== memberIds && !boardAdmin) {
       throw new HttpException(StatusCodes.FORBIDDEN, "Permission denied");
     }
-    const attachments = (files || []).map((file) => {
-      return {
-        fileName: file.originalname,
-        fileType: file.mimetype,
-        fileUrl: file.path,
-        createAt: new Date(),
-        createdBy: userId,
-      };
-    });
-    const attachInCard = card.attachments;
-    if ((attachInCard || []).length + attachments.length > MAX_FILES) {
-      throw new HttpException(
-        StatusCodes.BAD_REQUEST,
-        `Attachment limit is ${MAX_FILES}`
-      );
-    }
+
     const bucketName = process.env.BUCKET_NAME;
     const issueType = ISSUE_TYPE.task;
     if (!bucketName) {
@@ -1511,6 +1497,30 @@ export default class CardService {
       );
     } catch (error: any) {
       throw new HttpException(StatusCodes.BAD_REQUEST, error.message);
+    }
+    const urls: string[] = [];
+    for (let i = 0; i < files.length; i++) {
+      const url = await this.cloudService.generateSignedUrl(
+        `${issueType}/${cardId}/${files[i].originalname}`,
+        bucketName
+      );
+      urls.push(url);
+    }
+    const attachments = (files || []).map((file, index) => {
+      return {
+        fileName: file.originalname,
+        fileType: file.mimetype,
+        fileUrl: `https://storage.cloud.google.com/${bucketName}/${issueType}/${cardId}/${file.originalname}`,
+        createAt: new Date(),
+        createdBy: userId,
+      };
+    });
+    const attachInCard = card.attachments;
+    if ((attachInCard || []).length + attachments.length > MAX_FILES) {
+      throw new HttpException(
+        StatusCodes.BAD_REQUEST,
+        `Attachment limit is ${MAX_FILES}`
+      );
     }
     card.attachments = [...attachInCard, ...attachments];
 

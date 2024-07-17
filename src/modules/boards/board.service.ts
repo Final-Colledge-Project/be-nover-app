@@ -13,7 +13,7 @@ import {
   permissionBoard,
   viewedBoardPermission,
 } from "@core/utils";
-import IBoard, { ICommonIssue } from "./board.interface";
+import IBoard, { ICommonIssue, IGeneralIssue } from "./board.interface";
 import BoardSchema from "./board.model";
 import CreateBoardDto from "./dtos/createBoardDto";
 import { HttpException } from "@core/exceptions";
@@ -1182,5 +1182,236 @@ export default class BoardService {
         });
       });
     return [...cards, ...subCards, ...epics];
+  }
+  public async getAllIssueInBoardDetail(
+    boardId: string,
+    userId: string,
+    hierarchy: string
+  ): Promise<IGeneralIssue[]> {
+    console.log("🚀 ~ BoardService ~ hierarchy:", hierarchy);
+    const member = await isBoardMember(boardId, userId);
+    if (!member) {
+      throw new HttpException(StatusCodes.FORBIDDEN, "Permission denied");
+    }
+    const board = await this.boardSchema.findById(boardId).exec();
+    let result: IGeneralIssue[];
+    switch (hierarchy) {
+      case "2": {
+        result = await this.cardSchema.aggregate([
+          {
+            $match: {
+              boardId: new OBJECT_ID(boardId),
+              isActive: true,
+            },
+          },
+          {
+            $set: {
+              taskId: "$cardId",
+              name: "$title",
+            },
+          },
+          {
+            $lookup: {
+              from: "labels",
+              localField: "labelId",
+              foreignField: "_id",
+              as: "label",
+              let: {
+                labelId: "$labelId",
+              },
+              pipeline: [
+                {
+                  $match: {
+                    $expr: {
+                      $eq: ["$_id", "$$labelId"],
+                    },
+                  },
+                },
+                {
+                  $project: {
+                    _id: 1,
+                    name: 1,
+                    color: 1,
+                  },
+                },
+              ],
+            },
+          },
+          {
+            $lookup: {
+              from: "issuetypes",
+              localField: "issueTypeId",
+              foreignField: "_id",
+              as: "issueType",
+              let: {
+                issueTypeId: "$issueTypeId",
+              },
+              pipeline: [
+                {
+                  $match: {
+                    $expr: {
+                      $eq: ["$_id", "$$issueTypeId"],
+                    },
+                  },
+                },
+                {
+                  $project: {
+                    _id: 1,
+                    name: 1,
+                    icon: 1,
+                  },
+                },
+              ],
+            },
+          },
+          {
+            $lookup: {
+              from: "columns",
+              localField: "columnId",
+              foreignField: "_id",
+              let: {
+                columnId: "$columnId",
+              },
+              as: "status",
+              pipeline: [
+                {
+                  $match: {
+                    $expr: {
+                      $eq: ["$_id", "$$columnId"],
+                    },
+                  },
+                },
+                {
+                  $project: {
+                    _id: 1,
+                    title: 1,
+                    color: 1,
+                  },
+                },
+              ],
+            },
+          },
+          {
+            $lookup: {
+              from: "priorities",
+              localField: "priorityId",
+              foreignField: "_id",
+              let: {
+                priorityId: "$priorityId",
+              },
+              as: "priority",
+              pipeline: [
+                {
+                  $match: {
+                    $expr: {
+                      $eq: ["$_id", "$$priorityId"],
+                    },
+                  },
+                },
+                {
+                  $project: {
+                    _id: 1,
+                    name: 1,
+                    color: 1,
+                  },
+                },
+              ],
+            },
+          },
+          {
+            $lookup: {
+              from: "sprints",
+              localField: "sprintId",
+              foreignField: "_id",
+              as: "sprint",
+              let: {
+                sprintId: "$sprintId",
+              },
+              pipeline: [
+                {
+                  $match: {
+                    $expr: {
+                      $eq: ["$_id", "$$sprintId"],
+                    },
+                  },
+                },
+                {
+                  $project: {
+                    _id: 1,
+                    name: 1,
+                    status: 1,
+                  },
+                },
+              ],
+            },
+          },
+          {
+            $lookup: {
+              from: "users",
+              let: { memberIds: "$memberIds" },
+              localField: "memberIds",
+              foreignField: "_id",
+              as: "assignee",
+              pipeline: [
+                {
+                  $match: {
+                    $expr: {
+                      $in: ["$_id", "$$memberIds"],
+                    },
+                  },
+                },
+                {
+                  $project: {
+                    _id: 1,
+                    fullName: { $concat: ["$firstName", " ", "$lastName"] },
+                    avatar: 1,
+                  },
+                },
+              ],
+            },
+          },
+          {
+            $project: {
+              _id: 1,
+              boardId: 1,
+              name: 1,
+              taskId: {
+                $concat: [board?.key, "-", "$taskId"],
+              },
+              description: 1,
+              status: {
+                $arrayElemAt: ["$status", 0],
+              },
+              priority: {
+                $arrayElemAt: ["$priority", 0],
+              },
+              assignee: {
+                $arrayElemAt: ["$assignee", 0],
+              },
+              storyPoint: 1,
+              sprint: {
+                $arrayElemAt: ["$sprint", 0],
+              },
+              label: {
+                $arrayElemAt: ["$label", 0],
+              },
+              startDate: 1,
+              dueDate: 1,
+              issueType: {
+                $arrayElemAt: ["$issueType", 0],
+              },
+              resolvedAt: 1,
+              createdAt: 1,
+              updatedAt: 1,
+            },
+          },
+        ]);
+        break;
+      }
+      default: {
+        result = [];
+      }
+    }
+    return result;
   }
 }

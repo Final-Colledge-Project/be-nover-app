@@ -117,4 +117,38 @@ export default class CloudStorageFileService {
       throw new Error("Failed to delete file from cloud storage");
     }
   }
+
+  async generateSignedUrl(
+    fileName: string,
+    bucketName: string
+  ): Promise<string> {
+    const options = {
+      version: "v4" as const,
+      action: "write" as const,
+      expires: Date.now() + 7 * 24 * 60 * 60 * 1000, // 7 days
+      contentType: "image/jpeg",
+      extensionHeaders: {
+        "x-goog-acl": "public-read",
+        "x-goog-content-length-range": "0,104857600",
+      },
+    };
+
+    const [url] = await this.storage
+      .bucket(bucketName)
+      // .setCorsConfiguration([
+      //   {
+      //     maxAgeSeconds: 3600,
+      //     method: ["PUT", "GET", "HEAD", "DELETE", "POST", "OPTIONS"],
+      //     origin: ["*"],
+      //     responseHeader: [
+      //       "Content-Type",
+      //       "Access-Control-Allow-Origin",
+      //       "x-goog-resumable",
+      //     ],
+      //   },
+      // ])
+      .file(fileName)
+      .getSignedUrl(options);
+    return url;
+  }
 }
