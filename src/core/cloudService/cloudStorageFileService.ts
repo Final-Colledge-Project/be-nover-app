@@ -1,5 +1,7 @@
 import { Storage, Bucket, File } from "@google-cloud/storage";
 import * as path from "path";
+import { createWriteStream } from "fs";
+import { Response } from "express";
 export default class CloudStorageFileService {
   private storage: Storage;
   constructor() {
@@ -73,26 +75,58 @@ export default class CloudStorageFileService {
     }
   }
 
-  async downloadFile(bucketName: string, fileName: string): Promise<void> {
+  getContentType = (fileName: string): string => {
+    const ext = path.extname(fileName).toLowerCase();
+    console.log("🚀 ~ CloudStorageFileService ~ ext:", ext);
+    switch (ext) {
+      case ".pdf":
+        return "application/pdf";
+      case ".jpg":
+      case ".jpeg":
+        return "image/jpeg";
+      case ".png":
+        return "image/png";
+      case ".txt":
+        return "text/plain";
+      case ".html":
+        return "text/html";
+      default:
+        return "application/octet-stream";
+    }
+  };
+
+  async downloadFile(
+    bucketName: string,
+    formatFileName: string,
+    fileName: string,
+    res: Response
+  ): Promise<any> {
     try {
-      const isExist = await this.fileExists(bucketName, fileName);
-      if (!isExist) {
-        throw new Error("File not found");
+      const file = this.storage.bucket(bucketName).file(formatFileName);
+
+      // Check if the file exists
+      const [exists] = await file.exists();
+      if (!exists) {
+        return res.status(404).send("File not found.");
       }
-      const bucket = this.storage.bucket(bucketName);
-      const blob = bucket.file(fileName);
-      const blobStream = blob.createReadStream();
-      return new Promise((resolve, reject) => {
-        blobStream
-          .on("finish", () => {
-            console.log(`${fileName} downloaded from ${bucketName}.`);
-            resolve();
-          })
-          .on("error", (err) => {
-            reject(err);
-          });
-      });
+
+      // Set appropriate headers for the response
+      res.setHeader(
+        "Content-Disposition",
+        `attachment; filename=${formatFileName}`
+      );
+      res.setHeader("Content-Type", this.getContentType(formatFileName));
+
+      // Stream the file contents to the response
+      file
+        .createReadStream()
+        .on("error", (error) => {
+          console.error("Error reading file:", error);
+          res.status(500).send("Failed to read file.");
+        })
+        .pipe(res);
     } catch (err) {
+      console.error("Error:", err);
       throw new Error("Failed to download file from cloud storage");
     }
   }
@@ -120,35 +154,27 @@ export default class CloudStorageFileService {
 
   async generateSignedUrl(
     fileName: string,
-    bucketName: string
+    bucketName: string,
+    itemId: string,
+    issueType: string
   ): Promise<string> {
-    const options = {
-      version: "v4" as const,
-      action: "write" as const,
-      expires: Date.now() + 7 * 24 * 60 * 60 * 1000, // 7 days
-      contentType: "image/jpeg",
-      extensionHeaders: {
-        "x-goog-acl": "public-read",
-        "x-goog-content-length-range": "0,104857600",
-      },
-    };
+    let url = "";
 
-    const [url] = await this.storage
-      .bucket(bucketName)
-      // .setCorsConfiguration([
-      //   {
-      //     maxAgeSeconds: 3600,
-      //     method: ["PUT", "GET", "HEAD", "DELETE", "POST", "OPTIONS"],
-      //     origin: ["*"],
-      //     responseHeader: [
-      //       "Content-Type",
-      //       "Access-Control-Allow-Origin",
-      //       "x-goog-resumable",
-      //     ],
-      //   },
-      // ])
-      .file(fileName)
-      .getSignedUrl(options);
+    const fileNameFormat = `${issueType}/${itemId}/${fileName}`;
+
+    const file = this.storage.bucket(bucketName).file(fileNameFormat);
+
+    // Check if the file exists
+    const [exists] = await file.exists();
+    if (exists) {
+      const options = {
+        action: "read" as const,
+        expires: Date.now() + 7 * 24 * 60 * 60 * 1000, // 7 days
+      };
+      const bucketFile = this.storage.bucket(bucketName).file(fileNameFormat);
+      const [signedUrl] = await bucketFile.getSignedUrl(options);
+      url = signedUrl;
+    }
     return url;
   }
 }

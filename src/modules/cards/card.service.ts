@@ -42,6 +42,7 @@ import UpdateCommentDto from "./dtos/updateCommentDto";
 import { IDailyStoryPoint } from "@modules/sprints/sprint.interface";
 import { CloudStorageFileService } from "@core/cloudService";
 import { Multer } from "multer";
+import { Response } from "express";
 export default class CardService {
   private cardSchema = CardSchema;
   private notificationService = new NotificationService();
@@ -1498,15 +1499,15 @@ export default class CardService {
     } catch (error: any) {
       throw new HttpException(StatusCodes.BAD_REQUEST, error.message);
     }
-    const urls: string[] = [];
-    for (let i = 0; i < files.length; i++) {
-      const url = await this.cloudService.generateSignedUrl(
-        `${issueType}/${cardId}/${files[i].originalname}`,
-        bucketName
-      );
-      urls.push(url);
-    }
-    const attachments = (files || []).map((file, index) => {
+    // const urls: string[] = [];
+    // for (let i = 0; i < files.length; i++) {
+    //   const url = await this.cloudService.generateSignedUrl(
+    //     `${issueType}/${cardId}/${files[i].originalname}`,
+    //     bucketName
+    //   );
+    //   urls.push(url);
+    // }
+    const attachments = (files || []).map((file) => {
       return {
         fileName: file.originalname,
         fileType: file.mimetype,
@@ -1532,8 +1533,9 @@ export default class CardService {
     cardId: string,
     boardId: string,
     fileName: string,
-    userId: string
-  ): Promise<void> {
+    userId: string,
+    res: Response
+  ): Promise<string> {
     const isMember = await isBoardMember(boardId, userId);
     if (!isMember) {
       throw new HttpException(StatusCodes.FORBIDDEN, "Permission denied");
@@ -1556,7 +1558,19 @@ export default class CardService {
     const issueType = ISSUE_TYPE.task;
     const formatFileName = `${issueType}/${cardId}/${fileName}`;
     try {
-      await this.cloudService.downloadFile(bucketName, formatFileName);
+      // await this.cloudService.downloadFile(
+      //   bucketName,
+      //   formatFileName,
+      //   fileName,
+      //   res
+      // );
+      const url = await this.cloudService.generateSignedUrl(
+        fileName,
+        bucketName,
+        cardId,
+        "task"
+      );
+      return url;
     } catch (error: any) {
       throw new HttpException(StatusCodes.BAD_REQUEST, error.message);
     }

@@ -239,15 +239,16 @@ export default class CardController {
       const cardId = req.params.id;
       const boardId = req.params.boardId;
       const fileName = req.query.fileName as string;
-      await this.cardService.downloadAttachmentInCard(
+      const url = await this.cardService.downloadAttachmentInCard(
         cardId,
         boardId,
         fileName,
-        userId
+        userId,
+        res
       );
       res
         .status(StatusCodes.OK)
-        .json({ message: "Download Attachment Successfully" });
+        .json({ data: url, message: "Download Attachment Successfully" });
     }
   );
   public deleteAttachment = async (
