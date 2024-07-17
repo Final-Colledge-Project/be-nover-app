@@ -278,4 +278,20 @@ export default class CardController {
       next(err);
     }
   };
+  public getCardsByMember = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      const memberId = req.params.userId;
+      const boardId = req.params.boardId;
+      const data = await this.cardService.getCardsByMemId(boardId, memberId);
+      res
+        .status(StatusCodes.OK)
+        .json({ data, message: "Get tasks by member successfully" });
+    } catch (err) {
+      next(err);
+    }
+  };
 }

@@ -134,7 +134,9 @@ export default class CardService {
               ])
             : uniq([!model.reporterId ? userId : model.reporterId]),
           sprintId:
-            existBoard.template === BOARD_TEMPLATE.scrum && model.sprintId ? model.sprintId: null,
+            existBoard.template === BOARD_TEMPLATE.scrum && model.sprintId
+              ? model.sprintId
+              : null,
         },
       ],
       { session }
@@ -516,7 +518,6 @@ export default class CardService {
     if (isEmptyObject(model)) {
       throw new HttpException(StatusCodes.BAD_REQUEST, "Model is empty");
     }
-    console.log('~~~>model', model)
     const card = await this.cardSchema.findById(cardId).exec();
     if (!card) {
       throw new HttpException(StatusCodes.BAD_REQUEST, "Card not found");
@@ -574,7 +575,6 @@ export default class CardService {
             await sprint.save({ session });
           }
         }
-        
       }
       if (oldCol?.isResolved && !newCol.isResolved) {
         const sprint = await this.sprintSchema.findById(card.sprintId).exec();
@@ -603,7 +603,6 @@ export default class CardService {
             });
           }
         }
-        console.log('~~~~~~~>sprint', sprint);
         await sprint.save({ session });
       }
       taskLogs.push({
@@ -779,7 +778,6 @@ export default class CardService {
       model.sprintId &&
       model.sprintId.toString() !== (cloneCard.sprintId || "").toString()
     ) {
-      console.log('~~~~~~~~~~~~~~>Sprinttttt')
       const oldSprint = await this.sprintSchema.findById(cloneCard.sprintId);
       const newSprint = await this.sprintSchema.findById(model.sprintId);
       if (!newSprint) {
@@ -1594,5 +1592,99 @@ export default class CardService {
     await card.save({ session });
     await session.commitTransaction();
     session.endSession();
+  }
+  public async getCardsByMemId(
+    boardId: string,
+    userId: string
+  ): Promise<Object[]> {
+    const memberBoard = await isBoardMember(boardId, userId);
+    if (!memberBoard)
+      throw new HttpException(StatusCodes.FORBIDDEN, "Permission denied");
+    const cardsMember = await this.cardSchema
+      .aggregate([
+        {
+          $lookup: {
+            from: "labels",
+            localField: "labelId",
+            foreignField: "_id",
+            as: "labels",
+            pipeline: [
+              {
+                $project: {
+                  _id: 1,
+                  name: 1,
+                  color: 1,
+                },
+              },
+            ],
+          },
+        },
+        {
+          $lookup: {
+            from: "columns",
+            localField: "columnId",
+            foreignField: "_id",
+            as: "columns",
+            pipeline: [
+              {
+                $project: {
+                  _id: 1,
+                  title: 1,
+                  isResolved: 1,
+                },
+              },
+            ],
+          },
+        },
+        {
+          $lookup: {
+            from: "issuetypes",
+            localField: "issueTypeId",
+            foreignField: "_id",
+            as: "issueType",
+            pipeline: [
+              {
+                $project: {
+                  _id: 1,
+                  name: 1,
+                  icon: 1,
+                },
+              },
+            ],
+          },
+        },
+        {
+          $match: {
+            boardId: new OBJECT_ID(boardId),
+            memberIds: {
+              $in: [new OBJECT_ID(userId)],
+            },
+            isActive: { $eq: true },
+          },
+        },
+        {
+          $project: {
+            _id: 1,
+            board: {
+              $arrayElemAt: ["$boards", 0],
+            },
+            column: {
+              $arrayElemAt: ["$columns", 0],
+            },
+            issueType: {
+              $arrayElemAt: ["$issueType", 0],
+            },
+            cardId: 1,
+            title: 1,
+            description: 1,
+            startDate: 1,
+            dueDate: 1,
+            priority: 1,
+            labels: 1,
+          },
+        },
+      ])
+      .exec();
+    return cardsMember;
   }
 }
