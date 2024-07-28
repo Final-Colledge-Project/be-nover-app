@@ -364,4 +364,5 @@ export default class IssueLinkService {
     const issueLink = await feature.query;
     return issueLink;
   };
+  
 }

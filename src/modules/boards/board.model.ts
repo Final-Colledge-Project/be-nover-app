@@ -92,6 +92,18 @@ const BoardSchema = new mongoose.Schema(
       type: [Number],
       default: [1, 2, 3, 4, 5], // 1: Monday, 2: Tuesday, 3: Wednesday, 4: Thursday, 5: Friday
     },
+    initEpicId: {
+      type: SCHEMA_TYPE,
+      ref: MODEL_NAME.column,
+    },
+    initTaskId: {
+      type: SCHEMA_TYPE,
+      ref: MODEL_NAME.column,
+    },
+    initSubTaskId: {
+      type: SCHEMA_TYPE,
+      ref: MODEL_NAME.column,
+    },
   },
   { timestamps: true }
 );

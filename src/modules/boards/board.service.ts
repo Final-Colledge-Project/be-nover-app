@@ -1,5 +1,6 @@
 import {
   BOARD_TEMPLATE,
+  ISSUE_TYPE,
   MODEL_NAME,
   OBJECT_ID,
   ROLE,
@@ -12,7 +13,7 @@ import {
   permissionBoard,
   viewedBoardPermission,
 } from "@core/utils";
-import IBoard from "./board.interface";
+import IBoard, { ICommonIssue, IGeneralIssue } from "./board.interface";
 import BoardSchema from "./board.model";
 import CreateBoardDto from "./dtos/createBoardDto";
 import { HttpException } from "@core/exceptions";
@@ -39,6 +40,7 @@ import { SprintSchema } from "@modules/sprints";
 import { IssueLinkSchema } from "@modules/issueLinks";
 import { IssueLinkTypeSchema } from "@modules/issueLinkTypes";
 import { WorkspacePermissionSchema } from "@modules/workspacePermissions";
+import { EpicSchema } from "@modules/epics";
 
 export default class BoardService {
   private boardSchema = BoardSchema;
@@ -52,6 +54,9 @@ export default class BoardService {
   private sprintSchema = SprintSchema;
   private notificationService = new NotificationService();
   private issueLinkTypeSchema = IssueLinkTypeSchema;
+  private cardSchema = CardSchema;
+  private epicSchema = EpicSchema;
+  private subCardSchema = SubCardSchema;
   public async createBoard(
     model: CreateBoardDto,
     ownerId: string,
@@ -219,15 +224,9 @@ export default class BoardService {
       ],
       { session }
     );
-
-    await this.boardSchema.findByIdAndUpdate(
-      createdBoard[0]._id,
-      {
-        columnOrderIds: columns.map((col: IColumn) => col._id),
-        initColumnId: columns[0]._id,
-      },
-      { session }
-    );
+    let initEpicId = null;
+    let initTaskId = null;
+    let initSubTaskId = null;
     if (createdBoard[0].template === BOARD_TEMPLATE.scrum) {
       const issueTypes = await this.issueTypeSchema.create(
         [
@@ -288,6 +287,9 @@ export default class BoardService {
         ],
         { session }
       );
+      initEpicId = issueTypes[0]._id;
+      initTaskId = issueTypes[1]._id;
+      initSubTaskId = issueTypes[4]._id;
     } else {
       const issueTypes = await this.issueTypeSchema.create(
         [
@@ -319,6 +321,9 @@ export default class BoardService {
         ],
         { session }
       );
+      initEpicId = issueTypes[0]._id;
+      initTaskId = issueTypes[1]._id;
+      initSubTaskId = issueTypes[2]._id;
     }
 
     await this.issueLinkTypeSchema.create(
@@ -352,6 +357,18 @@ export default class BoardService {
         session,
       }
     );
+    await this.boardSchema.findByIdAndUpdate(
+      createdBoard[0]._id,
+      {
+        columnOrderIds: columns.map((col: IColumn) => col._id),
+        initColumnId: columns[0]._id,
+        initEpicId: initEpicId,
+        initTaskId: initTaskId,
+        initSubTaskId: initSubTaskId,
+      },
+      { session }
+    );
+
     await await session.commitTransaction();
     session.endSession();
     return createdBoard[0];
@@ -1088,5 +1105,313 @@ export default class BoardService {
     await LabelSchema.updateMany(filter, updateOperation).exec();
     await session.commitTransaction();
     session.endSession();
+  }
+  public async searchCommonIssue(
+    boardId: string,
+    userId: string,
+    searchValue: string
+  ): Promise<ICommonIssue[]> {
+    const board = await this.boardSchema.findById(boardId).exec();
+    const boardKey = board?.key;
+    const issueKey = `${boardKey}-${searchValue}`;
+    if (!board) {
+      throw new HttpException(StatusCodes.BAD_REQUEST, "Board not found");
+    }
+    const memberBoard = await isBoardMember(boardId, userId);
+    if (!memberBoard) {
+      throw new HttpException(StatusCodes.FORBIDDEN, "Permission denied");
+    }
+    const cards = await this.cardSchema
+      .find({
+        boardId: boardId,
+        $or: [
+          { cardId: { $regex: issueKey, $options: "i" } },
+          { title: { $regex: searchValue, $options: "i" } },
+        ],
+      })
+      .exec()
+      .then((res) =>
+        res.map((item) => {
+          return {
+            _id: item._id,
+            name: item.title,
+            issueTag: item.cardId,
+            issueType: item.issueTypeId,
+            type: ISSUE_TYPE.task,
+          };
+        })
+      );
+    const subCards = await this.subCardSchema
+      .find({
+        boardId: boardId,
+        $or: [
+          { subCardId: { $regex: issueKey, $options: "i" } },
+          { name: { $regex: searchValue, $options: "i" } },
+        ],
+      })
+      .exec()
+      .then((res) =>
+        res.map((item) => {
+          return {
+            _id: item._id,
+            name: item.name,
+            issueTag: item.subCardId,
+            issueType: item.issueTypeId,
+            type: ISSUE_TYPE.subTask,
+          };
+        })
+      );
+    const epics = await this.epicSchema
+      .find({
+        boardId: boardId,
+        $or: [
+          { epicId: { $regex: issueKey, $options: "i" } },
+          { name: { $regex: searchValue, $options: "i" } },
+        ],
+      })
+      .exec()
+      .then((res) => {
+        return res.map((item) => {
+          return {
+            _id: item._id,
+            name: item.name,
+            issueTag: item.epicId,
+            issueType: item.issueTypeId,
+            type: ISSUE_TYPE.epic,
+          };
+        });
+      });
+    return [...cards, ...subCards, ...epics];
+  }
+  public async getAllIssueInBoardDetail(
+    boardId: string,
+    userId: string,
+    hierarchy: string
+  ): Promise<IGeneralIssue[]> {
+    console.log("🚀 ~ BoardService ~ hierarchy:", hierarchy);
+    const member = await isBoardMember(boardId, userId);
+    if (!member) {
+      throw new HttpException(StatusCodes.FORBIDDEN, "Permission denied");
+    }
+    const board = await this.boardSchema.findById(boardId).exec();
+    let result: IGeneralIssue[];
+    switch (hierarchy) {
+      case "2": {
+        result = await this.cardSchema.aggregate([
+          {
+            $match: {
+              boardId: new OBJECT_ID(boardId),
+              isActive: true,
+            },
+          },
+          {
+            $set: {
+              taskId: "$cardId",
+              name: "$title",
+            },
+          },
+          {
+            $lookup: {
+              from: "labels",
+              localField: "labelId",
+              foreignField: "_id",
+              as: "label",
+              let: {
+                labelId: "$labelId",
+              },
+              pipeline: [
+                {
+                  $match: {
+                    $expr: {
+                      $eq: ["$_id", "$$labelId"],
+                    },
+                  },
+                },
+                {
+                  $project: {
+                    _id: 1,
+                    name: 1,
+                    color: 1,
+                  },
+                },
+              ],
+            },
+          },
+          {
+            $lookup: {
+              from: "issuetypes",
+              localField: "issueTypeId",
+              foreignField: "_id",
+              as: "issueType",
+              let: {
+                issueTypeId: "$issueTypeId",
+              },
+              pipeline: [
+                {
+                  $match: {
+                    $expr: {
+                      $eq: ["$_id", "$$issueTypeId"],
+                    },
+                  },
+                },
+                {
+                  $project: {
+                    _id: 1,
+                    name: 1,
+                    icon: 1,
+                  },
+                },
+              ],
+            },
+          },
+          {
+            $lookup: {
+              from: "columns",
+              localField: "columnId",
+              foreignField: "_id",
+              let: {
+                columnId: "$columnId",
+              },
+              as: "status",
+              pipeline: [
+                {
+                  $match: {
+                    $expr: {
+                      $eq: ["$_id", "$$columnId"],
+                    },
+                  },
+                },
+                {
+                  $project: {
+                    _id: 1,
+                    title: 1,
+                    color: 1,
+                  },
+                },
+              ],
+            },
+          },
+          {
+            $lookup: {
+              from: "priorities",
+              localField: "priorityId",
+              foreignField: "_id",
+              let: {
+                priorityId: "$priorityId",
+              },
+              as: "priority",
+              pipeline: [
+                {
+                  $match: {
+                    $expr: {
+                      $eq: ["$_id", "$$priorityId"],
+                    },
+                  },
+                },
+                {
+                  $project: {
+                    _id: 1,
+                    name: 1,
+                    color: 1,
+                  },
+                },
+              ],
+            },
+          },
+          {
+            $lookup: {
+              from: "sprints",
+              localField: "sprintId",
+              foreignField: "_id",
+              as: "sprint",
+              let: {
+                sprintId: "$sprintId",
+              },
+              pipeline: [
+                {
+                  $match: {
+                    $expr: {
+                      $eq: ["$_id", "$$sprintId"],
+                    },
+                  },
+                },
+                {
+                  $project: {
+                    _id: 1,
+                    name: 1,
+                    status: 1,
+                  },
+                },
+              ],
+            },
+          },
+          {
+            $lookup: {
+              from: "users",
+              let: { memberIds: "$memberIds" },
+              localField: "memberIds",
+              foreignField: "_id",
+              as: "assignee",
+              pipeline: [
+                {
+                  $match: {
+                    $expr: {
+                      $in: ["$_id", "$$memberIds"],
+                    },
+                  },
+                },
+                {
+                  $project: {
+                    _id: 1,
+                    fullName: { $concat: ["$firstName", " ", "$lastName"] },
+                    avatar: 1,
+                  },
+                },
+              ],
+            },
+          },
+          {
+            $project: {
+              _id: 1,
+              boardId: 1,
+              name: 1,
+              taskId: {
+                $concat: [board?.key, "-", "$taskId"],
+              },
+              description: 1,
+              status: {
+                $arrayElemAt: ["$status", 0],
+              },
+              priority: {
+                $arrayElemAt: ["$priority", 0],
+              },
+              assignee: {
+                $arrayElemAt: ["$assignee", 0],
+              },
+              storyPoint: 1,
+              sprint: {
+                $arrayElemAt: ["$sprint", 0],
+              },
+              label: {
+                $arrayElemAt: ["$label", 0],
+              },
+              startDate: 1,
+              dueDate: 1,
+              issueType: {
+                $arrayElemAt: ["$issueType", 0],
+              },
+              resolvedAt: 1,
+              createdAt: 1,
+              updatedAt: 1,
+            },
+          },
+        ]);
+        break;
+      }
+      default: {
+        result = [];
+      }
+    }
+    return result;
   }
 }

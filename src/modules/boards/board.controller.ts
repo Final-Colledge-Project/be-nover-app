@@ -165,7 +165,12 @@ export default class BoardController {
       const boardId = req.params.id;
       const memberId = req.params.memberId;
       session.startTransaction();
-      await this.boardService.deleteMemberFromBoard(userId, boardId, memberId, session);
+      await this.boardService.deleteMemberFromBoard(
+        userId,
+        boardId,
+        memberId,
+        session
+      );
       res
         .status(StatusCodes.OK)
         .json({ message: "Delete member from board successfully" });
@@ -191,6 +196,27 @@ export default class BoardController {
       await session.abortTransaction();
       session.endSession();
       next(error);
+    }
+  };
+  public getAllIssueInBoardDetail = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      const hierarchy = req.query.hierarchy as string;
+      const userId = req.user.id;
+      const boardId = req.params.boardId;
+      const data = await this.boardService.getAllIssueInBoardDetail(
+        boardId,
+        userId,
+        hierarchy
+      );
+      res
+        .status(StatusCodes.OK)
+        .json({ data, message: "Get issues in board successfully" });
+    } catch (err) {
+      next(err);
     }
   };
 }

@@ -24,7 +24,10 @@ import { StatusCodes } from "http-status-codes";
 import assignUserDto from "./dtos/assignUserDto";
 import { UserSchema } from "@modules/users";
 import PushNotificationDto from "@modules/notifications/dtos/pushNotificationDto";
-import { NotificationService } from "@modules/notifications";
+import {
+  NotificationSchema,
+  NotificationService,
+} from "@modules/notifications";
 import { LabelSchema } from "@modules/labels";
 import { PrioritySchema } from "@modules/priorities";
 import { SprintSchema } from "@modules/sprints";
@@ -38,6 +41,8 @@ import AddCommentDto from "./dtos/addCommentDto";
 import UpdateCommentDto from "./dtos/updateCommentDto";
 import { IDailyStoryPoint } from "@modules/sprints/sprint.interface";
 import { CloudStorageFileService } from "@core/cloudService";
+import { Multer } from "multer";
+import { Response } from "express";
 export default class CardService {
   private cardSchema = CardSchema;
   private notificationService = new NotificationService();
@@ -100,7 +105,7 @@ export default class CardService {
     if (issueType.hierarchy !== 2) {
       throw new HttpException(
         StatusCodes.BAD_REQUEST,
-        "IssueType is suitable for issue"
+        "IssueType is not suitable for issue"
       );
     }
     const backlog = await this.sprintSchema
@@ -130,7 +135,9 @@ export default class CardService {
               ])
             : uniq([!model.reporterId ? userId : model.reporterId]),
           sprintId:
-            existBoard.template === BOARD_TEMPLATE.scrum ? backlog?._id : null,
+            existBoard.template === BOARD_TEMPLATE.scrum && model.sprintId
+              ? model.sprintId
+              : null,
         },
       ],
       { session }
@@ -493,6 +500,7 @@ export default class CardService {
             resolvedAt: 1,
             isActive: 1,
             watcherIds: 1,
+            attachments: 1,
             ...extendPrj,
           },
         },
@@ -520,7 +528,8 @@ export default class CardService {
     const cloneCard = cloneDeep(card);
     const taskLogs: ITaskLog[] = [];
     let isResolve = false;
-
+    let notifications: PushNotificationDto[] = [];
+    const contextUrl = `${process.env.URL_CLIENT}/u/boards/${board?._id}/cards/${card._id}`;
     if (model.columnId && model.columnId !== cloneCard.columnId) {
       const oldCol = await this.colSchema.findById(cloneCard.columnId).exec();
       const newCol = await this.colSchema.findById(model.columnId).exec();
@@ -532,8 +541,11 @@ export default class CardService {
       oldCol.cardOrderIds = oldCol.cardOrderIds.filter(
         (item) => item.toString() !== cardId.toString()
       );
-      newCol.cardOrderIds.push(cardId);
+      if (!newCol.cardOrderIds.find((item) => item.toString() === cardId)) {
+        newCol.cardOrderIds.push(cardId);
+      }
       isResolve = newCol.isResolved;
+
       //Handle StotyPoint
       //Resolve Columns => StoryPoint - , Unresolve Columns => StoryPoint +
       if (isResolve && board?.template === BOARD_TEMPLATE.scrum) {
@@ -552,6 +564,7 @@ export default class CardService {
         if (sprint.status !== SPRINT_STATUS.completed) {
           if (storyPoint) {
             storyPoint.storyPoints -= cloneCard.storyPoint;
+            await sprint.save({ session });
           } else {
             const prevDailyStoryPoint =
               sprint.dailyStoryPoints[sprint.dailyStoryPoints.length - 1];
@@ -561,10 +574,9 @@ export default class CardService {
                 ? prevDailyStoryPoint.storyPoints - cloneCard.storyPoint
                 : 0,
             });
+            await sprint.save({ session });
           }
         }
-
-        await sprint.save({ session });
       }
       if (oldCol?.isResolved && !newCol.isResolved) {
         const sprint = await this.sprintSchema.findById(card.sprintId).exec();
@@ -593,7 +605,6 @@ export default class CardService {
             });
           }
         }
-
         await sprint.save({ session });
       }
       taskLogs.push({
@@ -605,6 +616,32 @@ export default class CardService {
         issueModel: MODEL_NAME.card,
         issueId: card._id,
       });
+      uniq(card.watcherIds.map((e) => e.toString()))
+        .filter((item) => item.toString() !== userId)
+        .forEach((item) => {
+          notifications.push({
+            senderId: userId,
+            targetType: card.title,
+            message: "changed the status of the task",
+            type: {
+              category: MODEL_NAME.board,
+              name: board?.title || "",
+            },
+            contextUrl: contextUrl,
+            receiverId: item,
+          });
+        });
+      // notifications.push({
+      //   senderId: userId,
+      //   targetType: card.title,
+      //   message: "changed the status of the task",
+      //   type: {
+      //     category: MODEL_NAME.board,
+      //     name: board?.title || "",
+      //   },
+      //   contextUrl: contextUrl,
+      //   receiverId: card.watcherIds.filter((item) => item !== userId),
+      // });
       await oldCol.save({ session });
       await newCol.save({ session });
     }
@@ -629,6 +666,21 @@ export default class CardService {
         issueModel: MODEL_NAME.card,
         issueId: card._id,
       });
+      uniq(card.watcherIds.map((e) => e.toString()))
+        .filter((item) => item.toString() !== userId)
+        .forEach((item) => {
+          notifications.push({
+            senderId: userId,
+            targetType: card.title,
+            message: "changed the title of the task",
+            type: {
+              category: MODEL_NAME.board,
+              name: board?.title || "",
+            },
+            contextUrl: contextUrl,
+            receiverId: item,
+          });
+        });
     }
     if (model.description) {
       taskLogs.push({
@@ -640,6 +692,21 @@ export default class CardService {
         issueModel: MODEL_NAME.card,
         issueId: card._id,
       });
+      uniq(card.watcherIds.map((e) => e.toString()))
+        .filter((item) => item.toString() !== userId)
+        .forEach((item) => {
+          notifications.push({
+            senderId: userId,
+            targetType: card.title,
+            message: "changed the description of the task",
+            type: {
+              category: MODEL_NAME.board,
+              name: board?.title || "",
+            },
+            contextUrl: contextUrl,
+            receiverId: item,
+          });
+        });
     }
     if (model.labelId) {
       const oldLabel = await this.labelSchema
@@ -658,6 +725,21 @@ export default class CardService {
         issueModel: MODEL_NAME.card,
         issueId: card._id,
       });
+      uniq(card.watcherIds.map((e) => e.toString()))
+        .filter((item) => item.toString() !== userId)
+        .forEach((item) => {
+          notifications.push({
+            senderId: userId,
+            targetType: card.title,
+            message: "changed the label of the task",
+            type: {
+              category: MODEL_NAME.board,
+              name: board?.title || "",
+            },
+            contextUrl: contextUrl,
+            receiverId: item,
+          });
+        });
     }
     if (model.priorityId && model.priorityId !== cloneCard.priorityId) {
       const oldPriority = await this.prioritySchema
@@ -676,6 +758,22 @@ export default class CardService {
         issueModel: MODEL_NAME.card,
         issueId: card._id,
       });
+      uniq(card.watcherIds.map((e) => e.toString()))
+        .filter((item) => item.toString() !== userId)
+        .forEach((item) => {
+          console.log("🚀 ~ CardService ~ .forEach ~ item:", item);
+          notifications.push({
+            senderId: userId,
+            targetType: card.title,
+            message: "changed the priority of the task",
+            type: {
+              category: MODEL_NAME.board,
+              name: board?.title || "",
+            },
+            contextUrl: contextUrl,
+            receiverId: item,
+          });
+        });
     }
     //Update sprint
     if (
@@ -757,6 +855,21 @@ export default class CardService {
         issueModel: MODEL_NAME.card,
         issueId: card._id,
       });
+      uniq(card.watcherIds.map((e) => e.toString()))
+        .filter((item) => item.toString() !== userId)
+        .forEach((item) => {
+          notifications.push({
+            senderId: userId,
+            targetType: card.title,
+            message: "changed the sprint of the task",
+            type: {
+              category: MODEL_NAME.board,
+              name: board?.title || "",
+            },
+            contextUrl: contextUrl,
+            receiverId: item,
+          });
+        });
     }
     if (model.epicId && model.epicId !== cloneCard.epicId) {
       const oldEpic = await this.epicSchema.findById(cloneCard.epicId);
@@ -782,6 +895,21 @@ export default class CardService {
         issueModel: MODEL_NAME.card,
         issueId: card._id,
       });
+      uniq(card.watcherIds.map((e) => e.toString()))
+        .filter((item) => item.toString() !== userId)
+        .forEach((item) => {
+          notifications.push({
+            senderId: userId,
+            targetType: card.title,
+            message: "changed the epic of the task",
+            type: {
+              category: MODEL_NAME.board,
+              name: board?.title || "",
+            },
+            contextUrl: contextUrl,
+            receiverId: item,
+          });
+        });
     }
     if (model.issueTypeId && model.issueTypeId !== cloneCard.issueTypeId) {
       const oldIssueType = await this.issueTypeSchema
@@ -798,7 +926,7 @@ export default class CardService {
       if (newIssueType.hierarchy !== 2) {
         throw new HttpException(
           StatusCodes.BAD_REQUEST,
-          "IssueType is suitable for issue"
+          "IssueType is not suitable for issue"
         );
       }
 
@@ -811,6 +939,21 @@ export default class CardService {
         issueModel: MODEL_NAME.card,
         issueId: card._id,
       });
+      uniq(card.watcherIds.map((e) => e.toString()))
+        .filter((item) => item.toString() !== userId)
+        .forEach((item) => {
+          notifications.push({
+            senderId: userId,
+            targetType: card.title,
+            message: "changed the issue type of the task",
+            type: {
+              category: MODEL_NAME.board,
+              name: board?.title || "",
+            },
+            contextUrl: contextUrl,
+            receiverId: item,
+          });
+        });
     }
     //Update storyPoint
     if (model.storyPoint && model.storyPoint !== cloneCard.storyPoint) {
@@ -859,9 +1002,27 @@ export default class CardService {
         issueModel: MODEL_NAME.card,
         issueId: card._id,
       });
+      uniq(card.watcherIds.map((e) => e.toString()))
+        .filter((item) => item.toString() !== userId)
+        .forEach((item) => {
+          notifications.push({
+            senderId: userId,
+            targetType: card.title,
+            message: "changed the story point of the task",
+            type: {
+              category: MODEL_NAME.board,
+              name: board?.title || "",
+            },
+            contextUrl: contextUrl,
+            receiverId: item,
+          });
+        });
     }
     if (taskLogs.length) {
       await this.taskLogSchema.create(taskLogs, { session });
+    }
+    if (notifications.length) {
+      await this.notificationService.pushMultiNotification(notifications);
     }
     await session.commitTransaction();
     session.endSession();
@@ -1322,22 +1483,7 @@ export default class CardService {
     if (userId !== reporterId && userId !== memberIds && !boardAdmin) {
       throw new HttpException(StatusCodes.FORBIDDEN, "Permission denied");
     }
-    const attachments = (files || []).map((file) => {
-      return {
-        fileName: file.originalname,
-        fileType: file.mimetype,
-        fileUrl: file.path,
-        createAt: new Date(),
-        createdBy: userId,
-      };
-    });
-    const attachInCard = card.attachments;
-    if ((attachInCard || []).length + attachments.length > MAX_FILES) {
-      throw new HttpException(
-        StatusCodes.BAD_REQUEST,
-        `Attachment limit is ${MAX_FILES}`
-      );
-    }
+
     const bucketName = process.env.BUCKET_NAME;
     const issueType = ISSUE_TYPE.task;
     if (!bucketName) {
@@ -1353,6 +1499,30 @@ export default class CardService {
     } catch (error: any) {
       throw new HttpException(StatusCodes.BAD_REQUEST, error.message);
     }
+    // const urls: string[] = [];
+    // for (let i = 0; i < files.length; i++) {
+    //   const url = await this.cloudService.generateSignedUrl(
+    //     `${issueType}/${cardId}/${files[i].originalname}`,
+    //     bucketName
+    //   );
+    //   urls.push(url);
+    // }
+    const attachments = (files || []).map((file) => {
+      return {
+        fileName: file.originalname,
+        fileType: file.mimetype,
+        fileUrl: `https://storage.cloud.google.com/${bucketName}/${issueType}/${cardId}/${file.originalname}`,
+        createAt: new Date(),
+        createdBy: userId,
+      };
+    });
+    const attachInCard = card.attachments;
+    if ((attachInCard || []).length + attachments.length > MAX_FILES) {
+      throw new HttpException(
+        StatusCodes.BAD_REQUEST,
+        `Attachment limit is ${MAX_FILES}`
+      );
+    }
     card.attachments = [...attachInCard, ...attachments];
 
     await card.save({ session });
@@ -1363,8 +1533,9 @@ export default class CardService {
     cardId: string,
     boardId: string,
     fileName: string,
-    userId: string
-  ): Promise<void> {
+    userId: string,
+    res: Response
+  ): Promise<string> {
     const isMember = await isBoardMember(boardId, userId);
     if (!isMember) {
       throw new HttpException(StatusCodes.FORBIDDEN, "Permission denied");
@@ -1387,7 +1558,19 @@ export default class CardService {
     const issueType = ISSUE_TYPE.task;
     const formatFileName = `${issueType}/${cardId}/${fileName}`;
     try {
-      await this.cloudService.downloadFile(bucketName, formatFileName);
+      // await this.cloudService.downloadFile(
+      //   bucketName,
+      //   formatFileName,
+      //   fileName,
+      //   res
+      // );
+      const url = await this.cloudService.generateSignedUrl(
+        fileName,
+        bucketName,
+        cardId,
+        "task"
+      );
+      return url;
     } catch (error: any) {
       throw new HttpException(StatusCodes.BAD_REQUEST, error.message);
     }
@@ -1433,6 +1616,99 @@ export default class CardService {
     await card.save({ session });
     await session.commitTransaction();
     session.endSession();
-  } 
-  
+  }
+  public async getCardsByMemId(
+    boardId: string,
+    userId: string
+  ): Promise<Object[]> {
+    const memberBoard = await isBoardMember(boardId, userId);
+    if (!memberBoard)
+      throw new HttpException(StatusCodes.FORBIDDEN, "Permission denied");
+    const cardsMember = await this.cardSchema
+      .aggregate([
+        {
+          $lookup: {
+            from: "labels",
+            localField: "labelId",
+            foreignField: "_id",
+            as: "labels",
+            pipeline: [
+              {
+                $project: {
+                  _id: 1,
+                  name: 1,
+                  color: 1,
+                },
+              },
+            ],
+          },
+        },
+        {
+          $lookup: {
+            from: "columns",
+            localField: "columnId",
+            foreignField: "_id",
+            as: "columns",
+            pipeline: [
+              {
+                $project: {
+                  _id: 1,
+                  title: 1,
+                  isResolved: 1,
+                },
+              },
+            ],
+          },
+        },
+        {
+          $lookup: {
+            from: "issuetypes",
+            localField: "issueTypeId",
+            foreignField: "_id",
+            as: "issueType",
+            pipeline: [
+              {
+                $project: {
+                  _id: 1,
+                  name: 1,
+                  icon: 1,
+                },
+              },
+            ],
+          },
+        },
+        {
+          $match: {
+            boardId: new OBJECT_ID(boardId),
+            memberIds: {
+              $in: [new OBJECT_ID(userId)],
+            },
+            isActive: { $eq: true },
+          },
+        },
+        {
+          $project: {
+            _id: 1,
+            board: {
+              $arrayElemAt: ["$boards", 0],
+            },
+            column: {
+              $arrayElemAt: ["$columns", 0],
+            },
+            issueType: {
+              $arrayElemAt: ["$issueType", 0],
+            },
+            cardId: 1,
+            title: 1,
+            description: 1,
+            startDate: 1,
+            dueDate: 1,
+            priority: 1,
+            labels: 1,
+          },
+        },
+      ])
+      .exec();
+    return cardsMember;
+  }
 }

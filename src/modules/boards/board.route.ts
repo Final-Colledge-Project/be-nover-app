@@ -86,5 +86,10 @@ export default class BoardRoute implements Route {
       authMiddleware,
       this.boardController.deleteMemberFromBoard
     );
+    this.router.get(
+      this.path + "/:boardId/issues",
+      authMiddleware,
+      this.boardController.getAllIssueInBoardDetail
+    );
   }
 }

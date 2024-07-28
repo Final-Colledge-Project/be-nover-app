@@ -121,13 +121,17 @@ const EpicSchema = new mongoose.Schema(
       type: SCHEMA_TYPE,
       ref: MODEL_NAME.priority,
     },
-    creatorId: {
+    reporterId: {
       type: SCHEMA_TYPE,
       ref: MODEL_NAME.user,
     },
     isActive: {
       type: Boolean,
       default: true,
+    },
+    epicId: {
+      type: String,
+      default: null,
     },
   },
   { timestamps: true }

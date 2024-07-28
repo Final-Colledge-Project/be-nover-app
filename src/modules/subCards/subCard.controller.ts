@@ -14,7 +14,13 @@ export default class SubCardController {
     const session = await startSession();
     try {
       const model: AddSubTaskDto = req.body;
-      const subCard = await this.subCardService.createSubCard(model, session);
+      const boardId: string = req.params.boardId;
+      session.startTransaction();
+      const subCard = await this.subCardService.createSubCard(
+        model,
+        session,
+        boardId
+      );
       res
         .status(StatusCodes.CREATED)
         .json({ data: subCard, message: "Create sub card successfully" });
@@ -56,9 +62,11 @@ export default class SubCardController {
   public updateSubCard = catchAsync(async (req: Request, res: Response) => {
     const subCardId = req.params.id;
     const model: AddSubTaskDto = req.body;
+    const boardId: string = req.params.boardId;
     const updatedSubCard = await this.subCardService.updateSubCard(
       model,
-      subCardId
+      subCardId,
+      boardId
     );
     res
       .status(StatusCodes.OK)

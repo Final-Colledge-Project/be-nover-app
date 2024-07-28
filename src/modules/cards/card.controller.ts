@@ -239,15 +239,16 @@ export default class CardController {
       const cardId = req.params.id;
       const boardId = req.params.boardId;
       const fileName = req.query.fileName as string;
-      await this.cardService.downloadAttachmentInCard(
+      const url = await this.cardService.downloadAttachmentInCard(
         cardId,
         boardId,
         fileName,
-        userId
+        userId,
+        res
       );
       res
         .status(StatusCodes.OK)
-        .json({ message: "Download Attachment Successfully" });
+        .json({ data: url, message: "Download Attachment Successfully" });
     }
   );
   public deleteAttachment = async (
@@ -275,6 +276,22 @@ export default class CardController {
     } catch (err) {
       await session.abortTransaction();
       session.endSession();
+      next(err);
+    }
+  };
+  public getCardsByMember = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      const memberId = req.params.userId;
+      const boardId = req.params.boardId;
+      const data = await this.cardService.getCardsByMemId(boardId, memberId);
+      res
+        .status(StatusCodes.OK)
+        .json({ data, message: "Get tasks by member successfully" });
+    } catch (err) {
       next(err);
     }
   };

@@ -17,6 +17,7 @@ import { ColumnSchema } from "@modules/columns";
 import { IssueTypeSchema } from "@modules/issueTypes";
 import AddCommentDto from "./dtos/addCommentDto";
 import UpdateCommentDto from "./dtos/updateCommentDto";
+import { PrioritySchema } from "@modules/priorities";
 
 export default class EpicService {
   private epicSchema = EpicSchema;
@@ -26,6 +27,7 @@ export default class EpicService {
   private userSchema = UserSchema;
   private columnSchema = ColumnSchema;
   private issueTypeSchema = IssueTypeSchema;
+  private prioritySchema = PrioritySchema;
   public async createEpic(
     model: CreateEpicDto,
     boardId: string,
@@ -39,6 +41,34 @@ export default class EpicService {
     if (!board) {
       throw new HttpException(StatusCodes.BAD_REQUEST, "Board not found");
     }
+    if (model.labelId) {
+      const label = await this.labelSchema
+        .findOne({ _id: model.labelId, boardId: boardId })
+        .exec();
+      if (!label) {
+        throw new HttpException(StatusCodes.BAD_REQUEST, "Label not found");
+      }
+    }
+    if (model.priorityId) {
+      const priority = await this.prioritySchema
+        .findOne({ _id: model.priorityId, boardId: boardId })
+        .exec();
+      if (!priority) {
+        throw new HttpException(StatusCodes.BAD_REQUEST, "Priority not found");
+      }
+    }
+    const issueType = await this.issueTypeSchema
+      .findOne({ _id: model.issueTypeId, boardId: boardId })
+      .exec();
+    if (!issueType) {
+      throw new HttpException(StatusCodes.BAD_REQUEST, "IssueType not found");
+    }
+    if (issueType.hierarchy !== 1) {
+      throw new HttpException(
+        StatusCodes.BAD_REQUEST,
+        "IssueType is not suitable for issue"
+      );
+    }
     const existEpic = await this.epicSchema.findOne({
       title: model.name,
       boardId,
@@ -48,17 +78,6 @@ export default class EpicService {
       throw new HttpException(
         StatusCodes.BAD_REQUEST,
         `Column with title ${model.name} already exists`
-      );
-    }
-
-    const issueType = await this.issueTypeSchema.findById(model.issueTypeId);
-    if (!issueType) {
-      throw new HttpException(StatusCodes.BAD_REQUEST, "IssueType not found");
-    }
-    if (issueType.hierarchy !== 1) {
-      throw new HttpException(
-        StatusCodes.BAD_REQUEST,
-        "IssueType must be of type Epic"
       );
     }
 
@@ -110,6 +129,34 @@ export default class EpicService {
     const board = await this.boardSchema.findById(boardId).exec();
     if (!board) {
       throw new HttpException(StatusCodes.BAD_REQUEST, "Board not found");
+    }
+    if (model.labelId) {
+      const label = await this.labelSchema
+        .findOne({ _id: model.labelId, boardId: boardId })
+        .exec();
+      if (!label) {
+        throw new HttpException(StatusCodes.BAD_REQUEST, "Label not found");
+      }
+    }
+    if (model.priorityId) {
+      const priority = await this.prioritySchema
+        .findOne({ _id: model.priorityId, boardId: boardId })
+        .exec();
+      if (!priority) {
+        throw new HttpException(StatusCodes.BAD_REQUEST, "Priority not found");
+      }
+    }
+    const issueType = await this.issueTypeSchema
+      .findOne({ _id: model.issueTypeId, boardId: boardId })
+      .exec();
+    if (!issueType) {
+      throw new HttpException(StatusCodes.BAD_REQUEST, "IssueType not found");
+    }
+    if (issueType.hierarchy !== 1) {
+      throw new HttpException(
+        StatusCodes.BAD_REQUEST,
+        "IssueType is not suitable for issue"
+      );
     }
     const existEpic = await this.epicSchema
       .findOne({

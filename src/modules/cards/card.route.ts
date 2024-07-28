@@ -148,5 +148,10 @@ export default class CardRoute implements Route {
       ),
       this.cardController.deleteAttachment
     );
+    this.router.get(
+      this.path + "/user/:userId/board/:boardId",
+      authMiddleware,
+      this.cardController.getCardsByMember
+    );
   }
 }
